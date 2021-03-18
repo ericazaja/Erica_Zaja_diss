@@ -1,0 +1,146 @@
+---
+title: " "
+output:
+  pdf_document:
+    number_sections: TRUE
+geometry: "left = 2.5cm, right = 2cm, top = 2cm, bottom = 2cm"
+fontsize: 11pt
+header-includes:
+  - \usepackage{float}
+  - \usepackage{sectsty}
+  - \usepackage{paralist}
+  - \usepackage{setspace}\spacing{1.5}
+  - \usepackage{fancyhdr}
+  - \usepackage{lastpage}
+  - \usepackage{dcolumn}
+bibliography: sections/bibliography.bib
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+getwd()
+```
+
+\allsectionsfont{\centering}
+\subsectionfont{\raggedright}
+\subsubsectionfont{\raggedright}
+
+\pagenumbering{gobble} 
+
+\begin{centering}
+
+\vspace{3cm}
+```{r uni_logo, echo=F, out.width="20%"}
+knitr::include_graphics("img/uniedlogo.png")
+```
+
+\vspace{1cm}
+
+\Large 
+{\bf The University Of Edinburgh}
+
+\Large
+{\bf School Of Geosciences}
+
+\vspace{1cm}
+
+\Large
+
+\doublespacing
+{\bf HOW ARCTIC SHRUBIFICATION WILL AFFECT MIGRATORY BEHAVIOUR OF CARIBOU}
+
+\vspace{1 cm}
+
+\normalsize
+\singlespacing
+By 
+
+\vspace{0.5 cm}
+
+\Large
+
+{\bf ERICA ZAJA}
+
+\vspace{1.5 cm}
+
+in partial fulfilment of the requirement \\for the degree of BSc with Honours \\in Ecological and Environmental Sciences 
+
+\vspace{1.5 cm}
+
+\normalsize
+May 2022
+
+\end{centering}
+
+\newpage
+
+\pagenumbering{gobble} 
+
+\begin{centering}
+
+{\bf Abstract}
+
+\end{centering}
+
+\spacing{1.5}
+
+(the spacing is set to 1.5) 
+
+no more than 250 words for the abstract
+
+- a description of the research question/knowledge gap – what we know and what we don’t know
+- how your research has attempted to fill this gap
+- a brief description of the methods
+- brief results
+- key conclusions that put the research into a larger context
+
+\pagenumbering{roman} 
+
+\newpage
+
+\centering
+\raggedright
+\newpage
+\tableofcontents
+
+\newpage
+
+```{r acknowledgments, child='sections/acknowledgments.Rmd'}
+```
+
+\newpage
+
+```{r intro, child = 'sections/introduction.Rmd'}
+```
+\pagenumbering{arabic} 
+
+\newpage
+
+```{r methods, child = 'sections/methods.Rmd'}
+```
+
+\newpage
+
+```{r results, child = 'sections/results.Rmd'}
+```
+
+\newpage 
+
+```{r discussion, child = 'sections/discussion.Rmd'}
+```
+
+\newpage 
+
+```{r conclusion, child = 'sections/conclusion.Rmd'}
+```
+
+\newpage 
+
+```{r biblio, child = 'sections/bibliography.Rmd'}
+```
+
+\newpage 
+
+```{r appendix, child = 'sections/appendix.Rmd'}
+```
