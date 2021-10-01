@@ -13,7 +13,7 @@ Repository including: datasets, figures, R scripts, statistical output, Markdown
 - `img`: figures 
 - `sections`: separate Rmd sections of dissertation report
 
-### Requirements
+#### Requirements
 - `RStudio` version 1.2.5001 or greater
 - packages ....
 
