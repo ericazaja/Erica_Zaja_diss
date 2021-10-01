@@ -9,8 +9,11 @@ Repository including: datasets, figures, R scripts, statistical output, Markdown
 
 #### Repository Structure
 - [datasets](https://github.com/ericazaja/dissertation/tree/main/datasets) including:
+
 a) [PCH_data](https://github.com/ericazaja/dissertation/tree/main/datasets/PCH_data): PCH summer range 
+
 b) [berner_data]: North Slope of Alaska shrub map 
+
 c) [anna_data](https://github.com/ericazaja/dissertation/tree/main/datasets/anna_data): data used for model RMarkdown dissertation
 
 - [img](https://github.com/ericazaja/dissertation/tree/main/img): figures 
