@@ -8,11 +8,15 @@
 Repository including: datasets, figures, R scripts, statistical output, Markdown structure, backup material. 
 
 #### Repository Structure
-- [anna_data](https://github.com/ericazaja/dissertation/tree/main/anna_data): data used for model RMarkdown dissertation
-- `berner_data`: North Slope of Alaska shrub map 
-- `img`: figures 
-- `sections`: separate Rmd sections of dissertation report
+- [datasets](https://github.com/ericazaja/dissertation/tree/main/datasets) including:
+a) [PCH_data](https://github.com/ericazaja/dissertation/tree/main/datasets/PCH_data): PCH summer range 
+b) [berner_data]: North Slope of Alaska shrub map 
+c) [anna_data](https://github.com/ericazaja/dissertation/tree/main/datasets/anna_data): data used for model RMarkdown dissertation
+
+- [img](https://github.com/ericazaja/dissertation/tree/main/img): figures 
+- [sections](https://github.com/ericazaja/dissertation/tree/main/sections): separate Rmd sections of dissertation report
 - [documents](https://github.com/ericazaja/dissertation/tree/main/documents): safety and ethics signed forms, title proposal, outline plan, budget form
+- [proposals](https://github.com/ericazaja/dissertation/tree/main/proposals): one page outline and full thesis plan
 
 #### Requirements
 - `RStudio` version 1.2.5001 or greater
