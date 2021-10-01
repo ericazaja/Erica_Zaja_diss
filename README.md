@@ -8,10 +8,11 @@
 Repository including: datasets, figures, R scripts, statistical output, Markdown structure, backup material. 
 
 #### Repository Structure
-- `anna_data` : data used for model RMarkdown dissertation
+- [anna_data](https://github.com/ericazaja/dissertation/tree/main/anna_data): data used for model RMarkdown dissertation
 - `berner_data`: North Slope of Alaska shrub map 
 - `img`: figures 
 - `sections`: separate Rmd sections of dissertation report
+- [documents](https://github.com/ericazaja/dissertation/tree/main/documents): safety and ethics signed forms, title proposal, outline plan, budget form
 
 #### Requirements
 - `RStudio` version 1.2.5001 or greater
@@ -24,7 +25,7 @@ Repository including: datasets, figures, R scripts, statistical output, Markdown
 - Using data to answer ecological questions
 
 
-#### Feedback etiquette
+#### Feedback Etiquette
 
 - Please use either an issue or a pull request.
 - Please use "###" and your initial before your feedback comments.
@@ -34,5 +35,5 @@ Repository including: datasets, figures, R scripts, statistical output, Markdown
 - I'm happy to answer any questions you might have about my work.
 
 ### Acknowledgements
-I thank the data providers, my supervisor Dr Isla Myers Smith, and Team Shrub members for their support. 
+I thank the data providers, my supervisor Dr Isla Myers Smith, and Team Shrub members for their support. I also thank Anna Chirumbolo for the tutorial on writing your Dissertation in RMarkdown. 
 
