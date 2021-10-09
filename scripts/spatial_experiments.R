@@ -110,6 +110,19 @@ gplot(t) +
         axis.text.x = element_text(angle = 90, hjust = 1)) +
   theme(plot.title = element_text(hjust = 0.5))
 
+### PCH summer range -----
+# https://gis.stackexchange.com/questions/34310/opening-lyr-file-via-rgdal-ogr
+range <- readOGR("datasets/PCH_data/Summer_range/v10/cyr_2013.gdb")
+plot(range)
+# class       : SpatialPolygonsDataFrame 
+# features    : 1 
+# extent      : 295021.4, 722245.6, 2015442, 2271115  (xmin, xmax, ymin, ymax)
+# crs         : +proj=aea +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs 
+# variables   : 7
+# names       : SEASONAL_, SEASONAL_I,      HERD,        RANGE,    Shape_Leng,     Shape_Length,       Shape_Area 
+# value       :        29,        122, Porcupine, Summer Range, 1511342.57305, 1568629.41263943, 73550115378.1924 
+
+### HOW DO I OVERLAY A RASTER WITH A POLYGON? -----
 
 
 
