@@ -19,7 +19,7 @@ c) [anna_data](https://github.com/ericazaja/dissertation/tree/main/datasets/anna
 - [img](https://github.com/ericazaja/dissertation/tree/main/img): figures 
 - [sections](https://github.com/ericazaja/dissertation/tree/main/sections): separate Rmd sections of dissertation report
 - [documents](https://github.com/ericazaja/dissertation/tree/main/documents): safety and ethics signed forms, title proposal, outline plan, budget form
-- [proposals](https://github.com/ericazaja/dissertation/tree/main/proposals): one page outline and full thesis plan
+- [proposals](https://github.com/ericazaja/dissertation/tree/main/proposals): one page outline, full thesis plan and proposed methods
 
 #### Requirements
 - `RStudio` version 1.2.5001 or greater
