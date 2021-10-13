@@ -14,6 +14,7 @@ library(viridis)
 library(rasterVis)
 
 # Loading data -----
+berner_dataset <- read_csv("datasets/berner_data/data/berner_dataset.csv")
 plant_agb_p2_5 <- raster("datasets/berner_data/data/plant_agb_p2_5.tif")
 # class      : RasterLayer 
 # dimensions : 14890, 35405, 527180450  (nrow, ncol, ncell)
@@ -122,7 +123,24 @@ plot(range)
 # names       : SEASONAL_, SEASONAL_I,      HERD,        RANGE,    Shape_Leng,     Shape_Length,       Shape_Area 
 # value       :        29,        122, Porcupine, Summer Range, 1511342.57305, 1568629.41263943, 73550115378.1924 
 
-### HOW DO I OVERLAY A RASTER WITH A POLYGON? -----
+### HOW DO I OVERLAY A RASTER layer WITH A spatial POLYGON? -----
+# https://rspatial.org/raster/rosu/Chapter11.html 
+library(rspatial)
+library(maptools)
+library(rgeos)
 
+projection(plant_agb_p2_5)
+projection(range)
+# same projection
 
+range <- spTransform(range, crs(plant_agb_p2_5))
 
+plot(plant_agb_p2_5)
+plot(range, add = TRUE)
+e <- extract(plant_agb_p2_5, range)
+
+# Cropping plant map to range -----
+cropped <- crop(plant_agb_p2_5, range)
+masked <- mask(cropped, range)
+plot(masked)
+plot(range, add=T)
