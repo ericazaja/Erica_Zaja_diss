@@ -10,9 +10,9 @@
 
 #### Objectives:
 
-•	Study the relationships between temperature, precipitation, phenology and shrub change.
+•	Study the relationships between temperature, precipitation, phenology and shrub cover.
 
-•	Compare landscape and plot-based shrub cover estimates.
+•	Compare landscape and plot-based vegetation cover estimates.
 
 *****************
 

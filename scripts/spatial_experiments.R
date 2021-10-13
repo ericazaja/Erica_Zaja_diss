@@ -125,6 +125,7 @@ plot(range)
 
 ### HOW DO I OVERLAY A RASTER layer WITH A spatial POLYGON? -----
 # https://rspatial.org/raster/rosu/Chapter11.html 
+## look into SpTransform
 library(rspatial)
 library(maptools)
 library(rgeos)
