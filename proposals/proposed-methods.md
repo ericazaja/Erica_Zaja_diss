@@ -145,17 +145,17 @@
 
 ### Datasets:
 
-●	Shrub cover - Berner et al. shrub cover map: https://arcticdata.io/catalog/view/doi%3A10.18739%2FA25Q4RN03 
+• Shrub cover - Berner et al. shrub cover map: https://arcticdata.io/catalog/view/doi%3A10.18739%2FA25Q4RN03 
 
-●	Climate - Chelsa data, climatology and climate change 
+• Climate - Chelsa data, climatology and climate change 
 -	average mean summer temperature per year (1979-2013) 
 -	average mean precipitation per year (1979-2013) 
 
 OR Google Earth + CRU temeprature and precipitation data 
 
-●	Vegetation (shrub, moss, lichen, forbs) and phenology data from ITEX TeamDivHub repo (https://github.com/ShrubHub/TundraDivHub)
+•	Vegetation (shrub, moss, lichen, forbs) and phenology data from ITEX TeamDivHub repo (https://github.com/ShrubHub/TundraDivHub)
 
-●	PCH summer range from https://catalog.data.gov/dataset?q=porcupine+caribou+herd&sort=score+desc%2C+name+asc&as_sfid=AAAAAAVkyuEO6_imG5g3XShopgdatMrb4oxngePMAutcoIVz3ASylYJjWYpD6RDzHFYR7TU6p8EQPOMpUnfy0wIO5RNYjwVv-lUbSPUr6GM3EjK8UKRhsj1oKIz_dnsIy3BxCC8%3D&as_fid=ac32b54adbfcdcdf8dbd1bed5ffe7f3a2be82a89 
+•	PCH summer range from https://catalog.data.gov/dataset?q=porcupine+caribou+herd&sort=score+desc%2C+name+asc&as_sfid=AAAAAAVkyuEO6_imG5g3XShopgdatMrb4oxngePMAutcoIVz3ASylYJjWYpD6RDzHFYR7TU6p8EQPOMpUnfy0wIO5RNYjwVv-lUbSPUr6GM3EjK8UKRhsj1oKIz_dnsIy3BxCC8%3D&as_fid=ac32b54adbfcdcdf8dbd1bed5ffe7f3a2be82a89 
 
 ● Phenology.....?
 
