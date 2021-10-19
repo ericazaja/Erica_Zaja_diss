@@ -52,7 +52,10 @@
 -	lmer(shrub_presence ~ avg_precipitation + (1|region/plot))
 
 ##### Questions:
-•	CHELSA Data stops at 2013…? If it’s an issue I can: Download Google Earth Pro + from CRU website download kml file. Open CRU into Google Earth, divide area into plots and extract temp and precipitation data OR Use climatologies for temperature and precipitation? 
+•	CHELSA Data stops at 2013…? If it’s an issue I can: Download Google Earth Pro + from CRU website download kml file. Open CRU into Google Earth, divide area into plots and extract temp and precipitation data OR Use climatologies for temperature and precipitation?
+
+###JoeEverest: I think you will be fine to use the CHELSA BioClimate variables even though it appears the data used to calculate some of them only goes up to 2013(?). You aren't looking at change over time for this question and the pattern of what sites are warmer/wetter is unlikely to have changed dramatically since then so I think they will be fine.
+
 ##Mariana: there are 2 types of data: climatologies (means over the whole 1978-2013 period) and timeseries, which I think also stop in 2013, or at least the first version did. CRU might be a good alternative, or check out version 2 of CHELSA which might have an extended time period now.
 
 •	Need to understand how to divide map into polygons, how to make plots (how many/how big), point extract from grid (?), random sampling?
@@ -75,6 +78,8 @@
 
 ##### Questions:
 •	How do I relate NDVI to shrub? NDVI doesnt discriminate veg types...
+
+###JoeEverest: Good question but with Q1, you already identified what areas comprise shrub cover so perhaps you can just look at NDVI change in these regions, then you can (fairly) confidently say you are looking at vegetation change in regions of shrub cover?
 
 ##Mariana: I am not very familiar with NDVI, but I would imagine there might be a colour band that could be different from shrubs to graminoids/forbs? I guess the majority or the stronger signals you'll pick up will come from shrubs, as the main structural unit in the tundra. But probably a good question for NDVI folks!
 
@@ -116,6 +121,9 @@
 
 ##### Questions:
 •	Need to pick main functional classes of vegetation (moss, lichen, forbs, shrub) picking from diet of caribou 
+
+###JoeEverest: I don't necessarily have many great suggestions here for solving this issue, just to say that the ITEX data on vascular plants (forbs/shrubs/graminoids) is considerably better than it is for non-vascular plants (lichen/moss). Mariana and I are only using the vascular plant data in our studies as its coverage is considerably better but I'm not sure about the feasability of this for your questions as I know nothing about caribou diets I'm afraid!
+
 ##Mariana: just as a little note, the non-vasculars are not consistently recorded in ITEX. Some sites have them, others not at all, others have recorded them simply as "moss", and then others are identified to genus/family level. You can check out how the data looks like for ANWR, it might be one of the good sites?
 
 • Compare with NDVI ? 
@@ -167,5 +175,6 @@ OR Google Earth + CRU temeprature and precipitation data
 •	PCH summer range from https://catalog.data.gov/dataset?q=porcupine+caribou+herd&sort=score+desc%2C+name+asc&as_sfid=AAAAAAVkyuEO6_imG5g3XShopgdatMrb4oxngePMAutcoIVz3ASylYJjWYpD6RDzHFYR7TU6p8EQPOMpUnfy0wIO5RNYjwVv-lUbSPUr6GM3EjK8UKRhsj1oKIz_dnsIy3BxCC8%3D&as_fid=ac32b54adbfcdcdf8dbd1bed5ffe7f3a2be82a89 
 
 ● Phenology.....?
+###JoeEverest: I'm not very familiar with it but does Logan's shrub cover map have different covers for different years or is it just one map of shrub cover averaged across the 2007-2016 period? I think either way it likely doesn't cover the 2018 period so maybe the best way of getting at this question would be to look at NDVI (or your chosen vegetation cover index) in the specified years throughout the areas of shrub cover that overlap the areas known to be calving grounds and try and get at the question that way?
 
 
