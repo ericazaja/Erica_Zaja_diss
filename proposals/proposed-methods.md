@@ -54,6 +54,8 @@
 ##### Questions:
 •	CHELSA Data stops at 2013…? If it’s an issue I can: Download Google Earth Pro + from CRU website download kml file. Open CRU into Google Earth, divide area into plots and extract temp and precipitation data OR Use climatologies for temperature and precipitation? 
 
+###JoeEverest: I think you will be fine to use the CHELSA BioClimate variables even though it appears the data used to calculate some of them only goes up to 2013(?). You aren't looking at change over time for this question and the pattern of what sites are warmer/wetter is unlikely to have changed dramatically since then so I think they will be fine.
+
 •	Need to understand how to divide map into polygons, how to make plots (how many/how big), point extract from grid (?), random sampling?
 
 *********
@@ -74,6 +76,8 @@
 
 ##### Questions:
 •	How do I relate NDVI to shrub? NDVI doesnt discriminate veg types...
+
+###JoeEverest: Good question but with Q1, you already identified what areas comprise shrub cover so perhaps you can just look at NDVI change in these regions, then you can (fairly) confidently say you are looking at vegetation change in regions of shrub cover?
 
 •	Logan's R package?
 
@@ -110,7 +114,9 @@
 - lm(forbs_cover ~ year)
 
 ##### Questions:
-•	Need to pick main functional classes of vegetation (moss, lichen, forbs, shrub) picking from diet of caribou 
+•	Need to pick main functional classes of vegetation (moss, lichen, forbs, shrub) picking from diet of caribou
+
+###JoeEverest: I don't necessarily have many great suggestions here for solving this issue, just to say that the ITEX data on vascular plants (forbs/shrubs/graminoids) is considerably better than it is for non-vascular plants (lichen/moss). Mariana and I are only using the vascular plant data in our studies as its coverage is considerably better but I'm not sure about the feasability of this for your questions as I know nothing about caribou diets I'm afraid!
 
 • Compare with NDVI ? 
 
@@ -159,4 +165,4 @@ OR Google Earth + CRU temeprature and precipitation data
 
 ● Phenology.....?
 
-
+###JoeEverest: I'm not very familiar with it but does Logan's shrub cover map have different covers for different years or is it just one map of shrub cover averaged across the 2007-2016 period? I think either way it likely doesn't cover the 2018 period so maybe the best way of getting at this question would be to look at NDVI (or your chosen vegetation cover index) in the specified years throughout the areas of shrub cover that overlap the areas known to be calving grounds and try and get at the question that way?
