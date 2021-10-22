@@ -10,18 +10,20 @@ Repository includes: datasets, figures, R scripts, statistical output, Markdown 
 #### Repository Structure
 - #### [datasets](https://github.com/ericazaja/dissertation/tree/main/datasets):
 
-a) [PCH_data](https://github.com/ericazaja/dissertation/tree/main/datasets/PCH_data): PCH summer range (Data.gov, 2013)
+  - [PCH_data](https://github.com/ericazaja/dissertation/tree/main/datasets/PCH_data): PCH summer range (Data.gov, 2013)
 
-b) [berner_data](https://github.com/ericazaja/dissertation/tree/main/datasets/berner_data): North Slope of Alaska shrub map (Berner et al, 2021)
+  - [berner_data](https://github.com/ericazaja/dissertation/tree/main/datasets/berner_data): North Slope of Alaska shrub map (Berner et al, 2021)
 
-c) [ITEX_data](https://github.com/ericazaja/dissertation/tree/main/datasets/ITEX_data): vegetation cover plot-based data 
+  - [ITEX_data](https://github.com/ericazaja/dissertation/tree/main/datasets/ITEX_data): vegetation cover plot-based data 
 
-d) [phenology_data](https://github.com/ericazaja/dissertation/tree/main/datasets/phenology_data): phenology data (Prevéy et al, 2021)
+  - [phenology_data](https://github.com/ericazaja/dissertation/tree/main/datasets/phenology_data): phenology data (Prevéy et al, 2021)
 
-e) [climate_data](): CHELSA temperature and precipitation data 
+  - [climate_data](): CHELSA temperature and precipitation data 
 
-f) [anna_data](https://github.com/ericazaja/dissertation/tree/main/datasets/anna_data): data used for model RMarkdown dissertation - **NOT** actual data I need 
+  - [anna_data](https://github.com/ericazaja/dissertation/tree/main/datasets/anna_data): data used for model RMarkdown dissertation - **NOT** actual data I need 
 
+- #### [scripts](https://github.com/ericazaja/dissertation/tree/main/scripts):
+  - for now contains experimental analyses (rubbish), please ignore
 
 - #### [img](https://github.com/ericazaja/dissertation/tree/main/img):
   - figures produced 
