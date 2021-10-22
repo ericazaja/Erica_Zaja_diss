@@ -66,12 +66,13 @@
 
 ##### Methods: 
 1.	Get NDVI values in the caribou summer range using Logan's IsatTS package
-2.	Plot mean NDVI (+/- S.E.) over time (2007-2016). 
-3.	Calculate percentage change in NDVI over the timeline. 
+2. Get trends in NDVI over time period and see if greening/browning/no trend? 
+3.	Plot NDVI over time/make map of NDVI trends.
+4.	Calculate percentage change in NDVI over the timeline. 
 
 ##### Results and Figures:
--	Result is a % increase or decrease in NDVI over the 2007-2016 period.
--	Figure 2: Point-plot (point +/- S.E.): years on x axis and NDVI estimates on y axis.
+-	Result is a % increase or decrease in NDVI over the 2007-2016 period. or more like trend..? 
+-	Figure 2: Point-plot (point +/- S.E.): years on x axis and NDVI estimates on y axis. // MAP of NDVI trends in PCH summer range
 
 ##### Stats Analysis: 
 -	lmer(avg_NDVI ~ year + (1|region/plot))
