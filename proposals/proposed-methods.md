@@ -21,7 +21,7 @@
 ### Q1: How much of the PCH Alaska summer range is shrub cover? 
 
 ##### Methods
-1.	Overlay shrub map of North Slope of Alaska of 2016 (Berner et al., 2021) over caribou summer range data 1983 - 2001 (Griffith, 2002). 
+1.	Overlay shrub map of North Slope of Alaska of 2016 (Berner et al., 2021) over caribou summer range data 1983 - 2001 (Data.gov, 2013). 
 2.	Crop shrub map to caribou summer range.
 3.	Estimate shrub % cover within the PCH range.
 
@@ -65,7 +65,7 @@
 ### Q3: How much vegetation change has occurred in the PCH Alaska summer range? - Change in NDVI (2007 to 2016)
 
 ##### Methods: 
-1.	Get NDVI values in the caribou summer range.
+1.	Get NDVI values in the caribou summer range using Logan's IsatTS package
 2.	Plot mean NDVI (+/- S.E.) over time (2007-2016). 
 3.	Calculate percentage change in NDVI over the timeline. 
 
@@ -82,8 +82,6 @@
 ###JoeEverest: Good question but with Q1, you already identified what areas comprise shrub cover so perhaps you can just look at NDVI change in these regions, then you can (fairly) confidently say you are looking at vegetation change in regions of shrub cover?
 
 ##Mariana: I am not very familiar with NDVI, but I would imagine there might be a colour band that could be different from shrubs to graminoids/forbs? I guess the majority or the stronger signals you'll pick up will come from shrubs, as the main structural unit in the tundra. But probably a good question for NDVI folks!
-
-•	Logan's R package?
 
 
 ****************
@@ -105,7 +103,7 @@
 ### Q5: Do plot-based estimates of vegetation change match with landscape scale estimates?
 
 ##### Methods: 
-1.	Plot vegetation change (cover of moss, lichen, shrubs, forbs) in the Arctic National Wildlife Refuge (ANWR) over time, using ITEX data that Mariana cleaned. 
+1.	Plot vegetation change (cover of moss, lichen, shrubs, forbs) in the Arctic National Wildlife Refuge (ANWR) over time, using ITEX data 
 
 ##Mariana: just remember that I retained vascular plants only in the newish ITEX dataset, so you'll have to change the cleaning process to retain mosses and lichens in! Also, for the sake of completion you could look at the trends in graminoids as well, unless you have a reason not to? If you wanted to, they are quite well recorded in the ITEX dataset.
 
@@ -126,7 +124,7 @@
 
 ##Mariana: just as a little note, the non-vasculars are not consistently recorded in ITEX. Some sites have them, others not at all, others have recorded them simply as "moss", and then others are identified to genus/family level. You can check out how the data looks like for ANWR, it might be one of the good sites?
 
-• Compare with NDVI ? 
+• Compare plot data with NDVI ? 
 ##Mariana: this sounds good, I could see a figure with a scatterplot and two trend lines comparing the trajectory of the two different types of data. Or if that's too many figures you can always send it to the Appendix or make a table :)
 
 •	for stats: extract slopes from linear models, and plot cover change variable over time (and space?).
@@ -135,8 +133,10 @@
 
 ### Q6: What are the early versus late phenology years in the PCH Alaska summer range region? 
 
+###### NB not exactly IN the PCH summer range. But I can get data from Toolik lake, Qikiqtaruk (close enough to PCH summer range) and perhaps Atqasuk, Utqiaġvik that are on the North slope
+
 ##### Methods:
-1.	Pick a phenology variable (eg. 50% max NDVI, first salix leaf bud appearance) from ITEX phenology data. 
+1.	Pick a phenology variable (eg. 50% max NDVI, first salix leaf bud appearance) from ITEX phenology data (Prevéy et al, 2021). 
 2.	Plot phenology variable over time: phenology variable on the y , Day of year DOI on x
 3.	Determine in which year phenology variable is earliest VS latest in the year
 
@@ -144,10 +144,6 @@
 -	Results: early year = , late year = 
 -	Make a threshold (‘first leaf bud after day n is late phenology year’)
 -	Figure: phenology variable over time 
-
-##### Questions:
-• Not sure about ITEX phenology data availability. Would be amazing to get ITEX data from the Arctic National Wildlife Refuge. 
-##Mariana: unfortunately I don't think there's any phenology data in the ITEX dataset at the moment. I think there is a separate phenology dataset that was managed by Courtney Collins, so maybe Isla can point you in the direction of the latest version of the data?
 
 • library(esquisse)
 
@@ -158,9 +154,13 @@
 ###### confused about this one
 - paper: https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15682 
 
+###JoeEverest: I'm not very familiar with it but does Logan's shrub cover map have different covers for different years or is it just one map of shrub cover averaged across the 2007-2016 period? I think either way it likely doesn't cover the 2018 period so maybe the best way of getting at this question would be to look at NDVI (or your chosen vegetation cover index) in the specified years throughout the areas of shrub cover that overlap the areas known to be calving grounds and try and get at the question that way?
+
 **************
 
 ### Datasets:
+
+•	PCH summer range  https://catalog.data.gov/dataset?q=porcupine+caribou+herd&sort=score+desc%2C+name+asc&as_sfid=AAAAAAVkyuEO6_imG5g3XShopgdatMrb4oxngePMAutcoIVz3ASylYJjWYpD6RDzHFYR7TU6p8EQPOMpUnfy0wIO5RNYjwVv-lUbSPUr6GM3EjK8UKRhsj1oKIz_dnsIy3BxCC8%3D&as_fid=ac32b54adbfcdcdf8dbd1bed5ffe7f3a2be82a89 
 
 • Shrub cover - Berner et al. shrub cover map: https://arcticdata.io/catalog/view/doi%3A10.18739%2FA25Q4RN03 
 
@@ -172,9 +172,11 @@ OR Google Earth + CRU temeprature and precipitation data
 
 •	Vegetation (shrub, moss, lichen, forbs) and phenology data from ITEX TeamDivHub repo (https://github.com/ShrubHub/TundraDivHub)
 
-•	PCH summer range from https://catalog.data.gov/dataset?q=porcupine+caribou+herd&sort=score+desc%2C+name+asc&as_sfid=AAAAAAVkyuEO6_imG5g3XShopgdatMrb4oxngePMAutcoIVz3ASylYJjWYpD6RDzHFYR7TU6p8EQPOMpUnfy0wIO5RNYjwVv-lUbSPUr6GM3EjK8UKRhsj1oKIz_dnsIy3BxCC8%3D&as_fid=ac32b54adbfcdcdf8dbd1bed5ffe7f3a2be82a89 
+•	Phenology - Prevéy et al, 2021: 
+https://cdnsciencepub.com/doi/abs/10.1139/AS-2020-0041
 
-● Phenology.....?
-###JoeEverest: I'm not very familiar with it but does Logan's shrub cover map have different covers for different years or is it just one map of shrub cover averaged across the 2007-2016 period? I think either way it likely doesn't cover the 2018 period so maybe the best way of getting at this question would be to look at NDVI (or your chosen vegetation cover index) in the specified years throughout the areas of shrub cover that overlap the areas known to be calving grounds and try and get at the question that way?
+• NDVI (IsatTS package by Logan Berner)
+https://github.com/logan-berner/lsatTS 
+
 
 
