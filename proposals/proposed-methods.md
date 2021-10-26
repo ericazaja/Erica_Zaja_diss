@@ -48,8 +48,11 @@
 -	Figure 2: facet (2a and 2b) boxplot with shrub (yes or no BINARY data) x axis and average temperatures (a) and precipitation (b) on y axes (continuous variable).
 
 ##### Stats Analysis: 
--	lmer(shrub_presence ~ avg_temperature + (1|region/plot))
--	lmer(shrub_presence ~ avg_precipitation + (1|region/plot))
+- Asking whether the probability of having shrub cover is significantly different based on (climatic) region (?)
+-	glm(shrub_presence ~ avg_temperature + (1|region/plot), family = binomial)
+-	glm(shrub_presence ~ avg_precipitation + (1|region/plot), family = binomial)
+
+- NB region and plot catgorical
 
 ##### Questions:
 •	CHELSA Data stops at 2013…? If it’s an issue I can: Download Google Earth Pro + from CRU website download kml file. Open CRU into Google Earth, divide area into plots and extract temp and precipitation data OR Use climatologies for temperature and precipitation?
