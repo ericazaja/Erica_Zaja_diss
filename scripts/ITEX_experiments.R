@@ -60,7 +60,7 @@ lm_forb <- lm(ForbCover~YEAR, data = ANWR_veg)
 summary(lm_forb)
 # F-statistic: 4.148 on 1 and 1118 DF,  p-value: 0.04191
 
-## put them all in same graph ! See OBAN project
-
+## put them all in same graph !
+# facet? or panel
 
 
