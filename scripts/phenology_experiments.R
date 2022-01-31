@@ -26,3 +26,13 @@ min(phenology_data$year)
 max(phenology_data$year)
 
 unique(phenology_data$study_area) # Unique site names
+
+# Retaining only locations on Alaskan north slope or close to PCH range
+phenology_new <- phenology_data %>%
+  filter(study_area %in% c("Atqasuk", "Toolik Lake","Qikiqtaruk", "Utqiagvik"))
+
+unique(phenology_new$study_area) # Unique site names
+unique(phenology_new$functional_group) # Unique site names
+unique(phenology_new$phenophase) # Unique site names
+
+
