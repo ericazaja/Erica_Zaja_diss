@@ -44,7 +44,7 @@ range(ANWR_veg$YEAR)
 ### Shrub cover over time  ----
 (ggplot(ANWR_veg, aes(x = YEAR, y = ShrubMean))+
   geom_point(size = 2) +
-  geom_smooth(method = "lm")+ bio.theme)
+  geom_smooth(method = "lm") + bio.theme)
 ## Shrub cover increasing 
 
 lm_shrub <- lm(ShrubMean~YEAR, data = ANWR_veg)
