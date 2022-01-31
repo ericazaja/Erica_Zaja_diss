@@ -2,7 +2,7 @@
 #                                                          #
 ####         ITEX VEG COVER EXPERIMENTS -----             ##
 #               Erica Zaja - 22/10/2021                   ##
-#                                                         #
+#                                                         ##
 ##%######################################################%##
 
 # Loading libraries ----
@@ -21,57 +21,77 @@ load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/pfplot_all.RData"
 load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/pfxy_all.RData")
 load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/other_all.RData")
 qhi_add <- read.csv("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/qhi_pf_fixed_forreal.csv")
+load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_EZ_diss.RData")
 
 
 # DATA WRANGLING ----
 ## NB the mosses and lichens might be not well recorded, check for ANWR
 
 ## Exploration --
-max(itex.full11$YEAR) # latest year
-min(itex.full11$YEAR) # earliest year
-unique(itex.full11$SITE) # Unique site names
+max(ITEX_EZ_diss$YEAR) # latest year
+min(ITEX_EZ_diss$YEAR) # earliest year
+unique(ITEX_EZ_diss$SITE) # Unique site names
 
 # Retaining only Arctic National Wildlife Refuge (ANWR) site 
-ANWR_veg <- itex.full11 %>%
+ANWR_veg <- ITEX_EZ_diss %>%
   filter(SITE=="ANWR")
 
 # Range of years 
 range(ANWR_veg$YEAR) 
 # 1997-2007
 
+# Plotting mean cover per plot over time (more representative of FG cover over time)
 ### Shrub cover over time  ----
 (ggplot(ANWR_veg, aes(x = YEAR, y = ShrubMean))+
   geom_point(size = 2) +
-  geom_smooth(method = "lm"))
+  geom_smooth(method = "lm")+ bio.theme)
 ## Shrub cover increasing 
 
 lm_shrub <- lm(ShrubMean~YEAR, data = ANWR_veg)
 summary(lm_shrub)
-# F-statistic: 6.008 on 1 and 1118 DF,  p-value: 0.01439
 
 ### Graminoid cover over time  ----
 (ggplot(ANWR_veg, aes(x = YEAR, y = GraminoidMean))+
    geom_point(size = 2) +
-   geom_smooth(method = "lm"))
+   geom_smooth(method = "lm") + bio.theme)
 ## Graminoid cover decreasing
 
 lm_graminoid <- lm(GraminoidMean~YEAR, data = ANWR_veg)
 summary(lm_graminoid)
-# F-statistic: 10.61 on 1 and 1118 DF,  p-value: 0.001158
 
 ### Forb cover over time  ----
 (ggplot(ANWR_veg, aes(x = YEAR, y = ForbMean))+
    geom_point(size = 2) +
-   geom_smooth(method = "lm"))
+   geom_smooth(method = "lm") + bio.theme)
 ## Forb cover increasing
 
 lm_forb <- lm(ForbMean~YEAR, data = ANWR_veg)
 summary(lm_forb)
-# F-statistic: 7.297 on 1 and 1118 DF,  p-value: 0.007012
+
+### Moss cover over time  ----
+(ggplot(ANWR_veg, aes(x = YEAR, y = MossMean))+
+    geom_point(size = 2) +
+    geom_smooth(method = "lm") + bio.theme)
+## Moss cover decreasing
+
+lm_moss <- lm(MossMean~YEAR, data = ANWR_veg)
+summary(lm_moss)
+
+### Lichen cover over time  ----
+(ggplot(ANWR_veg, aes(x = YEAR, y = LichenMean))+
+    geom_point(size = 2) +
+    geom_smooth(method = "lm") + bio.theme)
+## LIchen cover increasing
+
+lm_lichen<- lm(LichenMean~YEAR, data = ANWR_veg)
+summary(lm_lichen)
+
 
 ## put them all in same graph !
 # facet? or panel
 
+
+#####################################################################################
 
 ##### COPY OF MARIANA's CLEANING SCRIPT ------
 ## Biodiversity dynamics across a warming tundra
@@ -79,10 +99,10 @@ summary(lm_forb)
 ## Script 1. ITEX data cleaning - updated ITEX
 ## August 2021
 
-## FUNCTIONS ----
+## FUNCTIONS 
 `%notin%` <- Negate(`%in%`)
 
-## THEME ----
+## THEME 
 bio.theme <- theme(legend.position = "right",
                    axis.title.x = element_text(face="bold", size=20),
                    axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
@@ -107,7 +127,7 @@ qhi_add2 <- dplyr::select(qhi_add, -c(X.1, X.2))
 pfxy_all2 <- rbind(pfxy_all, qhi_add2)
 glimpse(pfxy_all2)
 
-## FILTERING ----
+## FILTERING 
 
 # We need to clean up separately before converting to cover and then binding
 # because the dataframes have different structures
@@ -165,14 +185,14 @@ pfxy_all2c <- pfxy_all2b %>% filter(HIT != "sum" | is.na(HIT))
 pfplot_all2b <- rbind(pfplot_all2, summed)
 
 
-## COVER ----
+## COVER
 
 # Do the cover values add up to 100?
 cov <- perccov_all2 %>% filter(ValueType == "percent_cover") %>% 
    group_by(SiteSubsitePlotYear) %>% summarise(sum = sum(ABUNDANCE))
 # Quite a lot of values over 100 so they need to be made proportional too so all values are comparable
 
-#### Cover-equivalent ####
+#### Cover-equivalent
 
 # Confirm that 1 row = 1 species
 cov.test <- perccov_all2 %>% group_by(SiteSubsitePlotYear) %>% 
@@ -230,7 +250,7 @@ cov.check <- itex.cov %>% group_by(SiteSubsitePlotYear) %>%
    distinct(SiteSubsitePlotYear, .keep_all = TRUE)
 
 
-#### Point-framing (summed) ####
+#### Point-framing (summed) 
 
 # Confirm that 1 row = 1 species
 pfsum.test <- pfplot_all2b %>% group_by(SiteSubsitePlotYear) %>% 
@@ -285,7 +305,7 @@ pfsum.check <- itex.pfsum %>% group_by(SiteSubsitePlotYear) %>%
    distinct(SiteSubsitePlotYear, .keep_all = TRUE)
 
 
-#### Point-framing (XY) ####
+#### Point-framing (XY) 
 
 # There are XY data that only have one coordinate - I'm filling in the NA cell so we avoid problems with cover calculation
 na.x <- pfxy_all2c %>% filter(is.na(X)) # all filled in
@@ -318,7 +338,7 @@ pfxy.check <- pfxy_all_cov %>% group_by(SiteSubsitePlotYear) %>%
    distinct(SiteSubsitePlotYear, .keep_all = TRUE)
 
 
-## BINDING ----
+## BINDING 
 
 # Keep same number of relevant columns
 itex.cov.f <- itex.cov %>% dplyr::select(., -c(TotalAbundance, ABUNDANCE))
@@ -332,7 +352,7 @@ itex.all0 <- rbind(itex.cov.f, itex.pfsum.f, pfxy_all_cov.f) #78357
 itex.all <- itex.all0 %>% mutate_at(vars(RelCover), ~replace(., is.nan(.), 0))
 
 
-## SITE CHECKS ----
+## SITE CHECKS 
 
 # Remove everything in the southern hemisphere, Tibet and Mongolia out because they are more meadow than tundra
 rmbl <- itex.all %>% filter(SITE == "RMBL")
@@ -391,7 +411,7 @@ nosize.abc <- sort(unique(nosize$SiteSubsite))
 # I confirm that the missing info is not in the previous version of ITEX as these are new sites
 # I am leaving DISKO with no coordinates as we know it's in Greenland. It will probably disappear from the models with latitude though.
 
-## SPOT CHECKS ----
+## SPOT CHECKS 
 hist(itex.full2$LAT) # makes sense
 hist(itex.full2$LONG) # ok
 unique(itex.full2$SiteSubsitePlot)
@@ -413,7 +433,7 @@ klein <- filter(itex.full2, SiteSubsitePlot %in% klein.vector) # starts in 1995 
 
 
 
-## SPECIES NAMES ----
+## SPECIES NAMES 
 spp <- unique(itex.full2$SPECIES_NAME)
 
 # Identify empty species names
@@ -490,7 +510,7 @@ itex.full5 <- itex.full4 %>%
 spppp <- unique(itex.full5$SPECIES_NAME)
 
 
-## GEO DATA ----
+## GEO DATA 
 
 # Specify Region
 eurasia <- c("ABISKO", "BILLEFJORDEN", "DOVRE", "ENDALEN", "FINSE", "FURI", "KILPISJARVI", "LATNJA", "LOGH", "LORI", 
@@ -517,7 +537,7 @@ itex.full6 <- itex.full5 %>%
 
 
 
-## MORPHOSPECIES ----
+## MORPHOSPECIES
 length(unique(itex.full6$SiteSubsitePlotYear)) # 6859 plotXyear in total
 
 # Check the unidentified species names
@@ -550,7 +570,7 @@ morpho25.vec <- unique(morpho25$SiteSubsitePlotYear)
 itex.full7 <- itex.full6 %>% filter(SiteSubsitePlotYear %notin% morpho25.vec)
 
 
-## FG-DOMINATION ----
+## FG-DOMINATION
 
 # Add % cover per functional group & specify dominant FG
 itex.full8 <- itex.full7 %>% 
