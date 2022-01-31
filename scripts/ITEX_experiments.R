@@ -125,7 +125,7 @@ unique(pfxy_all2$GFNARROWwalker)
 
 # Vector for target functional groups 
 fg <- c("FORB", "SEVER", "SDECI", "SHRUBU", "SHRUB", "GRAMINOIDU", "GRASS", "SEDGE", "RUSH", "GRAMU", 
-        "MOSSU", "LICHENU", "MACRO","MPLEU", "SPHAG")
+        "MOSSU", "LICHENU", "MACRO","MPLEU", "SPHAG", "BRYOPH", "LFRUT", "LCRUS", "LFOLI")
 
 # Keep only control plots and alive vascular plants, create unique plotXyear ID
 perccov_all2 <- perccov_all %>% filter(STATUS == "LIVE") %>% 
@@ -198,7 +198,6 @@ dif2 <- dif %>% filter(SiteSubsitePlotYear %notin% emp.vector) %>%
 # One site has duplicate values: all records have exactly the same values twice
 barrow.dup <- dif %>% filter(SiteSubsitePlotYear == "BARROW:CAREX_MOIST_MEADOW_MICROTOPO:BC02.5:1999") %>% 
    distinct(SPECIES_NAME, .keep_all = TRUE)
-
 
 # Dataframes to merge:
 
@@ -563,7 +562,9 @@ itex.full8 <- itex.full7 %>%
                              ValueType %in% c("pf_all_XY", "pf_top_XY", "pf_topbot_XY") ~ "Point-framing (XY)")) %>%
    mutate(FuncGroup = case_when(GFNARROWwalker %in% c("SEVER", "SDECI") ~ "Shrub",
                                 GFNARROWwalker == "FORB" ~ "Forb",
-                                GFNARROWwalker %in% c("RUSH", "SEDGE", "GRASS", "GRAMINOIDU", "GRAMU") ~ "Graminoid")) %>%
+                                GFNARROWwalker %in% c("RUSH", "SEDGE", "GRASS", "GRAMINOIDU", "GRAMU") ~ "Graminoid",
+                                GFNARROWwalker %in% c("MACRO", "MPLEU", "MOSSU", "SPHAG", "BRYOPH") ~ "Moss",
+                                GFNARROWwalker %in% c("LCRUS", "LFOLI", "LICHENU", "LFRUT") ~ "Lichen")) %>%
    group_by(SiteSubsitePlotYear, FuncGroup) %>% 
    mutate(FuncPlotCover = sum(RelCover)) %>% ungroup() %>%
    mutate(DominatingFG = case_when(FuncPlotCover > 50 ~ paste0(FuncGroup, "-Dominated"), TRUE ~ "None")) # we need this column for homogeneization
@@ -578,9 +579,13 @@ dom.fg <- itex.full8 %>% distinct(SiteSubsitePlotYear, FuncGroup, .keep_all = TR
    pivot_wider(names_from = FuncGroup, values_from = FuncPlotCover, values_fill = list(FuncPlotCover = 0)) %>%
    mutate(DominatingFG = case_when(Shrub > 50 ~ "Shrub-Dominated",
                                    Graminoid > 50 ~ "Graminoid-Dominated",
-                                   Forb > 50 ~ "Forb-Dominated", TRUE ~ "None")) %>%
+                                   Forb > 50 ~ "Forb-Dominated",
+                                   Moss > 50 ~ "Moss-Dominated",
+                                   Lichen > 50 ~ "Lichen-Dominated",
+                                   TRUE ~ "None")) %>%
    rename(ShrubCover = Shrub) %>% rename(GraminoidCover = Graminoid) %>% 
-   rename(ForbCover = Forb) %>% rename(PlotDominatingFG = DominatingFG)
+   rename(ForbCover = Forb) %>% rename(LichenCover = Lichen) %>% rename(MossCover = Moss) %>%
+   rename(PlotDominatingFG = DominatingFG)
 
 # Join with full dataset
 itex.full9 <- left_join(itex.full8, dom.fg, by = "SiteSubsitePlotYear")
@@ -590,8 +595,9 @@ itex.full9 <- left_join(itex.full8, dom.fg, by = "SiteSubsitePlotYear")
 avg.fg <- itex.full9 %>% distinct(SiteSubsitePlotYear, .keep_all = TRUE) %>% 
    group_by(SiteSubsitePlot) %>% mutate(ShrubMean = mean(ShrubCover)) %>% 
    mutate(ForbMean = mean(ForbCover)) %>% mutate(GraminoidMean = mean(GraminoidCover)) %>%
+   mutate(MossMean = mean(MossCover)) %>% mutate(LichenMean = mean(LichenCover)) %>%
    distinct(SiteSubsitePlot, .keep_all = TRUE) %>% ungroup() %>%
-   dplyr::select(SiteSubsitePlot, ShrubMean, ForbMean, GraminoidMean)
+   dplyr::select(SiteSubsitePlot, ShrubMean, ForbMean, GraminoidMean, LichenMean, MossMean)
 
 # Join with main dataset
 itex.full10 <- left_join(itex.full9, avg.fg, by = "SiteSubsitePlot")
@@ -609,10 +615,10 @@ mean.rich <- itex.full100 %>% group_by(SiteSubsitePlotYear) %>%
    dplyr::select(SiteSubsitePlotYear, AnnualRichness, MeanRichness)
 
 # Join with main dataset
-itex.full11 <- left_join(itex.full100, mean.rich, by = "SiteSubsitePlotYear")
+ITEX_EZ_diss <- left_join(itex.full100, mean.rich, by = "SiteSubsitePlotYear")
 
 # Save full dataset
-# save(itex.full11, file = "~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/full_itex.RData") #52890
+save(ITEX_EZ_diss, file = "~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_EZ_diss.RData") #52890
 
 
 
