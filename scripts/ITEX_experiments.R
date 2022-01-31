@@ -23,15 +23,13 @@ load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/other_all.RData")
 qhi_add <- read.csv("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/qhi_pf_fixed_forreal.csv")
 
 
-# Data wrangling ----
-## Make sure I retain mosses and lichens, forbs, shrubs, graminoids in Arctic national wildlife refuge (ANWR)
+# DATA WRANGLING ----
 ## NB the mosses and lichens might be not well recorded, check for ANWR
 
-## Data exploration
+## Exploration --
 max(itex.full11$YEAR) # latest year
 min(itex.full11$YEAR) # earliest year
 unique(itex.full11$SITE) # Unique site names
-
 
 # Retaining only Arctic National Wildlife Refuge (ANWR) site 
 ANWR_veg <- itex.full11 %>%
@@ -126,7 +124,8 @@ unique(pfplot_all$GFNARROWwalker)
 unique(pfxy_all2$GFNARROWwalker)
 
 # Vector for target functional groups 
-fg <- c("FORB", "SEVER", "SDECI", "SHRUBU", "SHRUB", "GRAMINOIDU", "GRASS", "SEDGE", "RUSH", "GRAMU", "MOSSU", "LICHENU")
+fg <- c("FORB", "SEVER", "SDECI", "SHRUBU", "SHRUB", "GRAMINOIDU", "GRASS", "SEDGE", "RUSH", "GRAMU", 
+        "MOSSU", "LICHENU", "MACRO","MPLEU", "SPHAG")
 
 # Keep only control plots and alive vascular plants, create unique plotXyear ID
 perccov_all2 <- perccov_all %>% filter(STATUS == "LIVE") %>% 
@@ -349,11 +348,11 @@ itex.all2 <- itex.all %>% filter(SiteSubsite %notin% bad.subsites) %>% filter(SI
 
 # I have edited the metadata file manually so the subsites that didn't match up are similar now
 # mainly just adding an extra site name to the subsite column so they link up
-metadata0 <- read.csv("scripts/mgarciacriado/data/new_itex/TVC_SITE_SUBSITE_UPDATED2020_edited.csv")
+metadata0 <- read.csv("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/TVC_SITE_SUBSITE_UPDATED2020_edited.csv")
 
 # Keep only relevant columns
 metadata <- metadata0 %>% unite(SiteSubsite, c("SITE", "SUBSITE"), sep = ":", remove = FALSE) %>% 
-   select(SiteSubsite, COMMTYPE, LAT, LONG, ELEV, AZONE, SurveyedArea) %>% rename(MOISTURE = COMMTYPE)
+   dplyr::select(SiteSubsite, COMMTYPE, LAT, LONG, ELEV, AZONE, SurveyedArea) %>% rename(MOISTURE = COMMTYPE)
 
 # Merge with composition data
 itex.full <- left_join(itex.all2, metadata, by = "SiteSubsite")
@@ -392,8 +391,6 @@ nosize.abc <- sort(unique(nosize$SiteSubsite))
 
 # I confirm that the missing info is not in the previous version of ITEX as these are new sites
 # I am leaving DISKO with no coordinates as we know it's in Greenland. It will probably disappear from the models with latitude though.
-
-
 
 ## SPOT CHECKS ----
 hist(itex.full2$LAT) # makes sense
@@ -494,8 +491,6 @@ itex.full5 <- itex.full4 %>%
 spppp <- unique(itex.full5$SPECIES_NAME)
 
 
-
-
 ## GEO DATA ----
 
 # Specify Region
@@ -531,7 +526,7 @@ xxxtest <- itex.full6 %>%
    filter(str_detect(SPECIES_NAME, 'XXX|xxx')) %>% 
    group_by(SiteSubsitePlotYear) %>% 
    mutate(MorphoCover = sum(RelCover)) %>%
-   ungroup() %>% select(SiteSubsitePlotYear, MorphoCover) %>% 
+   ungroup() %>% dplyr::select(SiteSubsitePlotYear, MorphoCover) %>% 
    distinct(., .keep_all = TRUE)
 
 # 2170 unique plotXyear that contain morphospecies
@@ -556,7 +551,6 @@ morpho25.vec <- unique(morpho25$SiteSubsitePlotYear)
 itex.full7 <- itex.full6 %>% filter(SiteSubsitePlotYear %notin% morpho25.vec)
 
 
-
 ## FG-DOMINATION ----
 
 # Add % cover per functional group & specify dominant FG
@@ -576,11 +570,11 @@ itex.full8 <- itex.full7 %>%
 
 # Check plot-dominated functional groups - this leaves a row per siteXyear but not necessarily the dominating one
 dom <- itex.full8 %>% distinct(SiteSubsitePlotYear, .keep_all = TRUE) %>% 
-   select(SITE, SUBSITE, SiteSubsitePlot, SiteSubsitePlotYear, FuncGroup, FuncPlotCover, DominatingFG)
+   dplyr::select(SITE, SUBSITE, SiteSubsitePlot, SiteSubsitePlotYear, FuncGroup, FuncPlotCover, DominatingFG)
 
 # Long format: include all covers values per functional group 
 dom.fg <- itex.full8 %>% distinct(SiteSubsitePlotYear, FuncGroup, .keep_all = TRUE) %>% 
-   select(SiteSubsitePlotYear, FuncGroup, FuncPlotCover) %>%
+   dplyr::select(SiteSubsitePlotYear, FuncGroup, FuncPlotCover) %>%
    pivot_wider(names_from = FuncGroup, values_from = FuncPlotCover, values_fill = list(FuncPlotCover = 0)) %>%
    mutate(DominatingFG = case_when(Shrub > 50 ~ "Shrub-Dominated",
                                    Graminoid > 50 ~ "Graminoid-Dominated",
@@ -597,7 +591,7 @@ avg.fg <- itex.full9 %>% distinct(SiteSubsitePlotYear, .keep_all = TRUE) %>%
    group_by(SiteSubsitePlot) %>% mutate(ShrubMean = mean(ShrubCover)) %>% 
    mutate(ForbMean = mean(ForbCover)) %>% mutate(GraminoidMean = mean(GraminoidCover)) %>%
    distinct(SiteSubsitePlot, .keep_all = TRUE) %>% ungroup() %>%
-   select(SiteSubsitePlot, ShrubMean, ForbMean, GraminoidMean)
+   dplyr::select(SiteSubsitePlot, ShrubMean, ForbMean, GraminoidMean)
 
 # Join with main dataset
 itex.full10 <- left_join(itex.full9, avg.fg, by = "SiteSubsitePlot")
@@ -618,7 +612,7 @@ mean.rich <- itex.full100 %>% group_by(SiteSubsitePlotYear) %>%
 itex.full11 <- left_join(itex.full100, mean.rich, by = "SiteSubsitePlotYear")
 
 # Save full dataset
-save(itex.full11, file = "scripts/mgarciacriado/data/new_itex/full_itex.RData") #52890
+# save(itex.full11, file = "~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/full_itex.RData") #52890
 
 
 
