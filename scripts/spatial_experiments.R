@@ -98,13 +98,28 @@ projection(shrub_agb_p2_5)
 
 # Cropping shrub map to range -----
 cropped <- crop(shrub_agb_p2_5, PCH_core_range)
-plot(cropped, col = pal(3))
-
+plot(cropped,col = pal(3))
 pal <- colorRampPalette(c("tan","green", "green4")) # make it virdis
 
 
 plot(shrub_agb_p2_5)
 plot(PCH_core_range, add = TRUE) # adds range onto shrub map
+
+# Cropped map visualisation - with viridis colour ----
+(cropped_viridis <- gplot(cropped) +
+    geom_raster(aes(x = x, y = y, fill = value)) +
+    # value is the specific value (of reflectance) each pixel is associated with
+    scale_fill_viridis_c() +
+    coord_quickmap()+
+    theme_classic() +  # Remove ugly grey background
+    xlab("Longitude") +
+    ylab("Latitude") +
+    ggtitle("Shrub cover of the PCH alaskan range") +
+    theme(plot.title = element_text(hjust = 0.5),             # centres plot title
+          text = element_text(size=15),		       	    # font size
+          axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
+
+
 
 #e <- extract(shrub_agb_p2_5, PCH_core_range)
 zoom()
