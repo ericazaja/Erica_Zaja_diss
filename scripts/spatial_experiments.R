@@ -98,7 +98,24 @@ projection(shrub_agb_p2_5)
 
 # Cropping shrub map to range -----
 cropped <- crop(shrub_agb_p2_5, PCH_core_range)
-plot(cropped)
+plot(cropped, col = pal(3))
+
+pal <- colorRampPalette(c("tan","green", "green4"))
+
+r = raster(shrub_agb_p2_5) #raster object
+#preparing raster object to plot with geom_tile in ggplot2
+r_points = rasterToPoints(r)
+r_df = data.frame(r_points)
+head(r_df) #breaks will be set to column "layer"
+r_df$cuts=cut(r_df$layer,breaks=c(100,150,160,170,180,190,200)) #set breaks
+
+ggplot(data=r_df) + 
+  geom_tile(aes(x=x,y=y,fill=cuts)) + 
+  scale_fill_brewer("Legend_title",type = "seq", palette = "Greys") +
+  coord_equal() +
+  theme_bw() +
+  theme(panel.grid.major = element_blank()) +
+  xlab("Longitude") + ylab("Latitude")
 
 plot(shrub_agb_p2_5)
 plot(PCH_core_range, add = TRUE) # adds range onto shrub map
