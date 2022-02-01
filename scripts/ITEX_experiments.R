@@ -14,13 +14,6 @@ library(viridis)
 library(ggtern)
 
 # Loading data ----
-load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_ALL.RData")
-load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/full_itex_marianas_version_sept21.RData")
-load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/perccov_all.RData")
-load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/pfplot_all.RData")
-load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/pfxy_all.RData")
-load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/other_all.RData")
-qhi_add <- read.csv("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/qhi_pf_fixed_forreal.csv")
 load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_EZ_diss.RData")
 
 
@@ -40,55 +33,83 @@ ANWR_veg <- ITEX_EZ_diss %>%
 range(ANWR_veg$YEAR) 
 # 1997-2007
 
-# Plotting mean cover per plot over time (more representative of FG cover over time)
+### Setting theme
+shrub.theme <- theme(legend.position = "right",
+                   axis.title.x = element_text(face="bold", size=20),
+                   axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
+                   axis.title.y = element_text(face="bold", size=20),
+                   axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
+                   panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
+                   panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
+                   panel.background = element_blank(), axis.line = element_line(colour = "black"), 
+                   plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
+                   plot.margin = unit(c(1,1,1,1), units = , "cm"))
+
+# Plotting mean cover of diff functional groups (FG) 
+## per plot over time (more representative of FG cover over time)
+### Q: is plotting mean cover right? 
+
 ### Shrub cover over time  ----
-(ggplot(ANWR_veg, aes(x = YEAR, y = ShrubMean))+
+(shrub_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = ShrubMean))+
   geom_point(size = 2) +
-  geom_smooth(method = "lm") + bio.theme)
+  geom_smooth(method = "lm") + 
+     labs(y = "Mean shrub cover\n", x = "\nYear") + 
+     shrub.theme))
 ## Shrub cover increasing 
 
 lm_shrub <- lm(ShrubMean~YEAR, data = ANWR_veg)
-summary(lm_shrub)
+summary(lm_shrub) ## not sig.
 
 ### Graminoid cover over time  ----
-(ggplot(ANWR_veg, aes(x = YEAR, y = GraminoidMean))+
+(graminoid_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = GraminoidMean))+
    geom_point(size = 2) +
-   geom_smooth(method = "lm") + bio.theme)
+   geom_smooth(method = "lm") + 
+      labs(y = "Mean graminoid cover\n", x = "\nYear") +
+       shrub.theme))
 ## Graminoid cover decreasing
 
 lm_graminoid <- lm(GraminoidMean~YEAR, data = ANWR_veg)
-summary(lm_graminoid)
+summary(lm_graminoid) ## sig.
 
 ### Forb cover over time  ----
-(ggplot(ANWR_veg, aes(x = YEAR, y = ForbMean))+
+(forb_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = ForbMean))+
    geom_point(size = 2) +
-   geom_smooth(method = "lm") + bio.theme)
+   geom_smooth(method = "lm") + 
+      labs(y = "Mean forb cover\n", x = "\nYear") +
+      shrub.theme))
 ## Forb cover increasing
 
 lm_forb <- lm(ForbMean~YEAR, data = ANWR_veg)
-summary(lm_forb)
+summary(lm_forb) ## marginally sig.
 
 ### Moss cover over time  ----
-(ggplot(ANWR_veg, aes(x = YEAR, y = MossMean))+
+(moss_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = MossMean))+
     geom_point(size = 2) +
-    geom_smooth(method = "lm") + bio.theme)
+    geom_smooth(method = "lm") + 
+       labs(y = "Mean moss cover\n", x = "\nYear") +
+       shrub.theme))
 ## Moss cover decreasing
 
 lm_moss <- lm(MossMean~YEAR, data = ANWR_veg)
-summary(lm_moss)
+summary(lm_moss) ## not sig.
 
 ### Lichen cover over time  ----
-(ggplot(ANWR_veg, aes(x = YEAR, y = LichenMean))+
+(lichen_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = LichenMean))+
     geom_point(size = 2) +
-    geom_smooth(method = "lm") + bio.theme)
+    geom_smooth(method = "lm") + 
+       labs(y = "Mean lichen cover\n", x = "\nYear") +
+       shrub.theme))
 ## LIchen cover increasing
 
 lm_lichen<- lm(LichenMean~YEAR, data = ANWR_veg)
-summary(lm_lichen)
+summary(lm_lichen) ## sig. 
 
-
-## put them all in same graph !
-# facet? or panel
+## Panel
+library(gridExtra)  # For making panels
+library(ggpubr)  # For data visualisation formatting
+(veg_panel <- grid.arrange(arrangeGrob(shrub_scatter, forb_scatter, 
+                                       moss_scatter, lichen_scatter, 
+                                       graminoid_scatter,nrow = 2)))
 
 
 #####################################################################################
@@ -98,6 +119,16 @@ summary(lm_lichen)
 ## Mariana Garcia Criado
 ## Script 1. ITEX data cleaning - updated ITEX
 ## August 2021
+## modified by Erica Zaja - 01/02/2022
+
+### Data to be cleaned 
+load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_ALL.RData")
+load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/full_itex_marianas_version_sept21.RData")
+load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/perccov_all.RData")
+load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/pfplot_all.RData")
+load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/pfxy_all.RData")
+load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/other_all.RData")
+qhi_add <- read.csv("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/qhi_pf_fixed_forreal.csv")
 
 ## FUNCTIONS 
 `%notin%` <- Negate(`%in%`)
