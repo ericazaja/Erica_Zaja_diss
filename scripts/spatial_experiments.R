@@ -94,12 +94,12 @@ projection(shrub_agb_p2_5)
 
 (PCH_range_map <- ggplot() + 
   geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "green") + 
-  ggtitle("PCH core range 2016"))
+  ggtitle("PCH core range 2016")) ## doesnt work anymore?
 
 # Cropping shrub map to range -----
 cropped <- crop(shrub_agb_p2_5, PCH_core_range)
 plot(cropped,col = pal(3))
-pal <- colorRampPalette(c("tan","green", "green4")) # make it virdis
+pal <- colorRampPalette(c("tan","green", "green4"))
 
 
 plot(shrub_agb_p2_5)
@@ -109,7 +109,25 @@ plot(PCH_core_range, add = TRUE) # adds range onto shrub map
 (cropped_viridis <- gplot(cropped) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
-    scale_fill_viridis_c() +
+    scale_fill_viridis_c(limits = c(0, 1400), oob = scales::squish) +
+    coord_quickmap()+
+    theme_classic() +  # Remove ugly grey background
+    xlab("Longitude") +
+    ylab("Latitude") +
+    ggtitle("Shrub cover of the PCH alaskan range") +
+    theme(plot.title = element_text(hjust = 0.5),             # centres plot title
+          text = element_text(size=15),		       	    # font size
+          axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
+
+(cropped_viridis <- gplot(cropped) +
+    geom_raster(aes(x = x, y = y, fill = value)) +
+    # value is the specific value (of reflectance) each pixel is associated with
+    scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
+      ifelse(x<700, 
+             scales::rescale(x,
+                             to = to,
+                             from = c(min(x, na.rm = TRUE), 700)),
+             1)}) +
     coord_quickmap()+
     theme_classic() +  # Remove ugly grey background
     xlab("Longitude") +
@@ -149,4 +167,5 @@ plot(PCH_core_range, add = TRUE) # adds range onto shrub map
 dev.off()
 
 ### HOW DO I OVERLAY A RASTER layer WITH A spatial POLYGON? -----
+
 
