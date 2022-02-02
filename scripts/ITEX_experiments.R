@@ -12,6 +12,7 @@ library(brms)
 library(ggpubr)
 library(viridis)
 library(ggtern)
+library(lme4)
 
 # Loading data ----
 load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_EZ_diss.RData")
@@ -31,7 +32,28 @@ ANWR_veg <- ITEX_EZ_diss %>%
 
 # Range of years 
 range(ANWR_veg$YEAR) 
-# 1997-2007
+# 1996-2007
+
+unique(ANWR_veg$PLOT) # Unique plot names
+length(unique(ANWR_veg$PLOT)) # 10 plots 
+
+# Group the dataframe by YEAR to see the number of plots per year
+ANWR_veg %>% group_by(YEAR) %>%
+   summarise(plot.n = length(unique(PLOT)))
+## I think there are 10 plots per year
+
+unique(ANWR_veg$FuncGroup) # Unique functional groups names
+# [1] "Shrub"     "Lichen"    "Moss"      "Forb"      "Graminoid"
+
+# Calculate tot shrub cover each plot per year 
+# so that plot is basic replication unit
+# then find mean shrub cover per year (mean of plots)
+# Calculate tot cover 
+ANWR_veg <- ANWR_veg %>%
+   group_by(YEAR, PLOT) %>%
+   mutate(Mean_cover = length(unique(FuncGroup))) %>%
+   ungroup()
+
 
 ### Setting theme
 shrub.theme <- theme(legend.position = "right",
@@ -45,7 +67,8 @@ shrub.theme <- theme(legend.position = "right",
                    plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                    plot.margin = unit(c(1,1,1,1), units = , "cm"))
 
-# Plotting mean cover of diff functional groups (FG) 
+
+# Mariana: mean cover of diff functional groups (FG) 
 ## per plot over time (more representative of FG cover over time)
 ### Q: is plotting mean cover right? 
 
@@ -68,7 +91,7 @@ summary(lm_shrub) ## not sig.
        shrub.theme))
 ## Graminoid cover decreasing
 
-lm_graminoid <- lm(GraminoidMean~YEAR, data = ANWR_veg)
+lm_graminoid <- lmer(GraminoidMean~I(YEAR-1996)+(1|PLOT), data = ANWR_veg)
 summary(lm_graminoid) ## sig.
 
 ### Forb cover over time  ----
