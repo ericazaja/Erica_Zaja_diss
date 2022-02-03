@@ -137,6 +137,23 @@ plot(PCH_core_range, add = TRUE) # adds range onto shrub map
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
+(cropped_new <- gplot(cropped) +
+    geom_raster(aes(x = x, y = y, fill = value)) +
+    # value is the specific value (of reflectance) each pixel is associated with
+    scale_fill_gradient(low = "tan", high = "green", 
+                        rescaler = function(x, to = c(0, 1), from = NULL) {
+                          ifelse(x<900, scales::rescale(x,
+                             to = to,
+                             from = c(min(x, na.rm = TRUE), 900)),
+             1)}) +
+    coord_quickmap()+
+    theme_classic() +  # Remove ugly grey background
+    xlab("Longitude") +
+    ylab("Latitude") +
+    ggtitle("Shrub cover of the PCH alaskan range") +
+    theme(plot.title = element_text(hjust = 0.5),             # centres plot title
+          text = element_text(size=15),		       	    # font size
+          axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
 
 #e <- extract(shrub_agb_p2_5, PCH_core_range)
