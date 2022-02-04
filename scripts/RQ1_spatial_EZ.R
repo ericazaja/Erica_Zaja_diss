@@ -1,9 +1,11 @@
 ##%######################################################%##
 #                                                          #
-####         SPATIAL ANALYSIS EXPERIMENTS -----         ####
-#               Erica Zaja - 09/10/2021                   #
-#                                                         #
+####            RQ1: SPATIAL ANALYSIS                   ####
+#               Erica Zaja - 04/02/2022                    #
+#                                                          #
 ##%######################################################%##
+
+## RQ1: What areas within the PCH Alaskan summer range have high-medium-low shrub biomass cover?
 
 # Loading libraries -----
 library(sp)
@@ -15,73 +17,51 @@ library(rasterVis)
 library(sf)
 library(tidyverse)
 library(ggmap)
+library(rspatial)
+library(maptools)
+library(rgeos)
 
-# Loading shrub data -----
-# berner_dataset <- read_csv("datasets/berner_data/berner_dataset.csv")
-shrub_agb_p2_5 <- raster("datasets/berner_data/shrub_agb_p2_5.tif")
-shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif")
-shrub_agb_p97_5<- raster("datasets/berner_data/shrub_agb_p97_5.tif")
-shrub_dominance_of_agb_p50 <- raster("datasets/berner_data/shrub_dominance_of_agb_p50.tif")
+## SHRUB DATA ----
+# from Berner et al 2018
 
-# Comparing rasters to see if they have the same extent, number of rows and column, projection, resolution and origin
-compareRaster(shrub_agb_p2_5, shrub_agb_p50,shrub_agb_p97_5, shrub_dominance_of_agb_p50)
-# TRUE
+# Loading raster of shrub biomass (g/m2) on Alaskan North Slope  -----
+shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif") 
+# Using the best-estimates: the 50th percentile of the 1,000 permutations
 
-# Plotting rasters 
-plot(shrub_agb_p2_5)
-plot(shrub_dominance_of_agb_p50)
+# Plotting shrub raster with base R
+plot(shrub_agb_p50)
 dev.off()
 
-# Cropping rasters 
-plot(shrub_agb_p2_5)
-zoom(shrub_agb_p2_5) ## define square 
-
-# Using ggplot to plot raster data 
-# Shrub cover p2_5
-(gplot_shrub_agb_p2_5 <- gplot(shrub_agb_p2_5) +
+# Plotting shrub raster with ggplot
+(gplot_shrub_agb_p50<- gplot(shrub_agb_p50) +
   geom_raster(aes(x = x, y = y, fill = value)) +
   # value is the specific value (of reflectance) each pixel is associated with
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(rescaler = function(x, to = c(0, 1), from = NULL) {
+    ifelse(x<1000, 
+           scales::rescale(x,
+                           to = to,
+                           from = c(min(x, na.rm = TRUE), 1000)),
+           1)}) +
   coord_quickmap()+
   theme_classic() +  # Remove ugly grey background
   xlab("Longitude") +
   ylab("Latitude") +
-  ggtitle("Shrub cover of the north slope of Alaska, raster plot") +
-  theme(plot.title = element_text(hjust = 0.5),             # centres plot title
-        text = element_text(size=20),		       	    # font size
-        axis.text.x = element_text(angle = 90, hjust = 1)))  # rotates x axis text
+  ggtitle("Shrub biomass cover (g/m2) of Alaskan north slope") +
+  theme(plot.title = element_text(hjust = 0.5),     # centres plot title
+        text = element_text(size=15),		       	    # font size
+        axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
 dev.off()
-# ggsave("gplot_shrub_agb_p2_5", scale = 1.5, dpi = 300) 		# to save plot
 
 
-# Stacking rasters (??)
-# Create a stack of all the rasters, so just putting them all on top of each other.
-# t <- stack(shrub_agb_p50, shrub_agb_p2_5)
+### PCH RANGE DATA -----
+# PCH core range data from Porcupine Caribou Management Board 2016
 
-# To visualise all the bands together, we can use facet_wrap in gplot. 
-# gplot(t) +
-  #geom_raster(aes(x = x, y = y, fill = value))+
-  #scale_fill_viridis_c() +
-  #facet_wrap(~variable) +
-  #coord_quickmap()+
-  #ggtitle("Vegetation cover p2, raster plots") +
-  #xlab("Longitude") +
-  #ylab("Latitude") +
-  #theme_classic() +
-  #theme(text = element_text(size=20),
-   #     axis.text.x = element_text(angle = 90, hjust = 1)) +
-  #theme(plot.title = element_text(hjust = 0.5))
-
-### PCH core range data -----
 # https://gis.stackexchange.com/questions/34310/opening-lyr-file-via-rgdal-ogr
 # https://rspatial.org/raster/rosu/Chapter11.html 
 ## look into SpTransform
 
-# libraries
-library(rspatial)
-library(maptools)
-library(rgeos)
+
 
 PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") #loading data
 
@@ -184,5 +164,28 @@ plot(PCH_core_range, add = TRUE) # adds range onto shrub map
 dev.off()
 
 ### HOW DO I OVERLAY A RASTER layer WITH A spatial POLYGON? -----
+# Cropping rasters 
+plot(shrub_agb_p2_5)
+zoom(shrub_agb_p2_5) ## define square 
 
+# Comparing rasters to see if they have the same extent, number of rows and column, projection, resolution and origin
+# compareRaster(shrub_agb_p2_5, shrub_agb_p50,shrub_agb_p97_5, shrub_dominance_of_agb_p50)
+# TRUE
 
+# Stacking rasters (??)
+# Create a stack of all the rasters, so just putting them all on top of each other.
+# t <- stack(shrub_agb_p50, shrub_agb_p2_5)
+
+# To visualise all the bands together, we can use facet_wrap in gplot. 
+# gplot(t) +
+#geom_raster(aes(x = x, y = y, fill = value))+
+#scale_fill_viridis_c() +
+#facet_wrap(~variable) +
+#coord_quickmap()+
+#ggtitle("Vegetation cover p2, raster plots") +
+#xlab("Longitude") +
+#ylab("Latitude") +
+#theme_classic() +
+#theme(text = element_text(size=20),
+#     axis.text.x = element_text(angle = 90, hjust = 1)) +
+#theme(plot.title = element_text(hjust = 0.5))

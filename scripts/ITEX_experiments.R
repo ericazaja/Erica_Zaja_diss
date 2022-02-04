@@ -48,6 +48,7 @@ unique(ANWR_veg$FuncGroup) # Unique functional groups names
 # Calculate tot shrub cover each plot per year 
 # so that plot is basic replication unit
 # then find mean shrub cover per year (mean of plots)
+
 # Calculate tot cover 
 ANWR_veg <- ANWR_veg %>%
    group_by(YEAR, PLOT) %>%
