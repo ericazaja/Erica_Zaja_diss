@@ -22,6 +22,19 @@ library(maptools)
 library(rgeos)
 library(rworldmap)
 
+## Setting a theme ----
+shrub.theme <- theme(legend.position = "right",
+                     axis.title.x = element_text(face="bold", size=20),
+                     axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
+                     axis.title.y = element_text(face="bold", size=20),
+                     axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
+                     panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
+                     panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
+                     panel.background = element_blank(), axis.line = element_line(colour = "black"), 
+                     plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
+                     plot.margin = unit(c(1,1,1,1), units = , "cm"))
+
+
 ## SHRUB DATA ----
 # from Berner et al 2018
 
@@ -99,8 +112,8 @@ plot(PCH_core_range, add = TRUE) # adds range polygon onto shrub map
 dev.off()
 
 cropped <- crop(shrub_agb_p50, PCH_core_range)
-plot(cropped,col = pal(3))
-pal <- colorRampPalette(c("tan","green", "green4"))
+#plot(cropped,col = pal(3))
+#pal <- colorRampPalette(c("tan","green", "green4"))
 
 # Cropped map with viridis palette
 (cropped_viridis <- gplot(cropped) +
@@ -165,10 +178,25 @@ glimpse(cropped_data)
 # Histogram of shrub agb (g/m2) 
 hist(cropped_data$shrub_agb_p50)
 
+# (cropped_histogram <- ggplot(cropped_data, aes(x = shrub_agb_p50, fill = y)) +  
+    #geom_histogram(stat = "count") +
+    #geom_vline(aes(xintercept = mean(shrub_agb_p50)),            
+              # colour = "red", linetype = "dashed", size = 1))
+
+dev.off()
+
+### CATEGORISE into HIGH/MEDIUM/LOW biomass and NORTH VS SOUTH range
+cropped_data <- cropped_data %>%
+  mutate(biomass_level = case_when
+                (shrub_agb_p50 <= 100 ~ 'Low',
+                  shrub_agb_p50 > 100  & shrub_agb_p50 < 500 ~ 'Medium', 
+                  shrub_agb_p50 >= 500 ~ 'High')) %>%
+  mutate(area = case_when )
 
 
 
-
+glimpse(cropped_data)
+str(cropped_data)
 
 ### OTHER ----
 
