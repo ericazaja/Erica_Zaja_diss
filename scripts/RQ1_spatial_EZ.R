@@ -121,7 +121,7 @@ pal <- colorRampPalette(c("tan","green", "green4"))
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
-# Cropped map with personalised colour palette
+# Cropped map with personalised colour palette (low-mid)
 (cropped_new <- gplot(cropped) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
@@ -141,13 +141,28 @@ pal <- colorRampPalette(c("tan","green", "green4"))
           axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
 
-
+# Cropped map with personalised colour palette (low-mid-high)
+(cropped_new_mid <- gplot(cropped) +
+    geom_raster(aes(x = x, y = y, fill = value)) +
+    # value is the specific value (of reflectance) each pixel is associated with
+    scale_fill_gradient2(low = "green", mid = "green4", high = "brown", midpoint = 50) +
+    coord_quickmap()+
+    theme_classic() +  # Remove ugly grey background
+    xlab("Longitude") +
+    ylab("Latitude") +
+    ggtitle("Shrub biomass cover (g/m2) of the PCH alaskan range") +
+    theme(plot.title = element_text(hjust = 0.5),             # centres plot title
+          text = element_text(size=15),		       	    # font size
+          axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
 dev.off()
 
+## EXTRACTING RASTER DATA 
+
+cropped_data <- as.data.frame(cropped, xy=TRUE)
+glimpse(cropped_data)
 ### OTHER ----
 
-### HOW DO I OVERLAY A RASTER layer WITH A spatial POLYGON? -----
 # Cropping rasters 
 plot(shrub_agb_p2_5)
 zoom(shrub_agb_p2_5) ## define square 
