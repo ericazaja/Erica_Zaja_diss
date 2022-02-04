@@ -157,10 +157,19 @@ pal <- colorRampPalette(c("tan","green", "green4"))
 
 dev.off()
 
-## EXTRACTING RASTER DATA 
+## EXTRACTING RASTER DATA ----
 
 cropped_data <- as.data.frame(cropped, xy=TRUE)
 glimpse(cropped_data)
+
+# Histogram of shrub agb (g/m2) 
+hist(cropped_data$shrub_agb_p50)
+
+
+
+
+
+
 ### OTHER ----
 
 # Cropping rasters 
