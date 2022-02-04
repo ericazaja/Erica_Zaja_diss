@@ -1,6 +1,6 @@
 ##%######################################################%##
 #                                                          #
-####            RQ1: SPATIAL ANALYSIS                   ####
+###              RQ1: SPATIAL ANALYSIS                  ####
 #               Erica Zaja - 04/02/2022                    #
 #                                                          #
 ##%######################################################%##
@@ -17,7 +17,6 @@ library(rasterVis)
 library(sf)
 library(tidyverse)
 library(ggmap)
-library(rspatial)
 library(maptools)
 library(rgeos)
 library(rworldmap)
@@ -114,8 +113,9 @@ dev.off()
 cropped <- crop(shrub_agb_p50, PCH_core_range)
 cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326")
 
+
 # Cropped map with viridis palette
-(cropped_viridis <- gplot(cropped_latlong) +
+(cropped_viridis <- gplot(cropped) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -133,7 +133,7 @@ cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326")
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
-# Cropped map with personalised colour palette (low-mid)
+# Cropped map with personalised colour palette (low-mid) and lat long coords
 (cropped_my_palette <- gplot(cropped_latlong) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
@@ -153,7 +153,7 @@ cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326")
           axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
 
-# Cropped map with personalised colour palette (low-mid-high)
+# Cropped map with personalised colour palette (low-mid-high) and lat long
 (cropped_new_mid <- gplot(cropped_latlong) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
@@ -171,12 +171,19 @@ dev.off()
 
 ## EXTRACTING RASTER DATA ----
 projection(cropped_latlong)
+projection(cropped)
 
-cropped_extract <- as.data.frame(cropped_latlong, xy=TRUE)
-glimpse(cropped_extract)
+cropped_shrub <- as.data.frame(cropped, xy=TRUE)
+glimpse(cropped_shrub) 
+
+cropped_coords <- as.data.frame(cropped_latlong, xy=TRUE)
+glimpse(cropped_coords)
+
+# Joining the two dataframes 
+# shrub_and_coords <- left_join(cropped_shrub, cropped_coords)
 
 # Histogram of shrub agb (g/m2) 
-hist(cropped_data$shrub_agb_p50)
+hist(cropped_shrub$shrub_agb_p50)
 
 # (cropped_histogram <- ggplot(cropped_data, aes(x = shrub_agb_p50, fill = y)) +  
     #geom_histogram(stat = "count") +
@@ -186,12 +193,12 @@ hist(cropped_data$shrub_agb_p50)
 dev.off()
 
 ### CATEGORISE into HIGH/MEDIUM/LOW biomass and NORTH VS SOUTH range
-cropped_data <- cropped_data %>%
+cropped_shrub_2 <- cropped_shrub %>%
   mutate(biomass_level = case_when (shrub_agb_p50 <= 100 ~ 'Low',
                   shrub_agb_p50 > 100  & shrub_agb_p50 < 500 ~ 'Medium', 
                   shrub_agb_p50 >= 500 ~ 'High'), 
-        area = case_when (x > -145.0 ~ 'East' ,
-                           x < -145.0 ~ 'West'))
+        area = case_when (x >= 300000 ~ 'East' ,
+                           x < 300000 ~ 'West'))
 
 glimpse(cropped_data)
 str(cropped_data)
