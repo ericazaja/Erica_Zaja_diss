@@ -112,10 +112,10 @@ plot(PCH_core_range, add = TRUE) # adds range polygon onto shrub map
 dev.off()
 
 cropped <- crop(shrub_agb_p50, PCH_core_range)
-cropped_new <- projectRaster(cropped, crs="+init=EPSG:4326")
+cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326")
 
 # Cropped map with viridis palette
-(cropped_viridis <- gplot(cropped_new) +
+(cropped_viridis <- gplot(cropped_latlong) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -134,7 +134,7 @@ cropped_new <- projectRaster(cropped, crs="+init=EPSG:4326")
           axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
 # Cropped map with personalised colour palette (low-mid)
-(cropped_my_palette <- gplot(cropped_new) +
+(cropped_my_palette <- gplot(cropped_latlong) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_gradient(low = "tan", high = "green4", 
@@ -154,7 +154,7 @@ cropped_new <- projectRaster(cropped, crs="+init=EPSG:4326")
 
 
 # Cropped map with personalised colour palette (low-mid-high)
-(cropped_new_mid <- gplot(cropped) +
+(cropped_new_mid <- gplot(cropped_latlong) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_gradient2(low = "green", mid = "green4", high = "brown", midpoint = 50) +
@@ -170,10 +170,10 @@ cropped_new <- projectRaster(cropped, crs="+init=EPSG:4326")
 dev.off()
 
 ## EXTRACTING RASTER DATA ----
-projection(cropped)
+projection(cropped_latlong)
 
-cropped_data <- as.data.frame(cropped, xy=TRUE)
-glimpse(cropped_data)
+cropped_extract <- as.data.frame(cropped_latlong, xy=TRUE)
+glimpse(cropped_extract)
 
 # Histogram of shrub agb (g/m2) 
 hist(cropped_data$shrub_agb_p50)
@@ -187,13 +187,11 @@ dev.off()
 
 ### CATEGORISE into HIGH/MEDIUM/LOW biomass and NORTH VS SOUTH range
 cropped_data <- cropped_data %>%
-  mutate(biomass_level = case_when
-                (shrub_agb_p50 <= 100 ~ 'Low',
+  mutate(biomass_level = case_when (shrub_agb_p50 <= 100 ~ 'Low',
                   shrub_agb_p50 > 100  & shrub_agb_p50 < 500 ~ 'Medium', 
-                  shrub_agb_p50 >= 500 ~ 'High')) %>%
-  mutate(area = case_when )
-
-
+                  shrub_agb_p50 >= 500 ~ 'High'), 
+        area = case_when (x > -145.0 ~ 'East' ,
+                           x < -145.0 ~ 'West'))
 
 glimpse(cropped_data)
 str(cropped_data)
