@@ -20,6 +20,7 @@ library(ggmap)
 library(rspatial)
 library(maptools)
 library(rgeos)
+library(rworldmap)
 
 ## SHRUB DATA ----
 # from Berner et al 2018
@@ -55,113 +56,96 @@ dev.off()
 
 
 ### PCH RANGE DATA -----
-# PCH core range data from Porcupine Caribou Management Board 2016
+# PCH core range data from Porcupine Caribou Management Board (2016)
 
-# https://gis.stackexchange.com/questions/34310/opening-lyr-file-via-rgdal-ogr
-# https://rspatial.org/raster/rosu/Chapter11.html 
-## look into SpTransform
-
-
-
+# Loading polygon of PCH range 
 PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") #loading data
 
-# checking PCH range and shrub hve same projection
+# Plotting PCH core range using ggplot
+(PCH_range_map <- ggplot() + 
+  geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "yellow") + 
+  theme_bw()+
+  ggtitle("PCH core range 2016")) 
+
+# Checking PCH range and shrub map have same projection
 projection(PCH_core_range)
-projection(shrub_agb_p2_5)
+projection(shrub_agb_p50)
 # same projection
 
-## NB. PCH range is a POLYGON VS Shrub map is raster data
 
-(PCH_range_map <- ggplot() + 
-  geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "green") + 
-  ggtitle("PCH core range 2016")) ## doesnt work anymore?
-
-# Cropping shrub map to range -----
-cropped <- crop(shrub_agb_p2_5, PCH_core_range)
-plot(cropped,col = pal(3))
-pal <- colorRampPalette(c("tan","green", "green4"))
-
-
-plot(shrub_agb_p2_5)
-plot(PCH_core_range, add = TRUE) # adds range onto shrub map
-
-# Cropped map visualisation - with viridis colour ----
-(cropped_viridis <- gplot(cropped) +
-    geom_raster(aes(x = x, y = y, fill = value)) +
-    # value is the specific value (of reflectance) each pixel is associated with
-    scale_fill_viridis_c(limits = c(0, 1400), oob = scales::squish) +
-    coord_quickmap()+
-    theme_classic() +  # Remove ugly grey background
-    xlab("Longitude") +
-    ylab("Latitude") +
-    ggtitle("Shrub cover of the PCH alaskan range") +
-    theme(plot.title = element_text(hjust = 0.5),             # centres plot title
-          text = element_text(size=15),		       	    # font size
-          axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
-
-(cropped_viridis <- gplot(cropped) +
-    geom_raster(aes(x = x, y = y, fill = value)) +
-    # value is the specific value (of reflectance) each pixel is associated with
-    scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
-      ifelse(x<700, 
-             scales::rescale(x,
-                             to = to,
-                             from = c(min(x, na.rm = TRUE), 700)),
-             1)}) +
-    coord_quickmap()+
-    theme_classic() +  # Remove ugly grey background
-    xlab("Longitude") +
-    ylab("Latitude") +
-    ggtitle("Shrub cover of the PCH alaskan range") +
-    theme(plot.title = element_text(hjust = 0.5),             # centres plot title
-          text = element_text(size=15),		       	    # font size
-          axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
-
-(cropped_new <- gplot(cropped) +
-    geom_raster(aes(x = x, y = y, fill = value)) +
-    # value is the specific value (of reflectance) each pixel is associated with
-    scale_fill_gradient(low = "tan", high = "green", 
-                        rescaler = function(x, to = c(0, 1), from = NULL) {
-                          ifelse(x<900, scales::rescale(x,
-                             to = to,
-                             from = c(min(x, na.rm = TRUE), 900)),
-             1)}) +
-    coord_quickmap()+
-    theme_classic() +  # Remove ugly grey background
-    xlab("Longitude") +
-    ylab("Latitude") +
-    ggtitle("Shrub cover of the PCH alaskan range") +
-    theme(plot.title = element_text(hjust = 0.5),             # centres plot title
-          text = element_text(size=15),		       	    # font size
-          axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
-
-
-#e <- extract(shrub_agb_p2_5, PCH_core_range)
-zoom()
-
-dev.off()
-
-## Basemap of north america
-library(rworldmap)
-library(rnaturalworld)
+### BASE MAP of North America ----
 world <- getMap(resolution = "low")
-
-
-## Specify the required projection using a proj4 string
-## Use http://www.spatialreference.org/ to find the required string
-## Polyconic for North America
-newProj <- CRS("+proj=aea +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
-#### Making a  basemap
-(Alaska_Yukon <- ggplot() +
+(Alaska_Yukon_base <- ggplot() +
     borders("world", colour = "black", fill = "white", size = 0.3) + 
     coord_cartesian(xlim = c(-180, -80), ylim = c(60, 75)) +
     theme_classic() +  # Remove ugly grey background
     xlab("Longitude") +
-    ylab("Latitude") )
+    ylab("Latitude") ) 
 
-plot(shrub_agb_p2_5, add = TRUE)
-plot(PCH_core_range, add = TRUE) # adds range onto shrub map
+(Alaska_Yukon <- ggplot() +
+    geom_polygon(data = world, aes(x = long, y = lat, group = group),
+                 fill = "grey", colour = "black") + 
+    coord_cartesian(xlim = c(-180, -80), ylim = c(60, 75)) +
+    geom_sf(data = PCH_core_range,
+            fill = "yellow", colour = "yellow") + 
+    theme_classic() +  
+    xlab("Longitude") +
+    ylab("Latitude") ) ## DOESNT WORK
+
+## CROPPED SHRUB MAP ----
+# Cropping shrub map to PCH range
+plot(shrub_agb_p50) # plots raster 
+plot(PCH_core_range, add = TRUE) # adds range polygon onto shrub map
 dev.off()
+
+cropped <- crop(shrub_agb_p50, PCH_core_range)
+plot(cropped,col = pal(3))
+pal <- colorRampPalette(c("tan","green", "green4"))
+
+# Cropped map with viridis palette
+(cropped_viridis <- gplot(cropped) +
+    geom_raster(aes(x = x, y = y, fill = value)) +
+    # value is the specific value (of reflectance) each pixel is associated with
+    scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
+      ifelse(x<1000, 
+             scales::rescale(x,
+                             to = to,
+                             from = c(min(x, na.rm = TRUE), 1000)),
+             1)}) +
+    coord_quickmap()+
+    theme_classic() +  # Remove ugly grey background
+    xlab("Longitude") +
+    ylab("Latitude") +
+    ggtitle("Shrub biomass cover (g/m2) of the PCH alaskan range") +
+    theme(plot.title = element_text(hjust = 0.5),             # centres plot title
+          text = element_text(size=15),		       	    # font size
+          axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
+
+# Cropped map with personalised colour palette
+(cropped_new <- gplot(cropped) +
+    geom_raster(aes(x = x, y = y, fill = value)) +
+    # value is the specific value (of reflectance) each pixel is associated with
+    scale_fill_gradient(low = "tan", high = "green4", 
+                        rescaler = function(x, to = c(0, 1), from = NULL) {
+                          ifelse(x<1000, scales::rescale(x,
+                             to = to,
+                             from = c(min(x, na.rm = TRUE), 1000)),
+             1)}) +
+    coord_quickmap()+
+    theme_classic() +  # Remove ugly grey background
+    xlab("Longitude") +
+    ylab("Latitude") +
+    ggtitle("Shrub biomass cover (g/m2) of the PCH alaskan range") +
+    theme(plot.title = element_text(hjust = 0.5),             # centres plot title
+          text = element_text(size=15),		       	    # font size
+          axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
+
+
+
+
+dev.off()
+
+### OTHER ----
 
 ### HOW DO I OVERLAY A RASTER layer WITH A spatial POLYGON? -----
 # Cropping rasters 
@@ -189,3 +173,10 @@ zoom(shrub_agb_p2_5) ## define square
 #theme(text = element_text(size=20),
 #     axis.text.x = element_text(angle = 90, hjust = 1)) +
 #theme(plot.title = element_text(hjust = 0.5))
+
+
+## Specify the required projection using a proj4 string
+newProj <- CRS("+proj=aea +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
+
+#e <- extract(shrub_agb_p2_5, PCH_core_range)
+zoom()
