@@ -112,11 +112,10 @@ plot(PCH_core_range, add = TRUE) # adds range polygon onto shrub map
 dev.off()
 
 cropped <- crop(shrub_agb_p50, PCH_core_range)
-#plot(cropped,col = pal(3))
-#pal <- colorRampPalette(c("tan","green", "green4"))
+cropped_new <- projectRaster(cropped, crs="+init=EPSG:4326")
 
 # Cropped map with viridis palette
-(cropped_viridis <- gplot(cropped) +
+(cropped_viridis <- gplot(cropped_new) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -135,7 +134,7 @@ cropped <- crop(shrub_agb_p50, PCH_core_range)
           axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
 # Cropped map with personalised colour palette (low-mid)
-(cropped_new <- gplot(cropped) +
+(cropped_my_palette <- gplot(cropped_new) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_gradient(low = "tan", high = "green4", 
@@ -171,6 +170,7 @@ cropped <- crop(shrub_agb_p50, PCH_core_range)
 dev.off()
 
 ## EXTRACTING RASTER DATA ----
+projection(cropped)
 
 cropped_data <- as.data.frame(cropped, xy=TRUE)
 glimpse(cropped_data)
@@ -198,7 +198,7 @@ cropped_data <- cropped_data %>%
 glimpse(cropped_data)
 str(cropped_data)
 
-### OTHER ----
+### OTHER (Random) ----
 
 # Cropping rasters 
 plot(shrub_agb_p2_5)
