@@ -211,8 +211,18 @@ str(cropped_shrub_2)
 # making area a factor with two levels (west and east)
 cropped_shrub_2$area <- as.factor(as.character(cropped_shrub_2$area))   
 
-model_1 <- lm(shrub_agb_p50 ~ area, data = cropped_shrub_2)
-summary(model_1)
+model_1 <- lm(shrub_agb_p50 ~ area + (1|area), data = cropped_shrub_2) # doesnt run
+summary(model_1) # doesnt run
+# maybe something to do with my data being skewed 
+
+### DATA VIS ----
+# I want a boxplot: area on x axis (west VS east) and shrub biomass (g/m2) on y 
+# This will show me:
+# 1. if there is a difference in distribution of shrub biomass between east and west areas of the range.
+# 2. where shrubs with higher/lower biomass are 
+
+
+
 ### OTHER (Random) ----
 
 # Cropping rasters 

@@ -11,8 +11,8 @@
   
 # Shrub data from Berner et al 2018
 # Climate data from CHELSA 2022
+
 # Coord data coord cleaner
-# data : use summer temp warmest quarter
 
 # Loading libraries -----
 library(sp)
@@ -23,7 +23,7 @@ library(viridis)
 library(rasterVis)
 
 # Loading CHELSA data ------
-precipitation_81 <- raster("datasets/climate_data/mean_annual_precipitation_timeseries/CHELSA_bio12_1981_V1.2.1.tif")
+# precipitation_81 <- raster("datasets/climate_data/mean_annual_precipitation_timeseries/CHELSA_bio12_1981_V1.2.1.tif")
 
 plot(precipitation_81)
 zoom(precipitation_81)
