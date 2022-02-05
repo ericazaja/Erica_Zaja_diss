@@ -212,12 +212,12 @@ str(cropped_shrub_2)
 cropped_shrub_2$area <- as.factor(as.character(cropped_shrub_2$area))   
 
 model_1 <- lm(shrub_agb_p50 ~ area, data = cropped_shrub_2)
-
+summary(model_1)
 ### OTHER (Random) ----
 
 # Cropping rasters 
-plot(shrub_agb_p2_5)
-zoom(shrub_agb_p2_5) ## define square 
+#plot(shrub_agb_p2_5)
+#zoom(shrub_agb_p2_5) ## define square 
 
 # Comparing rasters to see if they have the same extent, number of rows and column, projection, resolution and origin
 # compareRaster(shrub_agb_p2_5, shrub_agb_p50,shrub_agb_p97_5, shrub_dominance_of_agb_p50)
@@ -243,7 +243,7 @@ zoom(shrub_agb_p2_5) ## define square
 
 
 ## Specify the required projection using a proj4 string
-newProj <- CRS("+proj=aea +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
+#newProj <- CRS("+proj=aea +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 
 #e <- extract(shrub_agb_p2_5, PCH_core_range)
-zoom()
+#zoom()
