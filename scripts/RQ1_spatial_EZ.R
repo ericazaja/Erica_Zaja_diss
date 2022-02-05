@@ -22,7 +22,7 @@ library(rgeos)
 library(rworldmap)
 
 ## Setting a theme ----
-shrub.theme <- theme(legend.position = "right",
+theme_shrub <- function(){ theme(legend.position = "right",
                      axis.title.x = element_text(face="bold", size=20),
                      axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
                      axis.title.y = element_text(face="bold", size=20),
@@ -31,7 +31,7 @@ shrub.theme <- theme(legend.position = "right",
                      panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
                      panel.background = element_blank(), axis.line = element_line(colour = "black"), 
                      plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
-                     plot.margin = unit(c(1,1,1,1), units = , "cm"))
+                     plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
 
 ## SHRUB DATA ----
@@ -56,7 +56,7 @@ dev.off()
                            from = c(min(x, na.rm = TRUE), 1000)),
            1)}) +
   coord_quickmap()+
-  theme_classic() +  # Remove ugly grey background
+  theme_shrub() +  # Remove ugly grey background
   xlab("Longitude") +
   ylab("Latitude") +
   ggtitle("Shrub biomass cover (g/m2) of Alaskan north slope") +
@@ -75,8 +75,8 @@ PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp"
 
 # Plotting PCH core range using ggplot
 (PCH_range_map <- ggplot() + 
-  geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "yellow") + 
-  theme_bw()+
+  geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "grey") + 
+  theme_shrub()+
   ggtitle("PCH core range 2016")) 
 
 # Checking PCH range and shrub map have same projection
@@ -87,35 +87,39 @@ projection(shrub_agb_p50)
 
 ### BASE MAP of North America ----
 world <- getMap(resolution = "low")
+
 (Alaska_Yukon_base <- ggplot() +
     borders("world", colour = "black", fill = "white", size = 0.3) + 
     coord_cartesian(xlim = c(-180, -80), ylim = c(60, 75)) +
-    theme_classic() +  # Remove ugly grey background
+    theme_shrub() +  # Remove ugly grey background
     xlab("Longitude") +
     ylab("Latitude") ) 
 
+### PROBLEM 1 -----
 (Alaska_Yukon <- ggplot() +
     geom_polygon(data = world, aes(x = long, y = lat, group = group),
                  fill = "grey", colour = "black") + 
     coord_cartesian(xlim = c(-180, -80), ylim = c(60, 75)) +
     geom_sf(data = PCH_core_range,
             fill = "yellow", colour = "yellow") + 
-    theme_classic() +  
+    theme_shrub() +  
     xlab("Longitude") +
     ylab("Latitude") ) ## DOESNT WORK
 
 ## CROPPED SHRUB MAP ----
+### PROBLEM 2 ----- 
 # Cropping shrub map to PCH range
 plot(shrub_agb_p50) # plots raster 
-plot(PCH_core_range, add = TRUE) # adds range polygon onto shrub map
+plot(PCH_core_range, add = TRUE) # adds range polygon onto shrub map but UGLY ! 
 dev.off()
 
 cropped <- crop(shrub_agb_p50, PCH_core_range)
-cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326")
-
+# cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326") # works but then removes AGB at the bottom
+cropped_latlong <- projectRaster(cropped, crs = "+proj=longlat +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs") 
+projection(cropped_latlong)
 
 # Cropped map with viridis palette
-(cropped_viridis <- gplot(cropped) +
+(cropped_viridis <- gplot(cropped_latlong) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -134,7 +138,7 @@ cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326")
           axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
 # Cropped map with personalised colour palette (low-mid) and lat long coords
-(cropped_my_palette <- gplot(cropped_latlong) +
+(cropped_my_palette <- gplot(cropped) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_gradient(low = "tan", high = "green4", 
@@ -154,7 +158,7 @@ cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326")
 
 
 # Cropped map with personalised colour palette (low-mid-high) and lat long
-(cropped_new_mid <- gplot(cropped_latlong) +
+(cropped_new_mid <- gplot(cropped) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_gradient2(low = "green", mid = "green4", high = "brown", midpoint = 50) +
@@ -170,16 +174,16 @@ cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326")
 dev.off()
 
 ## EXTRACTING RASTER DATA ----
-projection(cropped_latlong)
 projection(cropped)
 
 cropped_shrub <- as.data.frame(cropped, xy=TRUE)
 glimpse(cropped_shrub) 
 
+# PROBLEM 3 ----
 cropped_coords <- as.data.frame(cropped_latlong, xy=TRUE)
-glimpse(cropped_coords)
+glimpse(cropped_coords) # cancels (makes into NAs) all my shrub biomass data ! 
 
-# Joining the two dataframes 
+# I could try joining the two dataframes: so i have latlong AND shrub biomass
 # shrub_and_coords <- left_join(cropped_shrub, cropped_coords)
 
 # Histogram of shrub agb (g/m2) 
@@ -192,7 +196,7 @@ hist(cropped_shrub$shrub_agb_p50)
 
 dev.off()
 
-### CATEGORISE into HIGH/MEDIUM/LOW biomass and NORTH VS SOUTH range
+### CATEGORISE into HIGH/MEDIUM/LOW biomass and EAST VS WEST range area
 cropped_shrub_2 <- cropped_shrub %>%
   mutate(biomass_level = case_when (shrub_agb_p50 <= 100 ~ 'Low',
                   shrub_agb_p50 > 100  & shrub_agb_p50 < 500 ~ 'Medium', 
@@ -200,8 +204,14 @@ cropped_shrub_2 <- cropped_shrub %>%
         area = case_when (x >= 300000 ~ 'East' ,
                            x < 300000 ~ 'West'))
 
-glimpse(cropped_data)
-str(cropped_data)
+glimpse(cropped_shrub_2)
+str(cropped_shrub_2)
+
+## MODEL ----
+# making area a factor with two levels (west and east)
+cropped_shrub_2$area <- as.factor(as.character(cropped_shrub_2$area))   
+
+model_1 <- lm(shrub_agb_p50 ~ area, data = cropped_shrub_2)
 
 ### OTHER (Random) ----
 
