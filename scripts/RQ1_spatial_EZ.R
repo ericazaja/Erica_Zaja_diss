@@ -50,7 +50,7 @@ dev.off()
   geom_raster(aes(x = x, y = y, fill = value)) +
   # value is the specific value (of reflectance) each pixel is associated with
   scale_fill_viridis_c(rescaler = function(x, to = c(0, 1), from = NULL) {
-    ifelse(x<1000, 
+  ifelse(x<1000, 
            scales::rescale(x,
                            to = to,
                            from = c(min(x, na.rm = TRUE), 1000)),
@@ -180,8 +180,11 @@ cropped_shrub <- as.data.frame(cropped, xy=TRUE)
 glimpse(cropped_shrub) 
 
 # PROBLEM 3 ----
-cropped_coords <- as.data.frame(cropped_latlong, xy=TRUE)
+cropped_coords <- as.data.frame(cropped_latlong, xy = TRUE)
 glimpse(cropped_coords) # cancels (makes into NAs) all my shrub biomass data ! 
+cropped_coords <- cropped_coords %>% 
+  dplyr::select(- shrub_agb_p50)
+# cropped_coords now is only the x and y lat and long! 
 
 # I could try joining the two dataframes: so i have latlong AND shrub biomass
 # shrub_and_coords <- left_join(cropped_shrub, cropped_coords)
