@@ -12,7 +12,6 @@
 # Shrub data from Berner et al 2018
 # Climate data from CHELSA 2022
 
-# Coord data coord cleaner
 
 # Loading libraries -----
 library(sp)
@@ -23,7 +22,7 @@ library(viridis)
 library(rasterVis)
 
 # Loading CHELSA data ------
-# precipitation_81 <- raster("datasets/climate_data/mean_annual_precipitation_timeseries/CHELSA_bio12_1981_V1.2.1.tif")
+# precipitation_81 <- raster("datasets/climate_data/CHELSA_bio12_1981_V1.2.1.tif")
 
 plot(precipitation_81)
 zoom(precipitation_81)
@@ -32,13 +31,30 @@ zoom(precipitation_81)
 
 ### I need to extract cooordinates from raster of my map
 
+
+# Load the coordinates of the cropped shrub map
+coords <- read.csv("datasets/berner_data/cropped_coords.csv") %>% 
+  # dplyr::select(-X)
+  
+# Climatologies:
+  
+# EXTRACTION ----
+
+# Create SpatialPoints (sp) object of unique coordinates
+coords_sp <- SpatialPoints(coords)
+
+# create raster stack
+chelsa.stack <- stack(filepath.chelsa)
+
+# Extract variables values for each pair of coordinates
+chelsa.extract <- raster::extract(chelsa.stack, itex.coord, df = TRUE) # extract coords from the itex
+
 ##############################################################################
 
 # COPY OF CHELSA raster data extraction ------
 # Joseph Everest (with help from M. Garcia Criado and J. Assmann)
 # February 2021, adapted October 2021
 # Modified by Erica Zaja - 01/02/2022
-
 
 # PACKAGES ----
 
@@ -122,3 +138,6 @@ coord.chelsa.combo.3 <- coord.chelsa.combo.2 %>%
 # Export the dataframe to combine with ITEX data
 write.csv(coord.chelsa.combo.3, "scripts/josephjeverest/FuncDiv_v2/data/output_03_chelsa.csv")
 
+
+#####################################################
+# OTHER (Random) -----

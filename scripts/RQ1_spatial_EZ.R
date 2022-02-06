@@ -44,9 +44,10 @@ shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif")
 # Plotting shrub raster with base R
 plot(shrub_agb_p50)
 dev.off()
+shrub_latlong <- projectRaster(shrub_agb_p50, crs = "+proj=longlat +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs") 
 
 # Plotting shrub raster with ggplot
-(gplot_shrub_agb_p50<- gplot(shrub_agb_p50) +
+(gplot_shrub_agb_p50 <- gplot(shrub_agb_p50) +
   geom_raster(aes(x = x, y = y, fill = value)) +
   # value is the specific value (of reflectance) each pixel is associated with
   scale_fill_viridis_c(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -62,10 +63,9 @@ dev.off()
   ggtitle("Shrub biomass cover (g/m2) of Alaskan north slope") +
   theme(plot.title = element_text(hjust = 0.5),     # centres plot title
         text = element_text(size=15),		       	    # font size
-        axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
+        axis.text.x = element_text(angle = 0, hjust = 1)))  # rotates x axis text
 
 dev.off()
-
 
 ### PCH RANGE DATA -----
 # PCH core range data from Porcupine Caribou Management Board (2016)
@@ -177,7 +177,12 @@ dev.off()
 projection(cropped)
 
 cropped_shrub <- as.data.frame(cropped, xy=TRUE)
-glimpse(cropped_shrub) 
+glimpse(cropped_shrub)
+cropped_shrub_2 <- cropped_shrub %>% 
+  dplyr::select(shrub_agb_p50)
+
+glimpse(cropped_shrub_2)
+# write.csv(cropped_shrub_2, "datasets/berner_data/cropped_shrub_2.csv")
 
 # PROBLEM 3 ----
 cropped_coords <- as.data.frame(cropped_latlong, xy = TRUE)
@@ -185,9 +190,11 @@ glimpse(cropped_coords) # cancels (makes into NAs) all my shrub biomass data !
 cropped_coords <- cropped_coords %>% 
   dplyr::select(- shrub_agb_p50)
 # cropped_coords now is only the x and y lat and long! 
+str(cropped_coords)
+# write.csv(cropped_coords, "datasets/berner_data/cropped_coords.csv")
 
 # I could try joining the two dataframes: so i have latlong AND shrub biomass
-# shrub_and_coords <- left_join(cropped_shrub, cropped_coords)
+# shrub_PCH_range <- bind_rows(cropped_coords, cropped_shrub_2)
 
 # Histogram of shrub agb (g/m2) 
 hist(cropped_shrub$shrub_agb_p50)
