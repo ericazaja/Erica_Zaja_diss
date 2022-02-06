@@ -44,7 +44,8 @@ shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif")
 # Plotting shrub raster with base R
 plot(shrub_agb_p50)
 dev.off()
-shrub_latlong <- projectRaster(shrub_agb_p50, crs = "+proj=longlat +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs") 
+# shrub_latlong <- projectRaster(shrub_agb_p50, crs = "+proj=longlat +lat_0=50 
+# +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs") # takes too long
 
 # Plotting shrub raster with ggplot
 (gplot_shrub_agb_p50 <- gplot(shrub_agb_p50) +
@@ -96,6 +97,7 @@ world <- getMap(resolution = "low")
     ylab("Latitude") ) 
 
 ### PROBLEM 1 -----
+# trying to overlay polygon of PCH range onto the basemap 
 (Alaska_Yukon <- ggplot() +
     geom_polygon(data = world, aes(x = long, y = lat, group = group),
                  fill = "grey", colour = "black") + 
@@ -105,6 +107,7 @@ world <- getMap(resolution = "low")
     theme_shrub() +  
     xlab("Longitude") +
     ylab("Latitude") ) ## DOESNT WORK
+
 
 ## CROPPED SHRUB MAP ----
 ### PROBLEM 2 ----- 
@@ -137,7 +140,7 @@ projection(cropped_latlong)
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
-# Cropped map with personalised colour palette (low-mid) and lat long coords
+# Cropped map with personalised colour palette (low-mid)
 (cropped_my_palette <- gplot(cropped) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
@@ -178,11 +181,12 @@ projection(cropped)
 
 cropped_shrub <- as.data.frame(cropped, xy=TRUE)
 glimpse(cropped_shrub)
+
 cropped_shrub_2 <- cropped_shrub %>% 
   dplyr::select(shrub_agb_p50)
 
 glimpse(cropped_shrub_2)
-# write.csv(cropped_shrub_2, "datasets/berner_data/cropped_shrub_2.csv")
+write.csv(cropped_shrub_2, "datasets/berner_data/cropped_shrub_2.csv")
 
 # PROBLEM 3 ----
 cropped_coords <- as.data.frame(cropped_latlong, xy = TRUE)

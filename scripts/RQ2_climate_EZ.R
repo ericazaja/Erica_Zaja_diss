@@ -11,6 +11,8 @@
   
 # Shrub data from Berner et al 2018
 # Climate data from CHELSA 2022
+# Temperature climatologies: mean daily mean air temperatures of the warmest quarter (bio10) (°C). Offset -273.15
+# Precipitation climatologies: mean monthly precipitation amount of the warmest quarter (bio18) (kg m-2)
 
 
 # Loading libraries -----
@@ -22,12 +24,8 @@ library(viridis)
 library(rasterVis)
 
 # Loading CHELSA data ------
-# precipitation_81 <- raster("datasets/climate_data/CHELSA_bio12_1981_V1.2.1.tif")
-
-plot(precipitation_81)
-zoom(precipitation_81)
-
-## eg. code to make site/block/plot categorical from https://ourcodingclub.github.io/tutorials/model-design/ 
+# temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
+# precip <- raster("datasets/climate_data/CHELSA_bio10_18.tif")
 
 ### I need to extract cooordinates from raster of my map
 
@@ -44,10 +42,10 @@ coords <- read.csv("datasets/berner_data/cropped_coords.csv") %>%
 coords_sp <- SpatialPoints(coords)
 
 # create raster stack
-chelsa.stack <- stack(filepath.chelsa)
+chelsa.stack <- stack(precip, temp)
 
 # Extract variables values for each pair of coordinates
-chelsa.extract <- raster::extract(chelsa.stack, itex.coord, df = TRUE) # extract coords from the itex
+chelsa.extract <- raster::extract(chelsa.stack, coords_sp, df = TRUE) # extract coords 
 
 ##############################################################################
 
@@ -141,3 +139,5 @@ write.csv(coord.chelsa.combo.3, "scripts/josephjeverest/FuncDiv_v2/data/output_0
 
 #####################################################
 # OTHER (Random) -----
+## eg. code to make site/block/plot categorical from https://ourcodingclub.github.io/tutorials/model-design/ 
+
