@@ -186,7 +186,9 @@ cropped_shrub_2 <- cropped_shrub %>%
   dplyr::select(shrub_agb_p50)
 
 glimpse(cropped_shrub_2)
-write.csv(cropped_shrub_2, "datasets/berner_data/cropped_shrub_2.csv")
+head(cropped_shrub_2)
+tail(cropped_shrub_2)
+# write.csv(cropped_shrub_2, "datasets/berner_data/cropped_shrub_2.csv")
 
 # PROBLEM 3 ----
 cropped_coords <- as.data.frame(cropped_latlong, xy = TRUE)
@@ -211,21 +213,24 @@ hist(cropped_shrub$shrub_agb_p50)
 dev.off()
 
 ### CATEGORISE into HIGH/MEDIUM/LOW biomass and EAST VS WEST range area
-cropped_shrub_2 <- cropped_shrub %>%
+cropped_shrub_categ <- cropped_shrub %>%
   mutate(biomass_level = case_when (shrub_agb_p50 <= 100 ~ 'Low',
                   shrub_agb_p50 > 100  & shrub_agb_p50 < 500 ~ 'Medium', 
                   shrub_agb_p50 >= 500 ~ 'High'), 
         area = case_when (x >= 300000 ~ 'East' ,
                            x < 300000 ~ 'West'))
 
-glimpse(cropped_shrub_2)
-str(cropped_shrub_2)
+glimpse(cropped_shrub_categ)
+str(cropped_shrub_categ)
 
 ## MODEL ----
 # making area a factor with two levels (west and east)
-cropped_shrub_2$area <- as.factor(as.character(cropped_shrub_2$area))   
+cropped_shrub_categ$area <- as.factor(as.character(cropped_shrub_categ$area))   
 
-model_1 <- lm(shrub_agb_p50 ~ area + (1|area), data = cropped_shrub_2) # doesnt run
+model_1 <- lm(shrub_agb_p50 ~ area, data = cropped_shrub_categ) # doesnt run
+save(model_1, file = "img/spatial_output/model_1_output.RData")
+model_1 <- get(load("img/spatial_output/model_1_output.RData"))
+
 summary(model_1) # doesnt run
 # maybe something to do with my data being skewed 
 
