@@ -7,6 +7,7 @@
 
 ## RQ1: What areas within the PCH Alaskan summer range have high-medium-low shrub biomass cover?
 
+## ISLA START ----
 
 # LOADING LIBRARIES -----
 library(sp)
@@ -55,9 +56,7 @@ extracted_shrub <- raster::extract(x = shrub_agb_p50,
                              df = TRUE)
 
 
-
-shrub_crop_df <- as.data.frame(shrub_crop, xy = TRUE)
-
+### ISLA STOP ----
 
 
 
