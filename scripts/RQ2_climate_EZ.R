@@ -24,8 +24,8 @@ library(viridis)
 library(rasterVis)
 
 # Loading CHELSA data ------
-# temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
-# precip <- raster("datasets/climate_data/CHELSA_bio10_18.tif")
+temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
+precip <- raster("datasets/climate_data/CHELSA_bio10_18.tif")
 
 ### I need to extract cooordinates from raster of my map
 

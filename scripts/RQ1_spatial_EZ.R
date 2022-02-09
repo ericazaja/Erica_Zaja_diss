@@ -7,7 +7,9 @@
 
 ## RQ1: What areas within the PCH Alaskan summer range have high-medium-low shrub biomass cover?
 
-# Loading libraries -----
+### ISLA START ------
+
+# LOADING LIBRARIES -----
 library(sp)
 library(rgdal)
 library(raster)
@@ -21,31 +23,69 @@ library(maptools)
 library(rgeos)
 library(rworldmap)
 
-## Setting a theme ----
-theme_shrub <- function(){ theme(legend.position = "right",
-                     axis.title.x = element_text(face="bold", size=20),
-                     axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
-                     axis.title.y = element_text(face="bold", size=20),
-                     axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
-                     panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
-                     panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
-                     panel.background = element_blank(), axis.line = element_line(colour = "black"), 
-                     plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
-                     plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
+### LOADING DATA -----
 
-## SHRUB DATA ----
-# from Berner et al 2018
-
+## SHRUB DATA: from Berner et al 2018
 # Loading raster of shrub biomass (g/m2) on Alaskan North Slope  -----
 shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif") 
 # Using the best-estimates: the 50th percentile of the 1,000 permutations
 
+### PCH CORE RANGE DATA: from Porcupine Caribou Management Board (2016)
+# Loading polygon of PCH range 
+PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") #loading data
+st_bbox(PCH_core_range) # extent 
+
 # Plotting shrub raster with base R
 plot(shrub_agb_p50)
-dev.off()
+
+# defining extent of the PCH range polygon
+range_extent <- extent(165444.3, 1697872.7,  849222.0, 2270606.5)
+
+# cropping shrub map to extent of the PCH range
+shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
+
+# making cropped raster into a dataframe
+shrub_crop_df <- as.data.frame(shrub_crop, xy = TRUE) 
+shrub_crop_omit <- na.omit(shrub_crop_df)
+
+# extracting shrub biomass data from pixels within the range 
+extracted_shrub <- raster::extract(x = shrub_agb_p50,
+                             y = as(PCH_core_range, "Spatial"),
+                             df = TRUE)
+
+
+###### ISLA STOP -----
+
 # shrub_latlong <- projectRaster(shrub_agb_p50, crs = "+proj=longlat +lat_0=50 
 # +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs") # takes too long
+
+ggplot() +
+  geom_raster(shrub_agb_p50) + 
+  scale_fill_gradientn(name = "Bathymetry", colors = terrain.colors(10)) +
+  geom_sf(data = PCH_core_range, color = "blue", fill = NA) +
+  coord_sf()
+
+bathy_Cropped <- crop(x = shrub_agb_p50, y = as_Spatial(PCH_core_range))
+plot(bathy_Cropped) # right !
+erie_bathy_Cropped_df <- as.data.frame(bathy_Cropped, xy = TRUE)
+
+ggplot() +
+  geom_sf(data = st_as_sfc(st_bbox(shrub_agb_p50)), fill = "green",
+          color = "green", alpha = .2) +  
+  geom_raster(data = erie_bathy_Cropped_df,
+              aes(x = x, y = y, fill =shrub_agb_p50)) + 
+  scale_fill_gradientn(name = "Bathymetry", colors = terrain.colors(10)) + 
+  coord_sf()
+
+str(erie_bathy_Cropped_df)
+
+fish_tracks_bathy <- raster::extract(x = bathy_Cropped,
+                             y = as(PCH_core_range, "Spatial"),
+                             df = TRUE)
+str(PCH_core_range)
+
+str(fish_tracks_bathy)
 
 # Plotting shrub raster with ggplot
 (gplot_shrub_agb_p50 <- gplot(shrub_agb_p50) +
@@ -68,12 +108,17 @@ dev.off()
 
 dev.off()
 
-### PCH RANGE DATA -----
-# PCH core range data from Porcupine Caribou Management Board (2016)
-
-# Loading polygon of PCH range 
-PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") #loading data
-
+## Setting a theme ----
+theme_shrub <- function(){ theme(legend.position = "right",
+                                 axis.title.x = element_text(face="bold", size=20),
+                                 axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
+                                 axis.title.y = element_text(face="bold", size=20),
+                                 axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
+                                 panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
+                                 panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
+                                 panel.background = element_blank(), axis.line = element_line(colour = "black"), 
+                                 plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
+                                 plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 # Plotting PCH core range using ggplot
 (PCH_range_map <- ggplot() + 
   geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "grey") + 
@@ -117,7 +162,10 @@ plot(PCH_core_range, add = TRUE) # adds range polygon onto shrub map but UGLY !
 dev.off()
 
 cropped <- crop(shrub_agb_p50, PCH_core_range)
-# cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326") # works but then removes AGB at the bottom
+
+cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326") # works but then removes AGB at the bottom
+(cell_size <-area(cropped_latlong, na.rm=TRUE, weights=FALSE))
+
 cropped_latlong <- projectRaster(cropped, crs = "+proj=longlat +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs") 
 projection(cropped_latlong)
 
@@ -229,6 +277,7 @@ cropped_shrub_categ$area <- as.factor(as.character(cropped_shrub_categ$area))
 
 model_1 <- lm(shrub_agb_p50 ~ area, data = cropped_shrub_categ) # doesnt run
 save(model_1, file = "img/spatial_output/model_1_output.RData")
+
 model_1 <- get(load("img/spatial_output/model_1_output.RData"))
 
 summary(model_1) # doesnt run
@@ -276,3 +325,15 @@ summary(model_1) # doesnt run
 
 #e <- extract(shrub_agb_p2_5, PCH_core_range)
 #zoom()
+
+# experimenting ----
+e <- drawExtent() # draw on the shrub map
+plot(e, asp = 1, xlab = "", ylab = "", axes = FALSE)
+exp <- plot(shrub_agb_p50, add = TRUE)
+
+exp <- plot(shrub_agb_p50, axes = FALSE, xlim = c(0,2e+05), ylim = c(2200000, 2300000))
+exp_df <- as.data.frame(exp, xy=TRUE)
+
+exp <- zoom(shrub_agb_p50, ext = drawExtent())
+crop <- crop(shrub_agb_p50, exp)
+exp_df <- as.data.frame(crop, xy=TRUE)
