@@ -45,7 +45,7 @@ range_extent <- extent(165444.3, 1697872.7,  849222.0, 2270606.5)
 # cropping shrub map to extent of the PCH range
 shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 
-# making cropped raster into a dataframe
+# making cropped raster into dataframe
 
 shrub_crop_df <- as.data.frame(shrub_crop, xy = TRUE) 
 shrub_crop_omit <- na.omit(shrub_crop_df)
