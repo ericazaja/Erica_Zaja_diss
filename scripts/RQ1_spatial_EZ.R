@@ -7,7 +7,6 @@
 
 ## RQ1: What areas within the PCH Alaskan summer range have high-medium-low shrub biomass cover?
 
-### ISLA START ------
 
 # LOADING LIBRARIES -----
 library(sp)
@@ -46,6 +45,7 @@ range_extent <- extent(165444.3, 1697872.7,  849222.0, 2270606.5)
 shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 
 # making cropped raster into a dataframe
+
 shrub_crop_df <- as.data.frame(shrub_crop, xy = TRUE) 
 shrub_crop_omit <- na.omit(shrub_crop_df)
 
@@ -55,7 +55,11 @@ extracted_shrub <- raster::extract(x = shrub_agb_p50,
                              df = TRUE)
 
 
-###### ISLA STOP -----
+
+shrub_crop_df <- as.data.frame(shrub_crop, xy = TRUE)
+
+
+
 
 # shrub_latlong <- projectRaster(shrub_agb_p50, crs = "+proj=longlat +lat_0=50 
 # +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs") # takes too long
@@ -108,6 +112,7 @@ str(fish_tracks_bathy)
 
 dev.off()
 
+
 ## Setting a theme ----
 theme_shrub <- function(){ theme(legend.position = "right",
                                  axis.title.x = element_text(face="bold", size=20),
@@ -119,6 +124,7 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  panel.background = element_blank(), axis.line = element_line(colour = "black"), 
                                  plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
+
 # Plotting PCH core range using ggplot
 (PCH_range_map <- ggplot() + 
   geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "grey") + 
