@@ -20,6 +20,8 @@ library(ggmap)
 library(maptools)
 library(rgeos)
 library(rworldmap)
+library(rnaturalearth)
+library(rnaturalearthdata)
 
 
 # LOADING DATA ----
@@ -96,23 +98,25 @@ projection(shrub_agb_p50)
 
 
 ### BASE MAP of North America ----
-# world <- getMap(resolution = "low")
-library(rnaturalearth)
-library(rnaturalearthdata)
-world <- ne_countries(scale = "medium", returnclass = "sf")
+world <- ne_countries(scale = "medium", returnclass = "sf") 
 class(world)
 
-Alaska_coords <- data.frame(longitude = c(-180, -80), latitude = c(60, 75))
-  
-Alaska_Yukon <- ggplot(data = world) +
-  geom_sf() +
-  geom_point(data = Alaska_coords, aes(x = longitude, y = latitude), size = 4, 
-             shape = 23, fill = "darkred") +
-  coord_sf(xlim = c(-180, -80), ylim = c(60, 75), expand = FALSE)
+Alaska_coords <- data.frame(longitude = c(-180, -80), latitude = c(60, 75)) # making a datafrme of coordinates of Alaska/Yukon
+
+# plotting map 
+(Alaska_Yukon <- ggplot(data = world) +
+    geom_sf() +
+  geom_point(data = Alaska_coords, aes(x = longitude, y = latitude)) +
+  coord_sf(xlim = c(-180, -80), ylim = c(60, 75), expand = FALSE))
 
 
-
+### OVERLAYING MAPS ----
 # trying to overlay polygon of PCH range onto the basemap 
+ggplot(data = world) +
+  geom_sf() +
+  geom_sf(data = counties, fill = NA, color = gray(.5)) +
+  coord_sf(xlim = c(-88, -78), ylim = c(24.5, 33), expand = FALSE)
+
 (Alaska_Yukon <- ggplot() +
    geom_polygon(data = world, aes(x = long, y = lat, group = group),
                 fill = "grey", colour = "black") + 
@@ -307,6 +311,8 @@ exp_df <- as.data.frame(exp, xy=TRUE)
 exp <- zoom(shrub_agb_p50, ext = drawExtent())
 crop <- crop(shrub_agb_p50, exp)
 exp_df <- as.data.frame(crop, xy=TRUE)
+
+# world <- getMap(resolution = "low")
 
 (NA_base <- ggplot() +
     borders("world", colour = "black", fill = "white", size = 0.3) + 
