@@ -44,38 +44,10 @@ ggplot() +
   scale_fill_gradientn(name = "Bathymetry", colors = terrain.colors(10)) + 
   coord_sf()
 
-str(erie_bathy_Cropped_df)
 
-fish_tracks_bathy <- raster::extract(x = bathy_Cropped,
-                                     y = as(PCH_core_range, "Spatial"),
-                                     df = TRUE)
-str(PCH_core_range)
+### DATA VISUALISATION -----
 
-str(fish_tracks_bathy)
-
-# Plotting shrub raster with ggplot
-(gplot_shrub_agb_p50 <- gplot(shrub_agb_p50) +
-    geom_raster(aes(x = x, y = y, fill = value)) +
-    # value is the specific value (of reflectance) each pixel is associated with
-    scale_fill_viridis_c(rescaler = function(x, to = c(0, 1), from = NULL) {
-      ifelse(x<1000, 
-             scales::rescale(x,
-                             to = to,
-                             from = c(min(x, na.rm = TRUE), 1000)),
-             1)}) +
-    coord_quickmap()+
-    theme_shrub() +  # Remove ugly grey background
-    xlab("Longitude") +
-    ylab("Latitude") +
-    ggtitle("Shrub biomass cover (g/m2) of Alaskan north slope") +
-    theme(plot.title = element_text(hjust = 0.5),     # centres plot title
-          text = element_text(size=15),		       	    # font size
-          axis.text.x = element_text(angle = 0, hjust = 1)))  # rotates x axis text
-
-dev.off()
-
-
-## Setting a theme ----
+# setting a theme 
 theme_shrub <- function(){ theme(legend.position = "right",
                                  axis.title.x = element_text(face="bold", size=20),
                                  axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
@@ -87,29 +59,59 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
-# Plotting PCH core range using ggplot
+# Plotting shrub raster (entire) with ggplot
+(gplot_shrub_agb_p50 <- gplot(shrub_agb_p50) +
+    geom_raster(aes(x = x, y = y, fill = value)) +
+    # value is the specific value (of reflectance) each pixel is associated with
+    scale_fill_viridis_c(rescaler = function(x, to = c(0, 1), from = NULL) {
+      ifelse(x<1000, 
+             scales::rescale(x,
+                             to = to,
+                             from = c(min(x, na.rm = TRUE), 1000)),1)}) +
+    coord_quickmap()+
+    theme_shrub() +  # Remove ugly grey background
+    xlab("Longitude") +
+    ylab("Latitude") +
+    ggtitle("Shrub biomass cover (g/m2) of Alaskan north slope") +
+    theme(plot.title = element_text(hjust = 0.5),     # centres plot title
+          text = element_text(size=15),		       	    # font size
+          axis.text.x = element_text(angle = 0, hjust = 1)))  # rotates x axis text
+
+
+# Plotting PCH core range (entire) using ggplot
 (PCH_range_map <- ggplot() + 
     geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "grey") + 
     theme_shrub()+
     ggtitle("PCH core range 2016")) 
+
 
 # Checking PCH range and shrub map have same projection
 projection(PCH_core_range)
 projection(shrub_agb_p50)
 # same projection
 
+# converting to latitude-longitude from aes projection
+# shrub_latlong <- projectRaster(shrub_agb_p50, crs = "+proj=longlat +lat_0=50 
+# +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs") # takes too long
+
 
 ### BASE MAP of North America ----
-world <- getMap(resolution = "low")
+# world <- getMap(resolution = "low")
+library(rnaturalearth)
+library(rnaturalearthdata)
+world <- ne_countries(scale = "medium", returnclass = "sf")
+class(world)
 
-(Alaska_Yukon_base <- ggplot() +
-    borders("world", colour = "black", fill = "white", size = 0.3) + 
-    coord_cartesian(xlim = c(-180, -80), ylim = c(60, 75)) +
-    theme_shrub() +  # Remove ugly grey background
-    xlab("Longitude") +
-    ylab("Latitude") ) 
+Alaska_coords <- data.frame(longitude = c(-180, -80), latitude = c(60, 75))
+  
+Alaska_Yukon <- ggplot(data = world) +
+  geom_sf() +
+  geom_point(data = Alaska_coords, aes(x = longitude, y = latitude), size = 4, 
+             shape = 23, fill = "darkred") +
+  coord_sf(xlim = c(-180, -80), ylim = c(60, 75), expand = FALSE)
 
-### PROBLEM 1 -----
+
+
 # trying to overlay polygon of PCH range onto the basemap 
 (Alaska_Yukon <- ggplot() +
    geom_polygon(data = world, aes(x = long, y = lat, group = group),
@@ -306,5 +308,11 @@ exp <- zoom(shrub_agb_p50, ext = drawExtent())
 crop <- crop(shrub_agb_p50, exp)
 exp_df <- as.data.frame(crop, xy=TRUE)
 
+(NA_base <- ggplot() +
+    borders("world", colour = "black", fill = "white", size = 0.3) + 
+    coord_cartesian(xlim = c(-180, -80), ylim = c(60, 75)) +
+    theme_shrub() +  # Remove ugly grey background
+    xlab("Longitude") +
+    ylab("Latitude") ) 
 
 
