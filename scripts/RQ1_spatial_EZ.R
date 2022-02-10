@@ -6,6 +6,7 @@
 ##%######################################################%##
 
 ## RQ1: What areas within the PCH Alaskan summer range have high-medium-low shrub biomass cover?
+### Variation in shrub biomass across latitudes 
 
 # LOADING LIBRARIES -----
 library(sp)
@@ -34,7 +35,7 @@ shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif")
 PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") #loading data
 
 
-### EXTRACTION ----
+### EXTRACTION (West-to-East) ----
 st_bbox(PCH_core_range) # extent of the PCH range
 
 # plotting shrub raster (entire) 
@@ -146,6 +147,9 @@ extracted_shrub_5 <- extracted_shrub_5 %>% mutate(strip = rep(5))
 shrub_all <- rbind(extracted_shrub_1, extracted_shrub_2, extracted_shrub_3, extracted_shrub_4, extracted_shrub_5) 
 # write.csv(shrub_all, "datasets/berner_data/shrub_all.csv")
 # shrub_all <- read_csv("datasets/berner_data/shrub_all.csv")
+
+### EXTRACTION (North-to-South) ----
+
 
 # LOGIC CHECKS ----
 # checking if norhtern strip has lower biomass than southern strip
