@@ -47,7 +47,7 @@ range_extent <- extent(165444.3,  849222.0, 1697872.7, 2270606.5) # xmin, xmax, 
 shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 
 # plotting cropped shrub map to visualise extent
-(cropped_vis <- gplot(shrub_crop_n) +
+(cropped_vis <- gplot(shrub_crop_s) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -140,11 +140,11 @@ glimpse(extracted_shrub_n)
 extracted_shrub_n <- na.omit(extracted_shrub_n)
 
 # South strip 
-range_extent_s <- extent(165454.7, 521674.7, 2170618.1, 2200618.1) # class: extent
-shrub_crop_s <- crop(x = shrub_agb_p50, y = range_extent_n)
-poly_s <- as(range_extent_n, 'SpatialPolygons') # making extent into polygon
+range_extent_s <- extent(165454.7, 521674.7, 2100000.1, 2120000.1) # class: extent
+shrub_crop_s <- crop(x = shrub_agb_p50, y = range_extent_s)
+poly_s <- as(range_extent_s, 'SpatialPolygons') # making extent into polygon
 class(poly_s) # checking it's a polygon
-extracted_shrub_n <- raster::extract(x = shrub_crop_n, y = poly_n, df = TRUE) # extracting pixels
-glimpse(extracted_shrub_n)
-extracted_shrub_n <- na.omit(extracted_shrub_n)
+extracted_shrub_s <- raster::extract(x = shrub_crop_s, y = poly_s, df = TRUE) # extracting pixels
+glimpse(extracted_shrub_s)
+extracted_shrub_s <- na.omit(extracted_shrub_s)
 
