@@ -130,7 +130,7 @@ extracted_shrub_6 <- raster::extract(x = shrub_crop_6, y = poly_6, df = TRUE) # 
 glimpse(extracted_shrub_6)
 extracted_shrub_6 <- na.omit(extracted_shrub_6)
 
-# North strip 
+# Northern strip 
 range_extent_n <- extent(165454.7, 521674.7, 2170618.1, 2200618.1) # class: extent
 shrub_crop_n <- crop(x = shrub_agb_p50, y = range_extent_n)
 poly_n <- as(range_extent_n, 'SpatialPolygons') # making extent into polygon
@@ -138,13 +138,19 @@ class(poly_n) # checking it's a polygon
 extracted_shrub_n <- raster::extract(x = shrub_crop_n, y = poly_n, df = TRUE) # extracting pixels
 glimpse(extracted_shrub_n)
 extracted_shrub_n <- na.omit(extracted_shrub_n)
+hist(shrub_crop_n)
+range(extracted_shrub_n) # 1-2248
 
-# South strip 
-range_extent_s <- extent(165454.7, 521674.7, 2100000.1, 2120000.1) # class: extent
+
+# Southern strip 
+range_extent_s <- extent(165454.7, 521674.7, 2100000.1, 2130000.1) # class: extent
 shrub_crop_s <- crop(x = shrub_agb_p50, y = range_extent_s)
 poly_s <- as(range_extent_s, 'SpatialPolygons') # making extent into polygon
 class(poly_s) # checking it's a polygon
 extracted_shrub_s <- raster::extract(x = shrub_crop_s, y = poly_s, df = TRUE) # extracting pixels
 glimpse(extracted_shrub_s)
 extracted_shrub_s <- na.omit(extracted_shrub_s)
+hist(shrub_crop_s)
+range(extracted_shrub_s) # 1 2788
+
 
