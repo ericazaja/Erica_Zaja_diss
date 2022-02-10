@@ -7,8 +7,6 @@
 
 ## RQ1: What areas within the PCH Alaskan summer range have high-medium-low shrub biomass cover?
 
-## ISLA START ----
-
 # LOADING LIBRARIES -----
 library(sp)
 library(rgdal)
@@ -36,27 +34,55 @@ shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif")
 PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") #loading data
 st_bbox(PCH_core_range) # extent 
 
-# Plotting shrub raster with base R
+# plotting shrub raster (entire) 
 plot(shrub_agb_p50)
 
 # defining extent of the PCH range polygon
-range_extent <- extent(165444.3, 1697872.7,  849222.0, 2270606.5)
+range_extent <- extent(165444.3,  849222.0, 1697872.7, 2270606.5) # xmin, xmax, ymin, ymax
 
 # cropping shrub map to extent of the PCH range
 shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 
+# plotting cropped shrub map to visualise extent
+(cropped_viridis <- gplot(shrub_crop) +
+    geom_raster(aes(x = x, y = y, fill = value)) +
+    # value is the specific value (of reflectance) each pixel is associated with
+    scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
+      ifelse(x<1000, 
+             scales::rescale(x,
+                             to = to,
+                             from = c(min(x, na.rm = TRUE), 1000)),
+             1)}) +
+    coord_quickmap()+
+    theme_classic() +  # Remove ugly grey background
+    xlab("Longitude") +
+    ylab("Latitude") +
+    ggtitle("Shrub biomass cover (g/m2) of the PCH alaskan range") +
+    theme(plot.title = element_text(hjust = 0.5),             # centres plot title
+          text = element_text(size=15),		       	    # font size
+          axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
+
+# extent of the cropped shrub map
+st_bbox(shrub_crop) # extent 
+
+# subdividing cropped map into smaller chunks 
+range_extent_1 <- extent(165454.7, 521674.7, 1933928.1, 2270618.1)
+range_extent_2 <- extent(165444.3, 1697872.7,  849222.0, 2270606.5)
+range_extent_3 <- extent(165444.3, 1697872.7,  849222.0, 2270606.5)
+range_extent_4 <- extent(165444.3, 1697872.7,  849222.0, 2270606.5)
+
 # making cropped raster into dataframe
 
-shrub_crop_df <- as.data.frame(shrub_crop, xy = TRUE) 
-shrub_crop_omit <- na.omit(shrub_crop_df)
+#shrub_crop_df <- as.data.frame(shrub_crop, xy = TRUE) 
+#shrub_crop_omit <- na.omit(shrub_crop_df)
 
 # extracting shrub biomass data from pixels within the range 
-extracted_shrub <- raster::extract(x = shrub_agb_p50,
+# Sub-area 1: 
+extracted_shrub_1 <- raster::extract(x = shrub_agb_p50,
                              y = as(PCH_core_range, "Spatial"),
                              df = TRUE)
 
 
-### ISLA STOP ----
 
 
 
