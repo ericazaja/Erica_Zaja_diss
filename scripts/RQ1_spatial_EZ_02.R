@@ -30,7 +30,6 @@ PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp"
 
 
 
-
 ggplot() +
   geom_raster(shrub_agb_p50) + 
   scale_fill_gradientn(name = "Bathymetry", colors = terrain.colors(10)) +
