@@ -44,7 +44,7 @@ range_extent <- extent(165444.3,  849222.0, 1697872.7, 2270606.5) # xmin, xmax, 
 shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 
 # plotting cropped shrub map to visualise extent
-(cropped_viridis <- gplot(shrub_crop) +
+(cropped_vis <- gplot(shrub_crop_1) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -66,10 +66,19 @@ shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 st_bbox(shrub_crop) # extent 
 
 # subdividing cropped map into smaller chunks 
-range_extent_1 <- extent(165454.7, 521674.7, 1933928.1, 2270618.1)
+range_extent_1 <- extent(165454.7, 175454.7, 1933928.1, 2270618.1)
 range_extent_2 <- extent(165444.3, 1697872.7,  849222.0, 2270606.5)
 range_extent_3 <- extent(165444.3, 1697872.7,  849222.0, 2270606.5)
 range_extent_4 <- extent(165444.3, 1697872.7,  849222.0, 2270606.5)
+
+shrub_crop_1 <- crop(x = shrub_agb_p50, y = range_extent_1)
+extracted_shrub_1 <- raster::extract(x = shrub_crop_1, y = as(range_extent_1, "Spatial"),
+                                     df = TRUE)
+extract_1 <- raster::extract(shrub_agb_p50, range_extent_1, fun = NULL, na.rm=TRUE, exact=TRUE, weights=FALSE,  
+                normalizeWeights=TRUE, cellnumbers=FALSE, small=TRUE, df=TRUE,layer, nl,
+                factors=FALSE, sp=FALSE)
+as.factor(shrub_agb_p50)
+
 
 # making cropped raster into dataframe
 
@@ -78,8 +87,8 @@ range_extent_4 <- extent(165444.3, 1697872.7,  849222.0, 2270606.5)
 
 # extracting shrub biomass data from pixels within the range 
 # Sub-area 1: 
-extracted_shrub_1 <- raster::extract(x = shrub_agb_p50,
-                             y = as(PCH_core_range, "Spatial"),
+extracted_shrub_1 <- raster::extract(x = shrub_crop_1,
+                             y = as(range_extent_1, "Spatial"),
                              df = TRUE)
 
 
