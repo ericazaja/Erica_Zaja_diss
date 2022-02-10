@@ -130,6 +130,10 @@ extracted_shrub_6 <- raster::extract(x = shrub_crop_6, y = poly_6, df = TRUE) # 
 glimpse(extracted_shrub_6)
 extracted_shrub_6 <- na.omit(extracted_shrub_6)
 
+
+# LOGIC CHECKS ----
+# checking if norhtern strip has lower biomass than southern strip
+
 # Northern strip 
 range_extent_n <- extent(165454.7, 521674.7, 2170618.1, 2200618.1) # class: extent
 shrub_crop_n <- crop(x = shrub_agb_p50, y = range_extent_n)

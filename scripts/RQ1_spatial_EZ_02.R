@@ -105,16 +105,19 @@ Alaska_coords <- data.frame(longitude = c(-180, -80), latitude = c(60, 75)) # ma
 
 # plotting map 
 (Alaska_Yukon <- ggplot(data = world) +
-    geom_sf() +
-  geom_point(data = Alaska_coords, aes(x = longitude, y = latitude)) +
+    geom_point(data = Alaska_coords, aes(x = longitude, y = latitude)) +
+  geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "grey") +
   coord_sf(xlim = c(-180, -80), ylim = c(60, 75), expand = FALSE))
 
+class(PCH_core_range)
 
-### OVERLAYING MAPS ----
+### OVERLAYING MAPS 
 # trying to overlay polygon of PCH range onto the basemap 
-ggplot(data = world) +
-  geom_sf() +
-  geom_sf(data = counties, fill = NA, color = gray(.5)) +
+
+Alaska_polygon <- as(Alaska_coords, 'SpatialPolygonsDataFrame') # making extent into polygon
+
+ggplot(data = Alaska_coords) +
+  geom_polygon(PCH_core_range, aes(x = long, y = lat, group = group), fill = "red") +
   coord_sf(xlim = c(-88, -78), ylim = c(24.5, 33), expand = FALSE)
 
 (Alaska_Yukon <- ggplot() +
