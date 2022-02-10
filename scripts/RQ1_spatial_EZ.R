@@ -182,4 +182,15 @@ shrub_check <- rbind(extracted_shrub_s, extracted_shrub_n)
   geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
   scale_fill_manual(values=c("#69b3a2", "#404080")) +
   theme_bw())
+# NB the histogram for the north is more skewed towards lower biomass
+## More datapoints in the Northern strip due to how map is
+## To the regions comparable: randomly sample the Northern strip to get down to the same sample size as the Southern strip. 
+# There is a dplyr function for that.
+
+### measuring area of focal area 
+# shrub_latlong <- projectRaster(shrub_crop, crs = "+init=epsg:4326") # doesnt work 
+cell_size <- area(shrub_latlong, na.rm=TRUE, weights=FALSE)
+cell_size  <-cell_size[!is.na(cell_size)]
+raster_area<-length(cell_size)*median(cell_size)
+#print(paste("Area of focal area (raster):“,round(raster_area, digits=1),“km2″))
 
