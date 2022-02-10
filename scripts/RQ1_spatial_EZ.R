@@ -65,7 +65,7 @@ shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 # extent of the cropped shrub map
 st_bbox(shrub_crop) 
 
-# subdividing cropped map into 5 smaller chunks (strips) and extracting biomass 
+# subdividing cropped map into 5 smaller chunks (strips from West to East) and extracting biomass 
 # 1. 
 range_extent_1 <- extent(165454.7, 236698.7, 1933928.1, 2270618.1) # class: extent
 shrub_crop_1 <- crop(x = shrub_agb_p50, y = range_extent_1) # raster layer
@@ -75,7 +75,10 @@ extracted_shrub_1 <- raster::extract(x = shrub_crop_1, y = poly_1, df = TRUE) # 
 glimpse(extracted_shrub_1)
 extracted_shrub_1 <- na.omit(extracted_shrub_1)
 hist(shrub_crop_1)
-# write.csv(extracted_shrub_1, "datasets/berner_data/extracted_shrub_1.csv")
+extracted_shrub_1 <- extracted_shrub_1 %>% mutate(strip = rep(1)) %>% select(-X1)
+
+write.csv(extracted_shrub_1, "datasets/berner_data/extracted_shrub_1.csv")
+extracted_shrub_1 <- read_csv("datasets/berner_data/extracted_shrub_1.csv")
 
 
 # 2. 
@@ -87,8 +90,9 @@ extracted_shrub_2 <- raster::extract(x = shrub_crop_2, y = poly_2, df = TRUE) # 
 glimpse(extracted_shrub_2)
 extracted_shrub_2 <- na.omit(extracted_shrub_2)
 hist(shrub_crop_2)
-# write.csv(extracted_shrub_2, "datasets/berner_data/extracted_shrub_2.csv")
+extracted_shrub_2 <- extracted_shrub_2 %>% mutate(strip = rep(2)) 
 
+# write.csv(extracted_shrub_2, "datasets/berner_data/extracted_shrub_2.csv")
 
 
 # 3. 
@@ -100,6 +104,8 @@ extracted_shrub_3 <- raster::extract(x = shrub_crop_3, y = poly_3, df = TRUE) # 
 glimpse(extracted_shrub_3)
 extracted_shrub_3 <- na.omit(extracted_shrub_3)
 hist(shrub_crop_3)
+extracted_shrub_3 <- extracted_shrub_3 %>% mutate(strip = rep(3)) 
+
 #write.csv(extracted_shrub_3, "datasets/berner_data/extracted_shrub_3.csv")
 
 # 4. 
@@ -111,6 +117,8 @@ extracted_shrub_4 <- raster::extract(x = shrub_crop_4, y = poly_4, df = TRUE) # 
 glimpse(extracted_shrub_4)
 extracted_shrub_4 <- na.omit(extracted_shrub_4)
 hist(shrub_crop_4)
+extracted_shrub_4 <- extracted_shrub_4 %>% mutate(strip = rep(4)) 
+
 #write.csv(extracted_shrub_4, "datasets/berner_data/extracted_shrub_4.csv")
 
 
@@ -124,9 +132,14 @@ extracted_shrub_5 <- raster::extract(x = shrub_crop_5, y = poly_5, df = TRUE) # 
 glimpse(extracted_shrub_5)
 extracted_shrub_5 <- na.omit(extracted_shrub_5)
 hist(shrub_crop_5)
+extracted_shrub_5 <- extracted_shrub_5 %>% mutate(strip = rep(5)) 
+
 # write.csv(extracted_shrub_5, "datasets/berner_data/extracted_shrub_5.csv")
 
 
+## MERGING DATASETS ----
+
+#shrub_all <- rbind(
 
 # LOGIC CHECKS ----
 # checking if norhtern strip has lower biomass than southern strip
