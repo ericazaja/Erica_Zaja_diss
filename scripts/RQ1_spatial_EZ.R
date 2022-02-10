@@ -75,6 +75,8 @@ extracted_shrub_1 <- raster::extract(x = shrub_crop_1, y = poly_1, df = TRUE) # 
 glimpse(extracted_shrub_1)
 extracted_shrub_1 <- na.omit(extracted_shrub_1)
 hist(shrub_crop_1)
+# write.csv(extracted_shrub_1, "datasets/berner_data/extracted_shrub_1.csv")
+
 
 # 2. 
 range_extent_2 <- extent(236698.7, 307942.7,  1933928.1, 2270618.1)
@@ -85,6 +87,8 @@ extracted_shrub_2 <- raster::extract(x = shrub_crop_2, y = poly_2, df = TRUE) # 
 glimpse(extracted_shrub_2)
 extracted_shrub_2 <- na.omit(extracted_shrub_2)
 hist(shrub_crop_2)
+# write.csv(extracted_shrub_2, "datasets/berner_data/extracted_shrub_2.csv")
+
 
 
 # 3. 
@@ -96,6 +100,7 @@ extracted_shrub_3 <- raster::extract(x = shrub_crop_3, y = poly_3, df = TRUE) # 
 glimpse(extracted_shrub_3)
 extracted_shrub_3 <- na.omit(extracted_shrub_3)
 hist(shrub_crop_3)
+#write.csv(extracted_shrub_3, "datasets/berner_data/extracted_shrub_3.csv")
 
 # 4. 
 range_extent_4 <- extent(379186.7, 450430.7,  1933928.1, 2270618.1)
@@ -105,7 +110,9 @@ class(poly_4) # checking it's a polygon
 extracted_shrub_4 <- raster::extract(x = shrub_crop_4, y = poly_4, df = TRUE) # extracting pixels
 glimpse(extracted_shrub_4)
 extracted_shrub_4 <- na.omit(extracted_shrub_4)
-hist(shrub_crop_3)
+hist(shrub_crop_4)
+#write.csv(extracted_shrub_4, "datasets/berner_data/extracted_shrub_4.csv")
+
 
 
 # 5. 
@@ -116,6 +123,9 @@ class(poly_5) # checking it's a polygon
 extracted_shrub_5 <- raster::extract(x = shrub_crop_5, y = poly_5, df = TRUE) # extracting pixels
 glimpse(extracted_shrub_5)
 extracted_shrub_5 <- na.omit(extracted_shrub_5)
+hist(shrub_crop_5)
+# write.csv(extracted_shrub_5, "datasets/berner_data/extracted_shrub_5.csv")
+
 
 
 # LOGIC CHECKS ----
