@@ -77,8 +77,8 @@ extracted_shrub_1 <- na.omit(extracted_shrub_1)
 hist(shrub_crop_1)
 extracted_shrub_1 <- extracted_shrub_1 %>% mutate(strip = rep(1)) %>% select(-X1)
 
-write.csv(extracted_shrub_1, "datasets/berner_data/extracted_shrub_1.csv")
-extracted_shrub_1 <- read_csv("datasets/berner_data/extracted_shrub_1.csv")
+write.csv(extracted_shrub_1, "datasets/berner_data/extracted_shrub_1.csv") # saving strip dataframe
+#extracted_shrub_1 <- read_csv("datasets/berner_data/extracted_shrub_1.csv")
 
 
 # 2. 
@@ -93,6 +93,7 @@ hist(shrub_crop_2)
 extracted_shrub_2 <- extracted_shrub_2 %>% mutate(strip = rep(2)) 
 
 # write.csv(extracted_shrub_2, "datasets/berner_data/extracted_shrub_2.csv")
+# extracted_shrub_2 <- read_csv("datasets/berner_data/extracted_shrub_2.csv")
 
 
 # 3. 
@@ -106,7 +107,8 @@ extracted_shrub_3 <- na.omit(extracted_shrub_3)
 hist(shrub_crop_3)
 extracted_shrub_3 <- extracted_shrub_3 %>% mutate(strip = rep(3)) 
 
-#write.csv(extracted_shrub_3, "datasets/berner_data/extracted_shrub_3.csv")
+# write.csv(extracted_shrub_3, "datasets/berner_data/extracted_shrub_3.csv")
+# extracted_shrub_3 <- read_csv("datasets/berner_data/extracted_shrub_3.csv")
 
 # 4. 
 range_extent_4 <- extent(379186.7, 450430.7,  1933928.1, 2270618.1)
@@ -119,7 +121,8 @@ extracted_shrub_4 <- na.omit(extracted_shrub_4)
 hist(shrub_crop_4)
 extracted_shrub_4 <- extracted_shrub_4 %>% mutate(strip = rep(4)) 
 
-#write.csv(extracted_shrub_4, "datasets/berner_data/extracted_shrub_4.csv")
+# write.csv(extracted_shrub_4, "datasets/berner_data/extracted_shrub_4.csv")
+# extracted_shrub_4 <- read_csv("datasets/berner_data/extracted_shrub_4.csv")
 
 
 
@@ -135,11 +138,14 @@ hist(shrub_crop_5)
 extracted_shrub_5 <- extracted_shrub_5 %>% mutate(strip = rep(5)) 
 
 # write.csv(extracted_shrub_5, "datasets/berner_data/extracted_shrub_5.csv")
+# extracted_shrub_5 <- read_csv("datasets/berner_data/extracted_shrub_5.csv")
 
 
 ## MERGING DATASETS ----
 
-#shrub_all <- rbind(
+shrub_all <- rbind(extracted_shrub_1, extracted_shrub_2, extracted_shrub_3, extracted_shrub_4, extracted_shrub_5) 
+# write.csv(shrub_all, "datasets/berner_data/shrub_all.csv")
+# shrub_all <- read_csv("datasets/berner_data/shrub_all.csv")
 
 # LOGIC CHECKS ----
 # checking if norhtern strip has lower biomass than southern strip
@@ -166,5 +172,7 @@ glimpse(extracted_shrub_s)
 extracted_shrub_s <- na.omit(extracted_shrub_s)
 hist(shrub_crop_s)
 range(extracted_shrub_s) # 1 2788
+
+# North and south strips in the same histogram 
 
 
