@@ -157,7 +157,7 @@ poly_n <- as(range_extent_n, 'SpatialPolygons') # making extent into polygon
 class(poly_n) # checking it's a polygon
 extracted_shrub_n <- raster::extract(x = shrub_crop_n, y = poly_n, df = TRUE) # extracting pixels
 glimpse(extracted_shrub_n)
-extracted_shrub_n <- na.omit(extracted_shrub_n)
+extracted_shrub_n <- na.omit(extracted_shrub_n)  %>% mutate(zone = "north")
 hist(shrub_crop_n)
 range(extracted_shrub_n) # 1-2248
 
@@ -169,10 +169,17 @@ poly_s <- as(range_extent_s, 'SpatialPolygons') # making extent into polygon
 class(poly_s) # checking it's a polygon
 extracted_shrub_s <- raster::extract(x = shrub_crop_s, y = poly_s, df = TRUE) # extracting pixels
 glimpse(extracted_shrub_s)
-extracted_shrub_s <- na.omit(extracted_shrub_s)
+extracted_shrub_s <- na.omit(extracted_shrub_s) %>% mutate(zone = "south")
 hist(shrub_crop_s)
 range(extracted_shrub_s) # 1 2788
 
-# North and south strips in the same histogram 
 
+# North and south strips in the same histogram 
+shrub_check <- rbind(extracted_shrub_s, extracted_shrub_n)
+
+(hist_check <- shrub_check %>%
+  ggplot(aes(x = shrub_agb_p50, fill = zone)) +
+  geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
+  scale_fill_manual(values=c("#69b3a2", "#404080")) +
+  theme_bw())
 
