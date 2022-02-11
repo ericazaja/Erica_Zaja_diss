@@ -72,16 +72,18 @@ st_bbox(shrub_crop)
 range_extent_1 <- extent(165454.7, 236698.7, 1933928.1, 2270618.1) # class: extent
 shrub_crop_1 <- crop(x = shrub_agb_p50, y = range_extent_1) # class: raster layer
 shrub_crop_1_latlong <- projectRaster(shrub_crop_1, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
-poly_1 <- as(range_extent_1, 'SpatialPolygons') # making extent into polygon
-class(poly_1) # checking it's a polygon
 
 # random sample 
 shrub_rsample_1 <- as.data.frame(sampleRandom(shrub_crop_1_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
-                                             cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "1")
+                                             cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "1")
+
 glimpse(shrub_rsample_1)
-hist(shrub_rsample_1$shrub_agb_p50)
+hist(shrub_rsample_1$layer)
+write.csv(shrub_rsample_1, "datasets/berner_data/shrub_rsample_1.csv") # saving strip dataframe
 
 # Raster::extract
+poly_1 <- as(range_extent_1, 'SpatialPolygons') # making extent into polygon
+class(poly_1) # checking it's a polygon
 extracted_shrub_1 <- raster::extract(x = shrub_crop_1_latlong, y = poly_1, cellnumbers = T, df = TRUE)# extracting pixels
 glimpse(extracted_shrub_1)
 shrub_1 <- cbind(extracted_shrub_1, xyFromCell(shrub_crop_1, extracted_shrub_1[,1])) # create coordinate columns using xyFromCell
@@ -97,15 +99,16 @@ hist(shrub_crop_1)
 range_extent_2 <- extent(236698.7, 307942.7,  1933928.1, 2270618.1)
 shrub_crop_2 <- crop(x = shrub_agb_p50, y = range_extent_2)
 shrub_crop_2_latlong <- projectRaster(shrub_crop_2, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
-poly_2 <- as(range_extent_2, 'SpatialPolygons') # making extent into polygon
-class(poly_2) # checking it's a polygon
 
 # random sample 
-shrub_rsample_2 <- as.data.frame(sampleRandom(shrub_crop_2, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+shrub_rsample_2 <- as.data.frame(sampleRandom(shrub_crop_2_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "2")
 glimpse(shrub_rsample_2)
+hist(shrub_rsample_2$layer)
 
 # Raster::extract
+poly_2 <- as(range_extent_2, 'SpatialPolygons') # making extent into polygon
+class(poly_2) # checking it's a polygon
 extracted_shrub_2<- raster::extract(x = shrub_crop_2_latlong, y = poly_2, cellnumbers = T, df = TRUE)# extracting pixels
 glimpse(extracted_shrub_2)
 shrub_2 <- cbind(extracted_shrub_2, xyFromCell(shrub_crop_2, extracted_shrub_2[,1])) # create coordinate columns using xyFromCell
