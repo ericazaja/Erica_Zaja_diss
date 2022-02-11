@@ -26,7 +26,7 @@ library(rworldmap)
 ### LOADING DATA -----
 
 ## SHRUB DATA: from Berner et al 2018
-# Loading raster of shrub biomass (g/m2) on Alaskan North Slope  -----
+# Loading raster of shrub biomass (g/m2) on Alaskan North Slope  
 shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif") 
 # Using the best-estimates: the 50th percentile of the 1,000 permutations
 
@@ -48,7 +48,7 @@ range_extent <- extent(165444.3,  849222.0, 1697872.7, 2270606.5) # xmin, xmax, 
 shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 
 # plotting cropped shrub map to visualise extent
-(cropped_vis <- gplot(shrub_crop) +
+(cropped_vis <- gplot(shrub_crop_1_latlong ) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -70,17 +70,19 @@ st_bbox(shrub_crop)
 # 1. 
 range_extent_1 <- extent(165454.7, 236698.7, 1933928.1, 2270618.1) # class: extent
 shrub_crop_1 <- crop(x = shrub_agb_p50, y = range_extent_1) # raster layer
+shrub_crop_1_latlong <- projectRaster(shrub_crop_1, crs="+init=EPSG:4326", xy = TRUE) # works but then removes AGB at the bottom
 poly_1 <- as(range_extent_1, 'SpatialPolygons') # making extent into polygon
 class(poly_1) # checking it's a polygon
-extracted_shrub_1 <- raster::extract(x = shrub_crop_1, y = poly_1, cellnumbers = T, df = TRUE)# extracting pixels
+extracted_shrub_1 <- raster::extract(x = shrub_crop_1_latlong, y = poly_1, cellnumbers = T, df = TRUE)# extracting pixels
 glimpse(extracted_shrub_1)
 shrub_1 <- cbind(extracted_shrub_1, xyFromCell(shrub_crop_1, extracted_shrub_1[,1])) # create coordinate columns using xyFromCell
 shrub_1 <- na.omit(extracted_shrub_1) %>% mutate(strip = rep(1))
 
 # random sample 
-shrub_rsample_1 <- as.data.frame(sampleRandom(shrub_crop_1, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+shrub_rsample_1 <- as.data.frame(sampleRandom(shrub_crop_1_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
                                              cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "1")
 glimpse(shrub_rsample_1)
+hist(shrub_rsample_1$shrub_agb_p50)
 
 # write.csv(shrub_1, "datasets/berner_data/shrub_1.csv") # saving strip dataframe
 #extracted_shrub_1 <- read_csv("datasets/berner_data/extracted_shrub_1.csv")
