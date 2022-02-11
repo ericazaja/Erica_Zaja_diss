@@ -72,11 +72,11 @@ range_extent_1 <- extent(165454.7, 236698.7, 1933928.1, 2270618.1) # class: exte
 shrub_crop_1 <- crop(x = shrub_agb_p50, y = range_extent_1) # raster layer
 poly_1 <- as(range_extent_1, 'SpatialPolygons') # making extent into polygon
 class(poly_1) # checking it's a polygon
-extracted_shrub_1 <- raster::extract(x = shrub_crop_1, y = poly_1, df = TRUE) # extracting pixels
+extracted_shrub_1 <- raster::extract(x = shrub_crop_1, y = poly_1, cellnumbers = T, df = TRUE)# extracting pixels
 glimpse(extracted_shrub_1)
 extracted_shrub_1 <- na.omit(extracted_shrub_1)
 hist(shrub_crop_1)
-extracted_shrub_1 <- extracted_shrub_1 %>% mutate(strip = rep(1)) %>% select(-X1)
+extracted_shrub_1 <- extracted_shrub_1 %>% mutate(strip = rep(1))
 
 write.csv(extracted_shrub_1, "datasets/berner_data/extracted_shrub_1.csv") # saving strip dataframe
 #extracted_shrub_1 <- read_csv("datasets/berner_data/extracted_shrub_1.csv")
@@ -171,11 +171,16 @@ range_extent_s <- extent(165454.7, 521674.7, 2100000.1, 2130000.1) # class: exte
 shrub_crop_s <- crop(x = shrub_agb_p50, y = range_extent_s)
 poly_s <- as(range_extent_s, 'SpatialPolygons') # making extent into polygon
 class(poly_s) # checking it's a polygon
-extracted_shrub_s <- raster::extract(x = shrub_crop_s, y = poly_s, df = TRUE) # extracting pixels
+extracted_shrub_s <- raster::extract(x = shrub_crop_s, y = poly_s, cellnumbers = T, df = TRUE) # extracting pixels
 glimpse(extracted_shrub_s)
-extracted_shrub_s <- na.omit(extracted_shrub_s) %>% mutate(zone = "south")
-hist(shrub_crop_s)
+# create coordinate columns using xyFromCell
+df.coords <- cbind(extracted_shrub_s, xyFromCell(shrub_crop_s, extracted_shrub_s[,1]))
+glimpse(df.coords)
+df.coords <- na.omit(df.coords) %>% mutate(zone = "south")
+hist(df.coords$shrub_agb_p50)
+str(df.coords)
 range(extracted_shrub_s) # 1 2788
+
 
 
 # North and south strips in the same histogram 
