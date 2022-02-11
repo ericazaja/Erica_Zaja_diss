@@ -77,7 +77,12 @@ glimpse(extracted_shrub_1)
 shrub_1 <- cbind(extracted_shrub_1, xyFromCell(shrub_crop_1, extracted_shrub_1[,1])) # create coordinate columns using xyFromCell
 shrub_1 <- na.omit(extracted_shrub_1) %>% mutate(strip = rep(1))
 
-write.csv(shrub_1, "datasets/berner_data/shrub_1.csv") # saving strip dataframe
+# random sample 
+shrub_rsample_1 <- as.data.frame(sampleRandom(shrub_crop_1, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                             cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "1")
+glimpse(shrub_rsample_1)
+
+# write.csv(shrub_1, "datasets/berner_data/shrub_1.csv") # saving strip dataframe
 #extracted_shrub_1 <- read_csv("datasets/berner_data/extracted_shrub_1.csv")
 
 hist(shrub_crop_1)
@@ -94,6 +99,11 @@ extracted_shrub_2 <- na.omit(extracted_shrub_2)
 hist(shrub_crop_2)
 extracted_shrub_2 <- extracted_shrub_2 %>% mutate(strip = rep(2)) 
 
+# random sample 
+shrub_rsample_2 <- as.data.frame(sampleRandom(shrub_crop_2, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "2")
+glimpse(shrub_rsample_2)
+
 # write.csv(extracted_shrub_2, "datasets/berner_data/extracted_shrub_2.csv")
 # extracted_shrub_2 <- read_csv("datasets/berner_data/extracted_shrub_2.csv")
 
@@ -109,6 +119,11 @@ extracted_shrub_3 <- na.omit(extracted_shrub_3)
 hist(shrub_crop_3)
 extracted_shrub_3 <- extracted_shrub_3 %>% mutate(strip = rep(3)) 
 
+# random sample 
+shrub_rsample_3 <- as.data.frame(sampleRandom(shrub_crop_3, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "3")
+glimpse(shrub_rsample_3)
+
 # write.csv(extracted_shrub_3, "datasets/berner_data/extracted_shrub_3.csv")
 # extracted_shrub_3 <- read_csv("datasets/berner_data/extracted_shrub_3.csv")
 
@@ -122,6 +137,11 @@ glimpse(extracted_shrub_4)
 extracted_shrub_4 <- na.omit(extracted_shrub_4)
 hist(shrub_crop_4)
 extracted_shrub_4 <- extracted_shrub_4 %>% mutate(strip = rep(4)) 
+
+# random sample 
+shrub_rsample_4 <- as.data.frame(sampleRandom(shrub_crop_4, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "4")
+glimpse(shrub_rsample_4)
 
 # write.csv(extracted_shrub_4, "datasets/berner_data/extracted_shrub_4.csv")
 # extracted_shrub_4 <- read_csv("datasets/berner_data/extracted_shrub_4.csv")
@@ -139,6 +159,11 @@ extracted_shrub_5 <- na.omit(extracted_shrub_5)
 hist(shrub_crop_5)
 extracted_shrub_5 <- extracted_shrub_5 %>% mutate(strip = rep(5)) 
 
+# random sample 
+shrub_rsample_5 <- as.data.frame(sampleRandom(shrub_crop_5, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "5")
+glimpse(shrub_rsample_5)
+
 # write.csv(extracted_shrub_5, "datasets/berner_data/extracted_shrub_5.csv")
 # extracted_shrub_5 <- read_csv("datasets/berner_data/extracted_shrub_5.csv")
 
@@ -149,7 +174,10 @@ shrub_all <- rbind(extracted_shrub_1, extracted_shrub_2, extracted_shrub_3, extr
 # write.csv(shrub_all, "datasets/berner_data/shrub_all.csv")
 # shrub_all <- read_csv("datasets/berner_data/shrub_all.csv")
 
-### EXTRACTION (North-to-South) ----
+shrub_all_random <- rbind(shrub_rsample_1, shrub_rsample_2, shrub_rsample_3, shrub_rsample_4, shrub_rsample_5) 
+# write.csv(shrub_all_random, "datasets/berner_data/shrub_all_random.csv")
+
+### EXTRACTION (North-to-South?) ----
 
 
 # LOGIC CHECKS ----
