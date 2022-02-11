@@ -74,12 +74,13 @@ poly_1 <- as(range_extent_1, 'SpatialPolygons') # making extent into polygon
 class(poly_1) # checking it's a polygon
 extracted_shrub_1 <- raster::extract(x = shrub_crop_1, y = poly_1, cellnumbers = T, df = TRUE)# extracting pixels
 glimpse(extracted_shrub_1)
-extracted_shrub_1 <- na.omit(extracted_shrub_1)
-hist(shrub_crop_1)
-extracted_shrub_1 <- extracted_shrub_1 %>% mutate(strip = rep(1))
+shrub_1 <- cbind(extracted_shrub_1, xyFromCell(shrub_crop_1, extracted_shrub_1[,1])) # create coordinate columns using xyFromCell
+shrub_1 <- na.omit(extracted_shrub_1) %>% mutate(strip = rep(1))
 
-write.csv(extracted_shrub_1, "datasets/berner_data/extracted_shrub_1.csv") # saving strip dataframe
+write.csv(shrub_1, "datasets/berner_data/shrub_1.csv") # saving strip dataframe
 #extracted_shrub_1 <- read_csv("datasets/berner_data/extracted_shrub_1.csv")
+
+hist(shrub_crop_1)
 
 
 # 2. 
@@ -171,7 +172,17 @@ range_extent_s <- extent(165454.7, 521674.7, 2100000.1, 2130000.1) # class: exte
 shrub_crop_s <- crop(x = shrub_agb_p50, y = range_extent_s)
 poly_s <- as(range_extent_s, 'SpatialPolygons') # making extent into polygon
 class(poly_s) # checking it's a polygon
-extracted_shrub_s <- raster::extract(x = shrub_crop_s, y = poly_s, cellnumbers = T, df = TRUE) # extracting pixels
+
+# buffered random sampling
+shrub_sample_s <- as.data.frame(sampleRandom(shrub_crop_s, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+             cells=TRUE, rowcol=FALSE, xy=TRUE))
+# 10000: positive integer giving the number of items to choose
+# cells = TRUE, sampled cell numbers are also returned
+# If xy = TRUE, coordinates of sampled cells are also returned
+hist(shrub_sample_s$shrub_agb_p50)
+
+glimpse(try)
+extracted_shrub_s <- raster::extract(x = shrub_crop_s, y = poly_s, buffer = 900, fun = mean, cellnumbers = T, df = TRUE) # extracting pixels
 glimpse(extracted_shrub_s)
 # create coordinate columns using xyFromCell
 df.coords <- cbind(extracted_shrub_s, xyFromCell(shrub_crop_s, extracted_shrub_s[,1]))
