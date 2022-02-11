@@ -160,6 +160,14 @@ range_extent_n <- extent(165454.7, 521674.7, 2170618.1, 2200618.1) # class: exte
 shrub_crop_n <- crop(x = shrub_agb_p50, y = range_extent_n)
 poly_n <- as(range_extent_n, 'SpatialPolygons') # making extent into polygon
 class(poly_n) # checking it's a polygon
+# buffered random sampling
+shrub_sample_n <- as.data.frame(sampleRandom(shrub_crop_n, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                             cells=TRUE, rowcol=FALSE, xy=TRUE))
+
+shrub_sample_n <- shrub_sample_n %>% mutate(zone = "north")
+
+hist(shrub_sample_n$shrub_agb_p50)
+
 extracted_shrub_n <- raster::extract(x = shrub_crop_n, y = poly_n, df = TRUE) # extracting pixels
 glimpse(extracted_shrub_n)
 extracted_shrub_n <- na.omit(extracted_shrub_n)  %>% mutate(zone = "north")
@@ -176,6 +184,9 @@ class(poly_s) # checking it's a polygon
 # buffered random sampling
 shrub_sample_s <- as.data.frame(sampleRandom(shrub_crop_s, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
              cells=TRUE, rowcol=FALSE, xy=TRUE))
+
+shrub_sample_s <- shrub_sample_s %>% mutate(zone = "south")
+
 # 10000: positive integer giving the number of items to choose
 # cells = TRUE, sampled cell numbers are also returned
 # If xy = TRUE, coordinates of sampled cells are also returned
@@ -196,11 +207,12 @@ range(extracted_shrub_s) # 1 2788
 
 # North and south strips in the same histogram 
 shrub_check <- rbind(extracted_shrub_s, extracted_shrub_n)
+buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
 
-(hist_check <- shrub_check %>%
+(hist_check <- buff_shrub_check %>%
   ggplot(aes(x = shrub_agb_p50, fill = zone)) +
   geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
-  scale_fill_manual(values=c("#69b3a2", "#404080")) +
+  scale_fill_manual(values=c("#404080", "#69b3a2")) +
   theme_bw())
 # NB the histogram for the north is more skewed towards lower biomass
 ## More datapoints in the Northern strip due to how map is
