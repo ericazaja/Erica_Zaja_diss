@@ -145,6 +145,13 @@ cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326") # works but the
 cropped_latlong <- projectRaster(cropped, crs = "+proj=longlat +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs") 
 projection(cropped_latlong)
 
+### measuring area of focal area 
+# shrub_latlong <- projectRaster(shrub_crop, crs = "+init=epsg:4326") # doesnt work 
+cell_size <- area(shrub_latlong, na.rm=TRUE, weights=FALSE)
+cell_size  <-cell_size[!is.na(cell_size)]
+raster_area<-length(cell_size)*median(cell_size)
+#print(paste("Area of focal area (raster):“,round(raster_area, digits=1),“km2″))
+
 # Cropped map with viridis palette
 (cropped_viridis <- gplot(cropped_latlong) +
     geom_raster(aes(x = x, y = y, fill = value)) +

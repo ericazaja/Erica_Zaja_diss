@@ -160,20 +160,23 @@ range_extent_n <- extent(165454.7, 521674.7, 2170618.1, 2200618.1) # class: exte
 shrub_crop_n <- crop(x = shrub_agb_p50, y = range_extent_n)
 poly_n <- as(range_extent_n, 'SpatialPolygons') # making extent into polygon
 class(poly_n) # checking it's a polygon
-# buffered random sampling
+
+## More datapoints in the Northern strip due to how map is
+## To the regions comparable: randomly sample the Northern strip to get down to the same sample size as the Southern strip. 
+
+# buffered random sampling in Northern strip
 shrub_sample_n <- as.data.frame(sampleRandom(shrub_crop_n, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
-                                             cells=TRUE, rowcol=FALSE, xy=TRUE))
-
-shrub_sample_n <- shrub_sample_n %>% mutate(zone = "north")
-
+                                             cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(zone = "north")
+# 10000: positive integer giving the number of items to choose
+# cells = TRUE, sampled cell numbers are also returned
+# If xy = TRUE, coordinates of sampled cells are also returned
 hist(shrub_sample_n$shrub_agb_p50)
 
-extracted_shrub_n <- raster::extract(x = shrub_crop_n, y = poly_n, df = TRUE) # extracting pixels
-glimpse(extracted_shrub_n)
-extracted_shrub_n <- na.omit(extracted_shrub_n)  %>% mutate(zone = "north")
-hist(shrub_crop_n)
-range(extracted_shrub_n) # 1-2248
-
+#extracted_shrub_n <- raster::extract(x = shrub_crop_n, y = poly_n, df = TRUE) # extracting pixels
+#glimpse(extracted_shrub_n)
+#extracted_shrub_n <- na.omit(extracted_shrub_n)  %>% mutate(zone = "north")
+#hist(shrub_crop_n)
+#range(extracted_shrub_n) # 1-2248
 
 # Southern strip 
 range_extent_s <- extent(165454.7, 521674.7, 2100000.1, 2130000.1) # class: extent
@@ -181,32 +184,26 @@ shrub_crop_s <- crop(x = shrub_agb_p50, y = range_extent_s)
 poly_s <- as(range_extent_s, 'SpatialPolygons') # making extent into polygon
 class(poly_s) # checking it's a polygon
 
-# buffered random sampling
+# buffered random sampling in Southern strip
 shrub_sample_s <- as.data.frame(sampleRandom(shrub_crop_s, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
-             cells=TRUE, rowcol=FALSE, xy=TRUE))
+             cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(zone = "south")
 
-shrub_sample_s <- shrub_sample_s %>% mutate(zone = "south")
 
-# 10000: positive integer giving the number of items to choose
-# cells = TRUE, sampled cell numbers are also returned
-# If xy = TRUE, coordinates of sampled cells are also returned
 hist(shrub_sample_s$shrub_agb_p50)
 
-glimpse(try)
-extracted_shrub_s <- raster::extract(x = shrub_crop_s, y = poly_s, buffer = 900, fun = mean, cellnumbers = T, df = TRUE) # extracting pixels
-glimpse(extracted_shrub_s)
+#extracted_shrub_s <- raster::extract(x = shrub_crop_s, y = poly_s, buffer = 900, fun = mean, cellnumbers = T, df = TRUE) # extracting pixels
+#glimpse(extracted_shrub_s)
 # create coordinate columns using xyFromCell
-df.coords <- cbind(extracted_shrub_s, xyFromCell(shrub_crop_s, extracted_shrub_s[,1]))
-glimpse(df.coords)
-df.coords <- na.omit(df.coords) %>% mutate(zone = "south")
-hist(df.coords$shrub_agb_p50)
-str(df.coords)
-range(extracted_shrub_s) # 1 2788
-
+#df.coords <- cbind(extracted_shrub_s, xyFromCell(shrub_crop_s, extracted_shrub_s[,1]))
+#glimpse(df.coords)
+#df.coords <- na.omit(df.coords) %>% mutate(zone = "south")
+#hist(df.coords$shrub_agb_p50)
+#str(df.coords)
+#range(extracted_shrub_s) # 1 2788
 
 
 # North and south strips in the same histogram 
-shrub_check <- rbind(extracted_shrub_s, extracted_shrub_n)
+#shrub_check <- rbind(extracted_shrub_s, extracted_shrub_n)
 buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
 
 (hist_check <- buff_shrub_check %>%
@@ -215,14 +212,7 @@ buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
   scale_fill_manual(values=c("#404080", "#69b3a2")) +
   theme_bw())
 # NB the histogram for the north is more skewed towards lower biomass
-## More datapoints in the Northern strip due to how map is
-## To the regions comparable: randomly sample the Northern strip to get down to the same sample size as the Southern strip. 
-# There is a dplyr function for that.
 
-### measuring area of focal area 
-# shrub_latlong <- projectRaster(shrub_crop, crs = "+init=epsg:4326") # doesnt work 
-cell_size <- area(shrub_latlong, na.rm=TRUE, weights=FALSE)
-cell_size  <-cell_size[!is.na(cell_size)]
-raster_area<-length(cell_size)*median(cell_size)
-#print(paste("Area of focal area (raster):“,round(raster_area, digits=1),“km2″))
+
+
 
