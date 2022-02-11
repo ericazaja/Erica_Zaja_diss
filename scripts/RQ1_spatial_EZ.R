@@ -79,7 +79,7 @@ shrub_rsample_1 <- as.data.frame(sampleRandom(shrub_crop_1_latlong, 10000, buffe
 
 glimpse(shrub_rsample_1)
 hist(shrub_rsample_1$layer)
-write.csv(shrub_rsample_1, "datasets/berner_data/shrub_rsample_1.csv") # saving strip dataframe
+# write.csv(shrub_rsample_1, "datasets/berner_data/shrub_rsample_1.csv") # saving strip dataframe
 
 # Raster::extract
 poly_1 <- as(range_extent_1, 'SpatialPolygons') # making extent into polygon
@@ -105,6 +105,8 @@ shrub_rsample_2 <- as.data.frame(sampleRandom(shrub_crop_2_latlong, 10000, buffe
                                               cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "2")
 glimpse(shrub_rsample_2)
 hist(shrub_rsample_2$layer)
+# write.csv(shrub_rsample_2, "datasets/berner_data/shrub_rsample_2.csv") # saving strip dataframe
+
 
 # Raster::extract
 poly_2 <- as(range_extent_2, 'SpatialPolygons') # making extent into polygon
@@ -123,15 +125,17 @@ hist(shrub_crop_2)
 range_extent_3 <- extent(307942.7, 379186.7,  1933928.1, 2270618.1)
 shrub_crop_3 <- crop(x = shrub_agb_p50, y = range_extent_3)
 shrub_crop_3_latlong <- projectRaster(shrub_crop_3, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
-poly_3 <- as(range_extent_3, 'SpatialPolygons') # making extent into polygon
-class(poly_3) # checking it's a polygon
 
 # random sample 
-shrub_rsample_3 <- as.data.frame(sampleRandom(shrub_crop_3, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+shrub_rsample_3 <- as.data.frame(sampleRandom(shrub_crop_3_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "3")
 glimpse(shrub_rsample_3)
+hist(shrub_rsample_3$layer)
+# write.csv(shrub_rsample_3, "datasets/berner_data/shrub_rsample_3.csv")
 
 # Raster::extract
+poly_3 <- as(range_extent_3, 'SpatialPolygons') # making extent into polygon
+class(poly_3) # checking it's a polygon
 extracted_shrub_3 <- raster::extract(x = shrub_crop_3_latlong, y = poly_3, cellnumbers = T, df = TRUE)# extracting pixels
 glimpse(extracted_shrub_3)
 shrub_3 <- cbind(extracted_shrub_3, xyFromCell(shrub_crop_3, extracted_shrub_3[,1])) # create coordinate columns using xyFromCell
@@ -145,15 +149,17 @@ hist(shrub_crop_3)
 range_extent_4 <- extent(379186.7, 450430.7,  1933928.1, 2270618.1)
 shrub_crop_4 <- crop(x = shrub_agb_p50, y = range_extent_4)
 shrub_crop_4_latlong <- projectRaster(shrub_crop_4, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
-poly_4 <- as(range_extent_4, 'SpatialPolygons') # making extent into polygon
-class(poly_4) # checking it's a polygon
 
 # random sample 
-shrub_rsample_4 <- as.data.frame(sampleRandom(shrub_crop_4, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+shrub_rsample_4 <- as.data.frame(sampleRandom(shrub_crop_4_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "4")
 glimpse(shrub_rsample_4)
+hist(shrub_rsample_4$layer)
+write.csv(shrub_rsample_4, "datasets/berner_data/shrub_rsample_4.csv")
 
 # Raster::extract
+poly_4 <- as(range_extent_4, 'SpatialPolygons') # making extent into polygon
+class(poly_4) # checking it's a polygon
 extracted_shrub_4 <- raster::extract(x = shrub_crop_4_latlong, y = poly_4, cellnumbers = T, df = TRUE)# extracting pixels
 glimpse(extracted_shrub_4)
 shrub_4 <- cbind(extracted_shrub_4, xyFromCell(shrub_crop_4, extracted_shrub_4[,1])) # create coordinate columns using xyFromCell
@@ -164,20 +170,21 @@ hist(shrub_crop_4)
 # extracted_shrub_4 <- read_csv("datasets/berner_data/extracted_shrub_4.csv")
 
 
-
 # Strip (5) ----- 
 range_extent_5 <- extent(450430.7, 521674.7,  1933928.1, 2270618.1)
 shrub_crop_5 <- crop(x = shrub_agb_p50, y = range_extent_5)
-shrub_crop_5_latlong <- projectRaster(shrub_crop_4, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
-poly_5 <- as(range_extent_5, 'SpatialPolygons') # making extent into polygon
-class(poly_5) # checking it's a polygon
+shrub_crop_5_latlong <- projectRaster(shrub_crop_5, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
 
 # random sample 
-shrub_rsample_5 <- as.data.frame(sampleRandom(shrub_crop_5, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+shrub_rsample_5 <- as.data.frame(sampleRandom(shrub_crop_5_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "5")
 glimpse(shrub_rsample_5)
+hist(shrub_rsample_5$layer)
+#write.csv(shrub_rsample_5, "datasets/berner_data/shrub_rsample_5.csv")
 
 # Raster::extract
+poly_5 <- as(range_extent_5, 'SpatialPolygons') # making extent into polygon
+class(poly_5) # checking it's a polygon
 extracted_shrub_5 <- raster::extract(x = shrub_crop_5_latlong, y = poly_5, cellnumbers = T, df = TRUE)# extracting pixels
 glimpse(extracted_shrub_5)
 shrub_5 <- cbind(extracted_shrub_5, xyFromCell(shrub_crop_5, extracted_shrub_5[,1])) # create coordinate columns using xyFromCell
