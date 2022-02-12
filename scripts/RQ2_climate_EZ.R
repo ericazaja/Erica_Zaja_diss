@@ -91,7 +91,7 @@ summary(model_3)
     theme_classic())
 
 # model: biomass ~ precip
-model_4 <- lmer(biomass ~ CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
+model_4 <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
 summary(model_4)
 
 # scatter: biomass ~temp
@@ -99,6 +99,11 @@ summary(model_4)
     geom_point(size = 2) +
     geom_smooth(method = "lm") +
     theme_classic())
+
+# model: biomass ~ temp*precip
+model_5 <- lmer(biomass ~ CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
+summary(model_4)
+
 
 
 
