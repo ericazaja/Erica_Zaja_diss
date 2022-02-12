@@ -28,8 +28,10 @@ library(rnaturalearthdata)
 shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif") # shrub data
 PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") # PCH range data
 
+res(shrub_agb_p50)
+# resolution of map: [1] 30 30
 
-
+# visualising shrub map
 ggplot() +
   geom_raster(shrub_agb_p50) + 
   scale_fill_gradientn(name = "Bathymetry", colors = terrain.colors(10)) +

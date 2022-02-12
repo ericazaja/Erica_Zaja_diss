@@ -324,5 +324,37 @@ buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
 # NB the histogram for the north is more skewed towards lower biomass
 
 
+## GRID -----
+# Dividing map into 10 plots
+
+# Plot (a) -----
+range_extent_a <- extent(165454.7, 236698.7, 1933928.1, 2102273.1) # class: extent
+shrub_plot_a <- crop(x = shrub_agb_p50, y = range_extent_a) # class: raster layer
+shrub_plot_a_latlong <- projectRaster(shrub_plot_a, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
+shrub_plot_a_latlong <- raster::aggregate(shrub_plot_a_latlong, fact=2, fun=mean) # factor is wrong
+
+# random sample 
+shrub_rsample_a <- as.data.frame(sampleRandom(shrub_plot_a_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(plot = "a")
+
+glimpse(shrub_rsample_a)
+hist(shrub_rsample_a$shrub_agb_p50)
+# write.csv(shrub_rsample_a, "datasets/berner_data/shrub_rsample_a.csv") # saving strip dataframe
+
+# Raster::extract
+poly_1 <- as(range_extent_1, 'SpatialPolygons') # making extent into polygon
+class(poly_1) # checking it's a polygon
+extracted_shrub_1 <- raster::extract(x = shrub_crop_1_latlong, y = poly_1, cellnumbers = T, df = TRUE)# extracting pixels
+glimpse(extracted_shrub_1)
+shrub_1 <- cbind(extracted_shrub_1, xyFromCell(shrub_crop_1, extracted_shrub_1[,1])) # create coordinate columns using xyFromCell
+shrub_1 <- na.omit(extracted_shrub_1) %>% mutate(strip = rep(1))
+hist(shrub_crop_1)
+
+# write.csv(shrub_1, "datasets/berner_data/shrub_1.csv") # saving strip dataframe
+# extracted_shrub_1 <- read_csv("datasets/berner_data/extracted_shrub_1.csv")
+
+
+
+
 
 

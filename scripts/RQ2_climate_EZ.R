@@ -14,7 +14,6 @@
 # Temperature climatologies: mean daily mean air temperatures of the warmest quarter (bio10) (°C). Offset -273.15
 # Precipitation climatologies: mean monthly precipitation amount of the warmest quarter (bio18) (kg m-2)
 
-
 # Loading libraries -----
 library(sp)
 library(rgdal)
@@ -27,6 +26,10 @@ library(lme4)
 # Loading CHELSA data ------
 temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
 precip <- raster("datasets/climate_data/CHELSA_bio10_18.tif")
+res(temp)
+# resolution = 0.008333333 0.008333333
+# resolution of map: [1] 30 30
+# > 30/0.008333333 =  3600
 
 # Load the coordinates of the cropped shrub map
 coords <- read.csv("datasets/berner_data/shrub_all_random_new.csv") %>% 
@@ -79,16 +82,29 @@ coord.chelsa.combo.3 <- coord.chelsa.combo.2 %>%
 # Export the dataframe to combine with ITEX data
 write.csv(coord.chelsa.combo.3, "datasets/climate_data/coord_chelsa_combo.csv")
 
+# MODELLING -----
+# setting a theme 
+theme_shrub <- function(){ theme(legend.position = "right",
+                                 axis.title.x = element_text(face="bold", size=20),
+                                 axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
+                                 axis.title.y = element_text(face="bold", size=20),
+                                 axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
+                                 panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
+                                 panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
+                                 panel.background = element_blank(), axis.line = element_line(colour = "black"), 
+                                 plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
+                                 plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
+# Plotting shrub raster (entire) with ggplot
 # model: biomass ~ temp
-model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|strip), data = coord.chelsa.combo.3)
+model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|strip) + data = coord.chelsa.combo.3)
 summary(model_3)
 
 # scatter: biomass ~temp
 (scatter_temp <- ggplot(coord.chelsa.combo.3, aes(x = biomass, y = CH_TempMeanSummer, colour = strip)) +
     geom_point(size = 2) +
     geom_smooth(method = "lm") +
-    theme_classic())
+    theme_shrub())
 
 # model: biomass ~ precip
 model_4 <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
@@ -105,7 +121,7 @@ model_5 <- lmer(biomass ~ CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.c
 summary(model_4)
 
 
-
+## NB aggregate biomass data (30x30m) to climatologies resolution (~1km)
 
 
 
