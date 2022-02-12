@@ -31,8 +31,8 @@ precip <- raster("datasets/climate_data/CHELSA_bio10_18.tif")
 
 
 # Load the coordinates of the cropped shrub map
-coords <- read.csv("datasets/berner_data/cropped_coords.csv") %>% 
-  # dplyr::select(-X)
+coords <- read.csv("datasets/berner_data/shrub_all_random_new.csv") %>% 
+  dplyr::select(lat, long)
   
 # Climatologies:
   
@@ -46,6 +46,35 @@ chelsa.stack <- stack(precip, temp)
 
 # Extract variables values for each pair of coordinates
 chelsa.extract <- raster::extract(chelsa.stack, coords_sp, df = TRUE) # extract coords 
+
+# COMBINED DATAFRAMES ----
+
+# Convert the SpatialPoints (sp) object into a dataframe 
+coord.df <- as.data.frame(coords_sp)
+
+# Reassign the 'ID' to the coordinates dataframe
+coord.df$ID <- row.names(coord.df)
+coord.df$ID <- as.numeric(coord.df$ID) # Make numeric
+
+# Merge the two dataframes: extracted CHELSA variables and the ITEX coordinates
+coord.chelsa.combo <- left_join(chelsa.extract, coord.df, by = c("ID" = "ID"))
+
+# Modify some of the variables to more useful values
+coord.chelsa.combo.2 <- coord.chelsa.combo %>% 
+  mutate(CHELSA_bio10_10 = CHELSA_bio10_10/10) # Divide by 10 to get to degC
+
+# Rename the variables to shorter column headings
+coord.chelsa.combo.3 <- coord.chelsa.combo.2 %>% 
+  rename(CH_TempMeanSummer = CHELSA_bio10_10,
+         CH_PrecipMeanSummer = CHELSA_bio10_18)
+
+
+# EXPORT TO CSV ----
+
+# Export the dataframe to combine with ITEX data
+write.csv(coord.chelsa.combo.3, "datasets/climate_data/coord_chelsa_combo.csv")
+
+
 
 ##############################################################################
 

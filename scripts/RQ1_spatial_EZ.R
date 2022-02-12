@@ -21,6 +21,8 @@ library(ggmap)
 library(maptools)
 library(rgeos)
 library(rworldmap)
+library(tidyverse)
+library(lme4)
 
 
 ### LOADING DATA -----
@@ -230,7 +232,8 @@ shrub_all_random_new <- shrub_all_random %>%
 
 # write.csv(shrub_all_random_new, "datasets/berner_data/shrub_all_random_new.csv")
 
-shrub_all_random_new$biomass_level <- as.factor(as.character(shrub_all_random_new$biomass_level))   
+str(shrub_all_random_new)
+shrub_all_random_new$biomass_level <- as.character(as.factor(shrub_all_random_new$biomass_level))   
 str(shrub_all_random_new$biomass_level) # biomass level is factor with 3 levels 
 
 shrub_all_random_new$strip <- as.factor(as.character(shrub_all_random_new$strip))   
@@ -242,9 +245,19 @@ str(shrub_all_random_new$strip) # strip is factor with 5 levels (random effect)
     scale_fill_manual(values=c("#404080", "#69b3a2", "yellow")) +
     theme_bw())
 
-model_1 <- lm(biomass ~ lat, data = shrub_all_random_new) # doesnt run
+
+model_1 <- lmer(biomass ~ strip + (1|strip), data = shrub_all_random_new) # doesnt run
 summary(model_1)
-#F-statistic: 0.007197 on 1 and 27191 DF,  p-value: 0.9324
+
+# Boxplot : biomass ~ strip
+(mixed_plot <- ggplot(shrub_all_random_new, aes(x = strip, y = biomass, colour = strip)) +
+    geom_boxplot(size = 2) +
+    theme_classic() +
+    theme(legend.position = "none"))
+
+boxplot(biomass ~ strip, data = shrub_all_random_new)
+
+
 
 ### EXTRACTION (North-to-South?) ----
 
