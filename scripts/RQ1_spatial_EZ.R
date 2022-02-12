@@ -204,6 +204,48 @@ shrub_all <- rbind(extracted_shrub_1, extracted_shrub_2, extracted_shrub_3, extr
 shrub_all_random <- rbind(shrub_rsample_1, shrub_rsample_2, shrub_rsample_3, shrub_rsample_4, shrub_rsample_5) 
 # write.csv(shrub_all_random, "datasets/berner_data/shrub_all_random.csv")
 
+### Distribtion ----
+# Histogram of shrub biomass for each strip
+(hist_random <-shrub_all_random %>%
+    ggplot(aes(x = layer, fill = strip)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
+    scale_fill_manual(values=c("#404080", "#69b3a2", "red", "yellow", "green")) +
+    theme_bw())
+
+(hist_random_all <-shrub_all_random %>%
+    ggplot(aes(x = layer)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
+    theme_bw())
+
+### Data right skewed. More shrubs with lower biomass.
+
+### Model 1: Biomass VS strip  ----
+shrub_all_random_new <- shrub_all_random %>%
+  rename (cell_ID = "cell", 
+              lat = x, long = y, 
+              biomass = layer) %>%
+  mutate(biomass_level = case_when (biomass <= 160 ~ 'Low',
+                                    biomass > 160  & biomass < 500 ~ 'Medium', 
+                                    biomass >= 500 ~ 'High')) 
+
+# write.csv(shrub_all_random_new, "datasets/berner_data/shrub_all_random_new.csv")
+
+shrub_all_random_new$biomass_level <- as.factor(as.character(shrub_all_random_new$biomass_level))   
+str(shrub_all_random_new$biomass_level) # biomass level is factor with 3 levels 
+
+shrub_all_random_new$strip <- as.factor(as.character(shrub_all_random_new$strip))   
+str(shrub_all_random_new$strip) # strip is factor with 5 levels (random effect)
+
+(hist_levels <-shrub_all_random_new %>%
+    ggplot(aes(x = biomass, fill = biomass_level)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
+    scale_fill_manual(values=c("#404080", "#69b3a2", "yellow")) +
+    theme_bw())
+
+model_1 <- lm(biomass ~ lat, data = shrub_all_random_new) # doesnt run
+summary(model_1)
+#F-statistic: 0.007197 on 1 and 27191 DF,  p-value: 0.9324
+
 ### EXTRACTION (North-to-South?) ----
 
 
