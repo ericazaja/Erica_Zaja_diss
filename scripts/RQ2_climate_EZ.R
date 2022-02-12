@@ -27,15 +27,11 @@ library(rasterVis)
 temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
 precip <- raster("datasets/climate_data/CHELSA_bio10_18.tif")
 
-### I need to extract cooordinates from raster of my map
-
-
 # Load the coordinates of the cropped shrub map
 coords <- read.csv("datasets/berner_data/shrub_all_random_new.csv") %>% 
   dplyr::select(lat, long)
   
 # Climatologies:
-  
 # EXTRACTION ----
 
 # Create SpatialPoints (sp) object of unique coordinates
@@ -47,7 +43,7 @@ chelsa.stack <- stack(precip, temp)
 # Extract variables values for each pair of coordinates
 chelsa.extract <- raster::extract(chelsa.stack, coords_sp, df = TRUE) # extract coords 
 
-# COMBINED DATAFRAMES ----
+# COMBINED DATAFRAMES 
 
 # Convert the SpatialPoints (sp) object into a dataframe 
 coord.df <- as.data.frame(coords_sp)
@@ -59,8 +55,16 @@ coord.df$ID <- as.numeric(coord.df$ID) # Make numeric
 # Merge the two dataframes: extracted CHELSA variables and the ITEX coordinates
 coord.chelsa.combo <- left_join(chelsa.extract, coord.df, by = c("ID" = "ID"))
 
+# loading the shrub biomass df
+biomass.df <- read.csv("datasets/berner_data/shrub_all_random_new.csv") %>%
+  rename(ID = X) %>%
+  dplyr::select(ID, biomass, strip, biomass_level)
+
+# merging biomass df with climate df
+coord.chelsa.combo_try <- left_join(coord.chelsa.combo, biomass.df, by = c("ID" = "ID"))
+
 # Modify some of the variables to more useful values
-coord.chelsa.combo.2 <- coord.chelsa.combo %>% 
+coord.chelsa.combo.2 <- coord.chelsa.combo_try %>% 
   mutate(CHELSA_bio10_10 = CHELSA_bio10_10/10) # Divide by 10 to get to degC
 
 # Rename the variables to shorter column headings
@@ -69,7 +73,7 @@ coord.chelsa.combo.3 <- coord.chelsa.combo.2 %>%
          CH_PrecipMeanSummer = CHELSA_bio10_18)
 
 
-# EXPORT TO CSV ----
+# EXPORT TO CSV
 
 # Export the dataframe to combine with ITEX data
 write.csv(coord.chelsa.combo.3, "datasets/climate_data/coord_chelsa_combo.csv")
@@ -83,7 +87,7 @@ write.csv(coord.chelsa.combo.3, "datasets/climate_data/coord_chelsa_combo.csv")
 # February 2021, adapted October 2021
 # Modified by Erica Zaja - 01/02/2022
 
-# PACKAGES ----
+# PACKAGES 
 
 # Load required packages
 library(tidyverse)
@@ -94,7 +98,7 @@ library(sp)
 library(broom)
 
 
-# DATA IMPORT ----
+# DATA IMPORT 
 
 # Load the ITEX coordinates
 itex <- read.csv("scripts/josephjeverest/FuncDiv_v2/data/output_01_itex_coords.csv") %>% 
@@ -111,7 +115,7 @@ filenames.chelsa <- list.files(folderpath.chelsa, pattern = "*.tif")
 filepath.chelsa = paste0(folderpath.chelsa, filenames.chelsa)
 
 
-# EXTRACTION ----
+# EXTRACTION 
 
 # Create SpatialPoints (sp) object of unique coordinates
 itex.coord <- SpatialPoints(itex)
@@ -123,7 +127,7 @@ chelsa.stack <- stack(filepath.chelsa)
 chelsa.extract <- raster::extract(chelsa.stack, itex.coord, df = TRUE) # extract coords from the itex
 
 
-# COMBINED DATAFRAMES ----
+# COMBINED DATAFRAMES
 
 # Convert the SpatialPoints (sp) object into a dataframe 
 itex.coord.df <- as.data.frame(itex.coord)
@@ -136,7 +140,7 @@ itex.coord.df$ID <- as.numeric(itex.coord.df$ID) # Make numeric
 coord.chelsa.combo.1 <- left_join(chelsa.extract, itex.coord.df, by = c("ID" = "ID"))
 
 
-# FORMAT THE DATAFRAME ----
+# FORMAT THE DATAFRAME 
 
 # Modify some of the variables to more useful values
 coord.chelsa.combo.2 <- coord.chelsa.combo.1 %>% 
@@ -160,7 +164,7 @@ coord.chelsa.combo.3 <- coord.chelsa.combo.2 %>%
          CH_SnowAnnual = CHELSA_bio10_12_minus_bio10_18)
 
 
-# EXPORT TO CSV ----
+# EXPORT TO CSV
 
 # Export the dataframe to combine with ITEX data
 write.csv(coord.chelsa.combo.3, "scripts/josephjeverest/FuncDiv_v2/data/output_03_chelsa.csv")
