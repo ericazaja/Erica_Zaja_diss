@@ -331,7 +331,7 @@ buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
 range_extent_a <- extent(165454.7, 236698.7, 1933928.1, 2102273.1) # class: extent
 shrub_plot_a <- crop(x = shrub_agb_p50, y = range_extent_a) # class: raster layer
 shrub_plot_a_latlong <- projectRaster(shrub_plot_a, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
-shrub_plot_a_latlong <- raster::aggregate(shrub_plot_a_latlong, fact=2, fun=mean) # factor is wrong
+shrub_plot_a_latlong <- raster::aggregate(shrub_plot_a_latlong, fact=0.0002777778, fun=mean) # factor is wrong
 
 # random sample 
 shrub_rsample_a <- as.data.frame(sampleRandom(shrub_plot_a_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
@@ -353,6 +353,9 @@ hist(shrub_crop_1)
 # write.csv(shrub_1, "datasets/berner_data/shrub_1.csv") # saving strip dataframe
 # extracted_shrub_1 <- read_csv("datasets/berner_data/extracted_shrub_1.csv")
 
+
+### AGGREGATION
+#aggregate from 30x30m resolution to 0.008333333x0.008333333m (factor = 3)
 
 
 
