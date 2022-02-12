@@ -22,6 +22,7 @@ library(raster)
 library(ggplot2)
 library(viridis)
 library(rasterVis)
+library(lme4)
 
 # Loading CHELSA data ------
 temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
@@ -77,6 +78,29 @@ coord.chelsa.combo.3 <- coord.chelsa.combo.2 %>%
 
 # Export the dataframe to combine with ITEX data
 write.csv(coord.chelsa.combo.3, "datasets/climate_data/coord_chelsa_combo.csv")
+
+
+# model: biomass ~ temp
+model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|strip), data = coord.chelsa.combo.3)
+summary(model_3)
+
+# scatter: biomass ~temp
+(scatter_temp <- ggplot(coord.chelsa.combo.3, aes(x = biomass, y = CH_TempMeanSummer, colour = strip)) +
+    geom_point(size = 2) +
+    geom_smooth(method = "lm") +
+    theme_classic())
+
+# model: biomass ~ precip
+model_4 <- lmer(biomass ~ CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
+summary(model_4)
+
+# scatter: biomass ~temp
+(scatter_precip <- ggplot(coord.chelsa.combo.3, aes(x = biomass, y = CH_PrecipMeanSummer, colour = strip)) +
+    geom_point(size = 2) +
+    geom_smooth(method = "lm") +
+    theme_classic())
+
+
 
 
 
