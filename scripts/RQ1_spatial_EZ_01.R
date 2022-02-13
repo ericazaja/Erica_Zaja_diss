@@ -24,7 +24,6 @@ library(rworldmap)
 library(tidyverse)
 library(lme4)
 library(Require)
-install.packages("SpaDES.tools")
 library(SpaDES.tools)
 
 
@@ -90,6 +89,7 @@ res(shrub_crop_latlong_agg)
 # 0.007986 0.008370 
 # not EXACTLY the same as climate resolution but close enough?
 # writeRaster(shrub_crop_latlong_agg, "datasets/berner_data/shrub_crop_latlong_agg.tif")
+shrub_crop_latlong_agg <- raster("datasets/berner_data/shrub_crop_latlong_agg.tif") 
 
 
 # OR can aggregate using resample() function
@@ -98,11 +98,14 @@ res(shrub_crop_latlong_agg)
 # [1] TRUE TRUE but it doesnt plot
 
 
-# Splitting raster ----
+# Splitting raster into tiles ----
 nx <- 2 # number of tiles for x axis to be split into
 ny <- 5 # number of tiles for y axis to be split into
-splitRaster(shrub_crop_latlong_agg, nx, ny, c(10, 10), path ="datasets/berner_data")
-
+raster_tiles <- splitRaster(shrub_crop_latlong_agg, nx, ny, c(2, 2), path ="datasets/berner_data")
+# buffer: 10 pixels along both axes
+layout(mat = matrix(seq_len(nx*ny), ncol = nx, nrow = ny))
+plotOrder <- c(1,2,3,4,5,6,7,8,9,10)
+if (interactive()) invisible(lapply(raster_tiles[plotOrder], plot))
 
 ### EXTRACTION (West-to-East) ----
 # subdividing cropped map into 5 smaller chunks (strips from West to East) and extracting biomass 
