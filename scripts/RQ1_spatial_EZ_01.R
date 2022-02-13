@@ -6,7 +6,7 @@
 ##%######################################################%##
 
 ## RQ1: What areas within the PCH Alaskan summer range have high-medium-low shrub biomass cover?
-### Variation in shrub biomass across latitudes 
+### Variation in shrub biomass across latitudes ? 
 
 # LOADING LIBRARIES -----
 library(sp)
@@ -55,7 +55,7 @@ shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 res(shrub_crop) # resolution 30m x 30m
 
 # plotting cropped shrub map to visualise extent
-(cropped_vis <- gplot(shrub_crop_latlong_agg) +
+(cropped_vis <- gplot(shrub_crop_b) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -82,15 +82,16 @@ shrub_crop_latlong <- projectRaster(shrub_crop, crs="+init=EPSG:4326", xy = TRUE
 res(shrub_crop_latlong)
 # 0.000726 m x 0.000270 m
 
-### AGGREGATION -----
+### JOE: AGGREGATION -----
 # aggregate shrub data before extraction(?) using aggregate function()
-shrub_crop_latlong_agg <- aggregate(shrub_crop_latlong, fact=c(11.47842,30.8642), fun=mean, expand = TRUE) # factor chosen looking at climate cell resolution 0.008333333
-res(shrub_crop_latlong_agg)
-# 0.007986 0.008370 
-# not EXACTLY the same as climate resolution but close enough?
-# writeRaster(shrub_crop_latlong_agg, "datasets/berner_data/shrub_crop_latlong_agg.tif")
-shrub_crop_latlong_agg <- raster("datasets/berner_data/shrub_crop_latlong_agg.tif") 
+shrub_crop_latlong_agg <- aggregate(shrub_crop_latlong, fact=c(11.47842,30.8642), fun=mean, expand = TRUE) 
+# factor chosen dividing climate cell resolution 0.008333333 x 0.008333333 by the resolution of the cropped shrub map (latlong)
 
+res(shrub_crop_latlong_agg)
+# 0.007986 x 0.008370 m
+# not EXACTLY the same as climate resolution but close enough? 
+# writeRaster(shrub_crop_latlong_agg, "datasets/berner_data/shrub_crop_latlong_agg.tif")
+# shrub_crop_latlong_agg <- raster("datasets/berner_data/shrub_crop_latlong_agg.tif") # loding raster 
 
 # OR can aggregate using resample() function
 #shrub_crop_new_res <- resample(shrub_crop_latlong, precip, method="bilinear") # bilinear method is like mean for aggregate
@@ -98,7 +99,7 @@ shrub_crop_latlong_agg <- raster("datasets/berner_data/shrub_crop_latlong_agg.ti
 # [1] TRUE TRUE but it doesnt plot
 
 
-# Splitting raster into tiles ----
+# NOT SURE THIS WORKS Splitting raster into tiles ----
 nx <- 2 # number of tiles for x axis to be split into
 ny <- 5 # number of tiles for y axis to be split into
 raster_tiles <- splitRaster(shrub_crop_latlong_agg, nx, ny, c(2, 2), path ="datasets/berner_data")
@@ -108,17 +109,14 @@ plotOrder <- c(1,2,3,4,5,6,7,8,9,10)
 if (interactive()) invisible(lapply(raster_tiles[plotOrder], plot))
 
 ### EXTRACTION (West-to-East) ----
-# subdividing cropped map into 5 smaller chunks (strips from West to East) and extracting biomass 
-
-# extent of the cropped shrub map
-st_bbox(shrub_crop_latlong_agg) 
-#  xmin       ymin       xmax       ymax 
-# -150.17942   66.93202 -140.50837   70.37209 
+# subdividing cropped map into 5 smaller chunks (vertical strips from West to East) and extracting biomass 
+# STRIPS 1 to 5
+# NB need to change to Latlong 
 
 # Strip (1) -----
-range_extent_1 <- extent(165454.7, 236698.7, 1933928.1, 2270618.1) # class: extent
-shrub_crop_1 <- crop(x = shrub_agb_p50, y = range_extent_1) # class: raster layer
-shrub_crop_1_latlong <- projectRaster(shrub_crop_1, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
+range_extent_1 <- extent(-150.17942, -140.50837 , 69.68408, 70.37209) # class: extent
+shrub_crop_1 <- crop(x = shrub_crop_latlong_agg, y = range_extent_1) # class: raster layer
+# shrub_crop_1_latlong <- projectRaster(shrub_crop_1, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
 res(shrub_crop_1_latlong) # 0.000733 0.000271
 
 # random sample 
@@ -306,7 +304,52 @@ boxplot(biomass ~ strip, data = shrub_all_random_new)
 
 
 
-### EXTRACTION (North-to-South?) ----
+### JOE: EXTRACTION (North-to-South) ----
+# STRIPS a to e
+# extent of the cropped shrub map
+st_bbox(shrub_crop_latlong_agg) 
+#  xmin       ymin       xmax       ymax 
+# -150.17942   66.93202 -140.50837   70.37209 
+# Using 68.40000 as ymin since that's where the shrub cover map starts
+
+# Strip (a) -----
+range_extent_a <- extent(-150.17942, -140.50837 ,69.97767, 70.37209 ) # class: extent
+shrub_crop_a <- crop(x = shrub_crop_latlong_agg, y = range_extent_a) # class: raster layer
+res(shrub_crop_a) # 0.007986 0.008370
+
+# JOE: random sample 
+shrub_rsample_a <- as.data.frame(sampleRandom(shrub_crop_a, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "a")
+# How do I pick how many points to sample? and is the buffer working?
+glimpse(shrub_rsample_a)
+hist(shrub_rsample_a$shrub_crop_latlong_agg)
+write.csv(shrub_rsample_a, "datasets/berner_data/shrub_rsample_a.csv") # saving strip dataframe
+
+# Strip (b) -----
+range_extent_b <- extent(-150.17942, -140.50837 , 69.58325, 69.97767) # class: extent
+shrub_crop_b <- crop(x = shrub_crop_latlong_agg, y = range_extent_b) # class: raster layer
+res(shrub_crop_b) # 0.007986 0.008370
+
+# JOE: random sample 
+shrub_rsample_b <- as.data.frame(sampleRandom(shrub_crop_b, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "b")
+# How do I pick how many points to sample? and is the buffer working?
+glimpse(shrub_rsample_b)
+hist(shrub_rsample_b$shrub_crop_latlong_agg)
+# write.csv(shrub_rsample_a, "datasets/berner_data/shrub_rsample_a.csv") # saving strip dataframe
+
+# Strip (c) -----
+range_extent_c <- extent(-150.17942, -140.50837, 68.30806 , 70.37209) # class: extent
+shrub_crop_c <- crop(x = shrub_crop_latlong_agg, y = range_extent_c) # class: raster layer
+res(shrub_crop_c) # 0.007986 0.008370
+
+# JOE: random sample 
+shrub_rsample_c <- as.data.frame(sampleRandom(shrub_crop_c, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "c")
+# How do I pick how many points to sample? and is the buffer working?
+glimpse(shrub_rsample_c)
+hist(shrub_rsample_c$shrub_crop_latlong_agg)
+# write.csv(shrub_rsample_a, "datasets/berner_data/shrub_rsample_a.csv") # saving strip dataframe
 
 
 # LOGIC CHECKS ----
