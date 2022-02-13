@@ -55,7 +55,7 @@ shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 res(shrub_crop) # resolution 30m x 30m
 
 # plotting cropped shrub map to visualise extent
-(cropped_vis <- gplot(shrub_crop_e) +
+(cropped_vis <- gplot(shrub_crop_5) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -112,20 +112,23 @@ if (interactive()) invisible(lapply(raster_tiles[plotOrder], plot))
 ### EXTRACTION (West-to-East) ----
 # subdividing cropped map into 5 smaller chunks (vertical strips from West to East) and extracting biomass 
 # STRIPS 1 to 5
-# NB need to change to Latlong 
+# extent of the cropped shrub map
+st_bbox(shrub_crop_latlong_agg) 
+#  xmin       ymin       xmax       ymax 
+# -150.17942   66.93202 -140.50837   70.37209 
+# Using 68.40000 as ymin since that's where the shrub cover map starts
 
 # Strip (1) -----
-range_extent_1 <- extent(-150.17942, -140.50837 , 69.68408, 70.37209) # class: extent
+range_extent_1 <- extent(-150.17942, -148.2452 ,  68.40000, 70.37209) # class: extent
 shrub_crop_1 <- crop(x = shrub_crop_latlong_agg, y = range_extent_1) # class: raster layer
-# shrub_crop_1_latlong <- projectRaster(shrub_crop_1, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
-res(shrub_crop_1_latlong) # 0.000733 0.000271
+res(shrub_crop_1) # 0.007986 0.008370
 
 # random sample 
-shrub_rsample_1 <- as.data.frame(sampleRandom(shrub_crop_1_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+shrub_rsample_1 <- as.data.frame(sampleRandom(shrub_crop_1, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "1")
 
 glimpse(shrub_rsample_1)
-hist(shrub_rsample_1$layer)
+hist(shrub_rsample_1$shrub_crop_latlong_agg)
 # write.csv(shrub_rsample_1, "datasets/berner_data/shrub_rsample_1.csv") # saving strip dataframe
 
 # Raster::extract
@@ -143,16 +146,16 @@ hist(shrub_crop_1)
 
 
 # Strip (2) -----
-range_extent_2 <- extent(236698.7, 307942.7,  1933928.1, 2270618.1)
-shrub_crop_2 <- crop(x = shrub_agb_p50, y = range_extent_2)
-shrub_crop_2_latlong <- projectRaster(shrub_crop_2, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
-res(shrub_crop_2_latlong) # 0.000733 0.000271
+range_extent_2 <- extent(-148.2452, -146.311 ,  68.40000, 70.37209) # class: extent
+shrub_crop_2 <- crop(x = shrub_crop_latlong_agg, y = range_extent_2) # class: raster layer
+res(shrub_crop_2) # 0.007986 0.008370
 
 # random sample 
-shrub_rsample_2 <- as.data.frame(sampleRandom(shrub_crop_2_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
-                                              cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "2")
+shrub_rsample_2 <- as.data.frame(sampleRandom(shrub_crop_2, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "2")
+
 glimpse(shrub_rsample_2)
-hist(shrub_rsample_2$layer)
+hist(shrub_rsample_2$shrub_crop_latlong_agg)
 # write.csv(shrub_rsample_2, "datasets/berner_data/shrub_rsample_2.csv") # saving strip dataframe
 
 
@@ -170,15 +173,16 @@ hist(shrub_crop_2)
 
 
 # Strip (3) ----- 
-range_extent_3 <- extent(307942.7, 379186.7,  1933928.1, 2270618.1)
-shrub_crop_3 <- crop(x = shrub_agb_p50, y = range_extent_3)
-shrub_crop_3_latlong <- projectRaster(shrub_crop_3, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
+range_extent_3 <- extent(-146.311 , -144.3768,  68.40000, 70.37209) # class: extent
+shrub_crop_3 <- crop(x = shrub_crop_latlong_agg, y = range_extent_3) # class: raster layer
+res(shrub_crop_3) # 0.007986 0.008370
 
 # random sample 
-shrub_rsample_3 <- as.data.frame(sampleRandom(shrub_crop_3_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
-                                              cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "3")
+shrub_rsample_3 <- as.data.frame(sampleRandom(shrub_crop_3, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "3")
+
 glimpse(shrub_rsample_3)
-hist(shrub_rsample_3$layer)
+hist(shrub_rsample_3$shrub_crop_latlong_agg)
 # write.csv(shrub_rsample_3, "datasets/berner_data/shrub_rsample_3.csv")
 
 # Raster::extract
@@ -194,16 +198,17 @@ hist(shrub_crop_3)
 # extracted_shrub_3 <- read_csv("datasets/berner_data/extracted_shrub_3.csv")
 
 # Strip (4) ----- 
-range_extent_4 <- extent(379186.7, 450430.7,  1933928.1, 2270618.1)
-shrub_crop_4 <- crop(x = shrub_agb_p50, y = range_extent_4)
-shrub_crop_4_latlong <- projectRaster(shrub_crop_4, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
+range_extent_4 <- extent(-144.3768,  -142.4426,  68.40000, 70.37209) # class: extent
+shrub_crop_4 <- crop(x = shrub_crop_latlong_agg, y = range_extent_4) # class: raster layer
+res(shrub_crop_4) # 0.007986 0.008370
 
 # random sample 
-shrub_rsample_4 <- as.data.frame(sampleRandom(shrub_crop_4_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
-                                              cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "4")
+shrub_rsample_4 <- as.data.frame(sampleRandom(shrub_crop_4, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "4")
+
 glimpse(shrub_rsample_4)
-hist(shrub_rsample_4$layer)
-write.csv(shrub_rsample_4, "datasets/berner_data/shrub_rsample_4.csv")
+hist(shrub_rsample_4$shrub_crop_latlong_agg)
+# write.csv(shrub_rsample_4, "datasets/berner_data/shrub_rsample_4.csv")
 
 # Raster::extract
 poly_4 <- as(range_extent_4, 'SpatialPolygons') # making extent into polygon
@@ -219,16 +224,17 @@ hist(shrub_crop_4)
 
 
 # Strip (5) ----- 
-range_extent_5 <- extent(450430.7, 521674.7,  1933928.1, 2270618.1)
-shrub_crop_5 <- crop(x = shrub_agb_p50, y = range_extent_5)
-shrub_crop_5_latlong <- projectRaster(shrub_crop_5, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
+range_extent_5 <- extent(-142.4426, -140.5084 ,  68.40000, 70.37209) # class: extent
+shrub_crop_5 <- crop(x = shrub_crop_latlong_agg, y = range_extent_5) # class: raster layer
+res(shrub_crop_5) # 0.007986 0.008370
 
 # random sample 
-shrub_rsample_5 <- as.data.frame(sampleRandom(shrub_crop_5_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
-                                              cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(strip = "5")
+shrub_rsample_5 <- as.data.frame(sampleRandom(shrub_crop_5, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "5")
+
 glimpse(shrub_rsample_5)
-hist(shrub_rsample_5$layer)
-#write.csv(shrub_rsample_5, "datasets/berner_data/shrub_rsample_5.csv")
+hist(shrub_rsample_5$shrub_crop_latlong_agg)
+write.csv(shrub_rsample_5, "datasets/berner_data/shrub_rsample_5.csv")
 
 # Raster::extract
 poly_5 <- as(range_extent_5, 'SpatialPolygons') # making extent into polygon
@@ -508,7 +514,8 @@ buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
 # is the aggregation fine? resolution is not exactly the same
 # does dividing W-E mean I can model biomass ~long 
 # is the model the right logic: biomass~lat + strip random effect
-
+# do I make a grid? map divided into 10plots
+# is the sampleRandom function fine, or do I need raster::extract?
 
 ## GRID???? -----
 # Dividing map into 10 plots
