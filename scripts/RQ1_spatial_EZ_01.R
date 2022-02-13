@@ -53,7 +53,7 @@ shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 res(shrub_crop) # resolution 30m x 30m
 
 # plotting cropped shrub map to visualise extent
-(cropped_vis <- gplot(shrub_crop_latlong) +
+(cropped_vis <- gplot(shrub_crop_latlong_agg) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -67,7 +67,7 @@ res(shrub_crop) # resolution 30m x 30m
     theme(plot.title = element_text(hjust = 0.5),             # centres plot title
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
-
+plot(shrub_crop_new_res)
 # extent of the cropped shrub map
 st_bbox(shrub_crop) 
 
@@ -81,15 +81,15 @@ res(shrub_crop_latlong)
 
 ### AGGREGATION -----
 # aggregate shrub data before extraction(?) using aggregate function()
-shrub_crop_latlong_agg <- aggregate(shrub_crop_latlong, fact=11.47842, fun=mean) # factor chosen looking at climate cell resolution 0.008333333
+shrub_crop_latlong_agg <- aggregate(shrub_crop_latlong, fact=c(11.47842,30.8642), fun=mean, expand = TRUE) # factor chosen looking at climate cell resolution 0.008333333
 res(shrub_crop_latlong_agg)
-# 0.007986 0.002970
+# 0.007986 0.008370 
+# not EXACTLY the same as climate resolution but close enough?
 
 # aggregate using resample() function
-shrub_crop_new_res <- resample(shrub_crop_latlong, precip, method="bilinear")
+shrub_crop_new_res <- resample(shrub_crop_latlong, precip, method="bilinear") # bilinear method is like mean for aggregate
 res(shrub_crop_new_res)== res(precip) # checking shrub and climate rasters have same resolution
 # [1] TRUE TRUE
-#writeRaster(shrub_crop_new_res, "datasets/berner_data/shrub_crop_new_res.tif")
 
 
 ### EXTRACTION (West-to-East) ----
