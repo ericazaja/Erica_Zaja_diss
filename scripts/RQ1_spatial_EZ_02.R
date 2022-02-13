@@ -209,34 +209,7 @@ raster_area<-length(cell_size)*median(cell_size)
 
 dev.off()
 
-## EXTRACTING RASTER DATA ----
-projection(cropped)
 
-cropped_shrub <- as.data.frame(cropped, xy=TRUE)
-glimpse(cropped_shrub)
-
-cropped_shrub_2 <- cropped_shrub %>% 
-  dplyr::select(shrub_agb_p50)
-
-glimpse(cropped_shrub_2)
-head(cropped_shrub_2)
-tail(cropped_shrub_2)
-# write.csv(cropped_shrub_2, "datasets/berner_data/cropped_shrub_2.csv")
-
-# PROBLEM 3 ----
-cropped_coords <- as.data.frame(cropped_latlong, xy = TRUE)
-glimpse(cropped_coords) # cancels (makes into NAs) all my shrub biomass data ! 
-cropped_coords <- cropped_coords %>% 
-  dplyr::select(- shrub_agb_p50)
-# cropped_coords now is only the x and y lat and long! 
-str(cropped_coords)
-# write.csv(cropped_coords, "datasets/berner_data/cropped_coords.csv")
-
-# I could try joining the two dataframes: so i have latlong AND shrub biomass
-# shrub_PCH_range <- bind_rows(cropped_coords, cropped_shrub_2)
-
-# Histogram of shrub agb (g/m2) 
-hist(cropped_shrub$shrub_agb_p50)
 
 # (cropped_histogram <- ggplot(cropped_data, aes(x = shrub_agb_p50, fill = y)) +  
 #geom_histogram(stat = "count") +
@@ -331,5 +304,8 @@ exp_df <- as.data.frame(crop, xy=TRUE)
     theme_shrub() +  # Remove ugly grey background
     xlab("Longitude") +
     ylab("Latitude") ) 
+
+
+### Questions: 
 
 
