@@ -77,6 +77,7 @@ st_bbox(shrub_crop)
 # transforming CRS of cropped map from aea to lalong
 shrub_crop_latlong <- projectRaster(shrub_crop, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
 # writeRaster(shrub_crop_latlong, "datasets/berner_data/shrub_crop_latlong.tif")
+# shrub_crop_latlong <- raster("datasets/berner_data/shrub_crop_latlong.tif")
 
 # resolution of cropped map
 res(shrub_crop_latlong)
@@ -424,7 +425,16 @@ summary(model_b)
 # I think I need the ggpredict lmer plot
 # random slopes
 
+# JOE: SAMPLE WHOLE MAP ----
+shrub_rsample_0 <- as.data.frame(sampleRandom(shrub_crop_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE))
+hist(shrub_rsample_0$shrub_crop_latlong)
 
+(scatter_model_b <- ggplot(shrub_rsample_0, aes(x = x, y = shrub_crop_latlong)) +
+  geom_point(size = 0.1) +
+  geom_smooth(method = "lm") +
+  theme_classic())
+# flat!
 
 # LOGIC CHECKS ----
 # checking if norhtern strip has lower biomass than southern strip
@@ -488,7 +498,10 @@ buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
 # NB the histogram for the north is more skewed towards lower biomass
 
 ### Questions: -----
+# NB do the East west strips
 # Buffer works?
+# now the whole map is being random sampled! Is that right? the scatter of biomass ~lat is same as with strips 
+# i.e do I need strips? I could use them to classify high-medium-low biomass? (see histogram)
 # how many datapoints do I random sample in each strip?
 # are the climatologies right?
 # seems like A LOT of datapoints when I plot the scatter - do I make means?
