@@ -516,9 +516,7 @@ buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
 # is the model the right logic: biomass~lat + strip random effect
 # do I make a grid? map divided into 10plots
 # is the sampleRandom function fine, or do I need raster::extract?
-
-## GRID???? -----
-# Dividing map into 10 plots
+# for the climate- i need to extract for the west east data and try with the full map extracted data
 
 
 
