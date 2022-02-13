@@ -31,7 +31,6 @@ res(temp)
 # This size in turn relates to the area on the ground that the pixel represents.
 # The higher the resolution for the same extent the crisper the image (and the larger the file size) 
 
-
 # resolution = 0.008333333 0.008333333
 # resolution of map: [1] 30 30
 # > 30/0.008333333 =  3600

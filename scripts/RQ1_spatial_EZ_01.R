@@ -36,9 +36,9 @@ shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif")
 # Loading polygon of PCH range 
 PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") #loading data
 
-
-### EXTRACTION (West-to-East) ----
 st_bbox(PCH_core_range) # extent of the PCH range
+
+### CROPPING SHRUB MAP -----
 
 # plotting shrub raster (entire) 
 plot(shrub_agb_p50)
@@ -48,6 +48,9 @@ range_extent <- extent(165444.3,  849222.0, 1697872.7, 2270606.5) # xmin, xmax, 
 
 # cropping shrub map to extent of the PCH range
 shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
+
+# exploring resolution 
+res(shrub_crop) # resolution 30m x 30m
 
 # plotting cropped shrub map to visualise extent
 (cropped_vis <- gplot(shrub_crop) +
@@ -68,12 +71,19 @@ shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 # extent of the cropped shrub map
 st_bbox(shrub_crop) 
 
+# transforming CRS of cropped map from aea to lalong
+shrub_crop_latlong <- projectRaster(shrub_crop, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
+
+
+
+### EXTRACTION (West-to-East) ----
 # subdividing cropped map into 5 smaller chunks (strips from West to East) and extracting biomass 
 
 # Strip (1) -----
 range_extent_1 <- extent(165454.7, 236698.7, 1933928.1, 2270618.1) # class: extent
 shrub_crop_1 <- crop(x = shrub_agb_p50, y = range_extent_1) # class: raster layer
 shrub_crop_1_latlong <- projectRaster(shrub_crop_1, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
+res(shrub_crop_1_latlong) # 0.000733 0.000271
 
 # random sample 
 shrub_rsample_1 <- as.data.frame(sampleRandom(shrub_crop_1_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
@@ -101,6 +111,7 @@ hist(shrub_crop_1)
 range_extent_2 <- extent(236698.7, 307942.7,  1933928.1, 2270618.1)
 shrub_crop_2 <- crop(x = shrub_agb_p50, y = range_extent_2)
 shrub_crop_2_latlong <- projectRaster(shrub_crop_2, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
+res(shrub_crop_2_latlong) # 0.000733 0.000271
 
 # random sample 
 shrub_rsample_2 <- as.data.frame(sampleRandom(shrub_crop_2_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
@@ -332,6 +343,7 @@ range_extent_a <- extent(165454.7, 236698.7, 1933928.1, 2102273.1) # class: exte
 shrub_plot_a <- crop(x = shrub_agb_p50, y = range_extent_a) # class: raster layer
 shrub_plot_a_latlong <- projectRaster(shrub_plot_a, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
 shrub_plot_a_latlong <- raster::aggregate(shrub_plot_a_latlong, fact=33, fun=mean) # factor is wrong
+res(shrub_plot_a_latlong)
 
 # random sample 
 shrub_rsample_a <- as.data.frame(sampleRandom(shrub_plot_a_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
