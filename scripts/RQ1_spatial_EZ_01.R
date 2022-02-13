@@ -57,9 +57,10 @@ res(shrub_crop) # resolution 30m x 30m
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
-      ifelse(x<1000, 
-             scales::rescale(x,to = to, from = c(min(x, na.rm = TRUE), 1000)), 1)}) +
+      ifelse(x<500, 
+             scales::rescale(x,to = to, from = c(min(x, na.rm = TRUE), 500)), 1)}) +
     coord_quickmap()+
+    ylim(68.2,70.5)+
     theme_classic() +  # Remove ugly grey background
     xlab("Longitude") +
     ylab("Latitude") +
@@ -67,7 +68,7 @@ res(shrub_crop) # resolution 30m x 30m
     theme(plot.title = element_text(hjust = 0.5),             # centres plot title
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
-plot(shrub_crop_new_res)
+
 # extent of the cropped shrub map
 st_bbox(shrub_crop) 
 
@@ -85,17 +86,22 @@ shrub_crop_latlong_agg <- aggregate(shrub_crop_latlong, fact=c(11.47842,30.8642)
 res(shrub_crop_latlong_agg)
 # 0.007986 0.008370 
 # not EXACTLY the same as climate resolution but close enough?
+# writeRaster(shrub_crop_latlong_agg, "datasets/berner_data/shrub_crop_latlong_agg.tif")
 
-# aggregate using resample() function
-shrub_crop_new_res <- resample(shrub_crop_latlong, precip, method="bilinear") # bilinear method is like mean for aggregate
-res(shrub_crop_new_res)== res(precip) # checking shrub and climate rasters have same resolution
-# [1] TRUE TRUE
+
+# OR can aggregate using resample() function
+#shrub_crop_new_res <- resample(shrub_crop_latlong, precip, method="bilinear") # bilinear method is like mean for aggregate
+#res(shrub_crop_new_res)== res(precip) # checking shrub and climate rasters have same resolution
+# [1] TRUE TRUE but it doesnt plot
 
 
 ### EXTRACTION (West-to-East) ----
 # subdividing cropped map into 5 smaller chunks (strips from West to East) and extracting biomass 
+
 # extent of the cropped shrub map
-st_bbox(shrub_crop_latlong) 
+st_bbox(shrub_crop_latlong_agg) 
+#  xmin       ymin       xmax       ymax 
+# -150.17942   66.93202 -140.50837   70.37209 
 
 # Strip (1) -----
 range_extent_1 <- extent(165454.7, 236698.7, 1933928.1, 2270618.1) # class: extent
