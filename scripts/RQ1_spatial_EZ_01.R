@@ -23,6 +23,9 @@ library(rgeos)
 library(rworldmap)
 library(tidyverse)
 library(lme4)
+library(Require)
+install.packages("SpaDES.tools")
+library(SpaDES.tools)
 
 
 ### LOADING DATA -----
@@ -93,6 +96,12 @@ res(shrub_crop_latlong_agg)
 #shrub_crop_new_res <- resample(shrub_crop_latlong, precip, method="bilinear") # bilinear method is like mean for aggregate
 #res(shrub_crop_new_res)== res(precip) # checking shrub and climate rasters have same resolution
 # [1] TRUE TRUE but it doesnt plot
+
+
+# Splitting raster ----
+nx <- 2 # number of tiles for x axis to be split into
+ny <- 5 # number of tiles for y axis to be split into
+splitRaster(shrub_crop_latlong_agg, nx, ny, c(10, 10), path ="datasets/berner_data")
 
 
 ### EXTRACTION (West-to-East) ----
