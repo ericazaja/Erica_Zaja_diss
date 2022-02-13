@@ -268,7 +268,7 @@ shrub_all_random_WE <- rbind(shrub_rsample_1, shrub_rsample_2, shrub_rsample_3, 
 ### Data right skewed. More shrubs with lower biomass.
 
 ### Model 1: Biomass VS strip  ----
-shrub_all_random_new <- shrub_all_random %>%
+shrub_all_random_new_WE <- shrub_all_random %>%
   rename (cell_ID = "cell", 
               lat = x, long = y, 
               biomass = layer) %>%
@@ -396,6 +396,25 @@ shrub_all_random_NS <- rbind(shrub_rsample_a, shrub_rsample_b, shrub_rsample_c, 
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
     scale_fill_manual(values=c("#404080", "#69b3a2", "red", "yellow", "green")) +
     theme_bw())
+
+# JOE: Model ----
+shrub_all_random_new_NS <- shrub_all_random_NS %>%
+  rename (cell_ID = "cell", 
+          lat = x, long = y, 
+          biomass = shrub_crop_latlong_agg)
+
+# write.csv(shrub_all_random_new_NS, "datasets/berner_data/shrub_all_random_new_NS.csv")
+boxplot(biomass~strip, data = shrub_all_random_new_NS)
+
+# making strip a factor
+shrub_all_random_new_NS$strip <- as.factor(as.character(shrub_all_random_new_NS$strip))   
+str(shrub_all_random_new_NS)
+
+# model biomass as function of latitude with strip as random effect
+model_b <- lmer(biomass ~ lat + (1|strip), data = shrub_all_random_new_NS)
+summary(model_b)
+# F-statistic:  7107 on 1 and 24998 DF,  p-value: < 2.2e-16
+
 
 
 # LOGIC CHECKS ----
