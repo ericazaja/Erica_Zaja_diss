@@ -35,8 +35,8 @@ res(temp)
 # resolution of map: [1] 30 30
 # > 30/0.008333333 =  3600
 
-plot(temp)
-plot(precip)
+plot(temp, main = "Mean daily mean air temperatures of the warmest quarter (°C)")
+plot(precip, main = "Mean monthly precipitation of the warmest quarter ((kg m-2)")
 levelplot(precip)
 
 # Load the coordinates of the cropped shrub map

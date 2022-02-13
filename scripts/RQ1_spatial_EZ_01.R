@@ -53,7 +53,7 @@ shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 res(shrub_crop) # resolution 30m x 30m
 
 # plotting cropped shrub map to visualise extent
-(cropped_vis <- gplot(shrub_crop) +
+(cropped_vis <- gplot(shrub_crop_latlong) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -73,11 +73,29 @@ st_bbox(shrub_crop)
 
 # transforming CRS of cropped map from aea to lalong
 shrub_crop_latlong <- projectRaster(shrub_crop, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
+# writeRaster(shrub_crop_latlong, "datasets/berner_data/shrub_crop_latlong.tif")
 
+# resolution of cropped map
+res(shrub_crop_latlong)
+# 0.000726 m x 0.000270 m
+
+### AGGREGATION -----
+# aggregate shrub data before extraction(?) using aggregate function()
+shrub_crop_latlong_agg <- aggregate(shrub_crop_latlong, fact=11.47842, fun=mean) # factor chosen looking at climate cell resolution 0.008333333
+res(shrub_crop_latlong_agg)
+# 0.007986 0.002970
+
+# aggregate using resample() function
+shrub_crop_new_res <- resample(shrub_crop_latlong, precip, method="bilinear")
+res(shrub_crop_new_res)== res(precip) # checking shrub and climate rasters have same resolution
+# [1] TRUE TRUE
+#writeRaster(shrub_crop_new_res, "datasets/berner_data/shrub_crop_new_res.tif")
 
 
 ### EXTRACTION (West-to-East) ----
 # subdividing cropped map into 5 smaller chunks (strips from West to East) and extracting biomass 
+# extent of the cropped shrub map
+st_bbox(shrub_crop_latlong) 
 
 # Strip (1) -----
 range_extent_1 <- extent(165454.7, 236698.7, 1933928.1, 2270618.1) # class: extent
