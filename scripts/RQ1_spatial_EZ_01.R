@@ -55,7 +55,7 @@ shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 res(shrub_crop) # resolution 30m x 30m
 
 # plotting cropped shrub map to visualise extent
-(cropped_vis <- gplot(shrub_crop_b) +
+(cropped_vis <- gplot(shrub_crop_e) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -242,13 +242,13 @@ hist(shrub_crop_5)
 # extracted_shrub_5 <- read_csv("datasets/berner_data/extracted_shrub_5.csv")
 
 
-## MERGING DATASETS ----
+## Merging strips West to East (1-5) ----
 
 shrub_all <- rbind(extracted_shrub_1, extracted_shrub_2, extracted_shrub_3, extracted_shrub_4, extracted_shrub_5) 
 # write.csv(shrub_all, "datasets/berner_data/shrub_all.csv")
 # shrub_all <- read_csv("datasets/berner_data/shrub_all.csv")
 
-shrub_all_random <- rbind(shrub_rsample_1, shrub_rsample_2, shrub_rsample_3, shrub_rsample_4, shrub_rsample_5) 
+shrub_all_random_WE <- rbind(shrub_rsample_1, shrub_rsample_2, shrub_rsample_3, shrub_rsample_4, shrub_rsample_5) 
 # write.csv(shrub_all_random, "datasets/berner_data/shrub_all_random.csv")
 
 ### Distribtion ----
@@ -259,6 +259,7 @@ shrub_all_random <- rbind(shrub_rsample_1, shrub_rsample_2, shrub_rsample_3, shr
     scale_fill_manual(values=c("#404080", "#69b3a2", "red", "yellow", "green")) +
     theme_bw())
 
+# Histogram of overall shrub biomass
 (hist_random_all <-shrub_all_random %>%
     ggplot(aes(x = layer)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
@@ -318,12 +319,13 @@ shrub_crop_a <- crop(x = shrub_crop_latlong_agg, y = range_extent_a) # class: ra
 res(shrub_crop_a) # 0.007986 0.008370
 
 # JOE: random sample 
-shrub_rsample_a <- as.data.frame(sampleRandom(shrub_crop_a, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+shrub_rsample_a <- as.data.frame(sampleRandom(shrub_crop_a, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "a")
-# How do I pick how many points to sample? and is the buffer working?
+# How do I pick how many points to sample? For now i picked 5000 random samples for each strip - given strip e small size 
+# and is the buffer working?
 glimpse(shrub_rsample_a)
 hist(shrub_rsample_a$shrub_crop_latlong_agg)
-write.csv(shrub_rsample_a, "datasets/berner_data/shrub_rsample_a.csv") # saving strip dataframe
+# write.csv(shrub_rsample_a, "datasets/berner_data/shrub_rsample_a.csv") # saving strip dataframe
 
 # Strip (b) -----
 range_extent_b <- extent(-150.17942, -140.50837 , 69.58325, 69.97767) # class: extent
@@ -331,7 +333,7 @@ shrub_crop_b <- crop(x = shrub_crop_latlong_agg, y = range_extent_b) # class: ra
 res(shrub_crop_b) # 0.007986 0.008370
 
 # JOE: random sample 
-shrub_rsample_b <- as.data.frame(sampleRandom(shrub_crop_b, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+shrub_rsample_b <- as.data.frame(sampleRandom(shrub_crop_b, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "b")
 # How do I pick how many points to sample? and is the buffer working?
 glimpse(shrub_rsample_b)
@@ -339,17 +341,61 @@ hist(shrub_rsample_b$shrub_crop_latlong_agg)
 # write.csv(shrub_rsample_a, "datasets/berner_data/shrub_rsample_a.csv") # saving strip dataframe
 
 # Strip (c) -----
-range_extent_c <- extent(-150.17942, -140.50837, 68.30806 , 70.37209) # class: extent
+range_extent_c <- extent(-150.17942, -140.50837, 69.18883 , 69.58325) # class: extent
 shrub_crop_c <- crop(x = shrub_crop_latlong_agg, y = range_extent_c) # class: raster layer
 res(shrub_crop_c) # 0.007986 0.008370
 
 # JOE: random sample 
-shrub_rsample_c <- as.data.frame(sampleRandom(shrub_crop_c, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+shrub_rsample_c <- as.data.frame(sampleRandom(shrub_crop_c, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "c")
 # How do I pick how many points to sample? and is the buffer working?
 glimpse(shrub_rsample_c)
 hist(shrub_rsample_c$shrub_crop_latlong_agg)
-# write.csv(shrub_rsample_a, "datasets/berner_data/shrub_rsample_a.csv") # saving strip dataframe
+# write.csv(shrub_rsample_c, "datasets/berner_data/shrub_rsample_c.csv") # saving strip dataframe
+
+# Strip (d) -----
+range_extent_d <- extent(-150.17942, -140.50837, 68.79441 , 69.18883) # class: extent
+shrub_crop_d <- crop(x = shrub_crop_latlong_agg, y = range_extent_d) # class: raster layer
+res(shrub_crop_d) # 0.007986 0.008370
+
+# JOE: random sample 
+shrub_rsample_d <- as.data.frame(sampleRandom(shrub_crop_d, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "d")
+# How do I pick how many points to sample? and is the buffer working?
+glimpse(shrub_rsample_d)
+hist(shrub_rsample_d$shrub_crop_latlong_agg)
+# write.csv(shrub_rsample_d, "datasets/berner_data/shrub_rsample_d.csv") # saving strip dataframe
+
+# Strip (e) -----
+range_extent_e <- extent(-150.17942, -140.50837, 68.39999, 68.79441) # class: extent
+shrub_crop_e <- crop(x = shrub_crop_latlong_agg, y = range_extent_e) # class: raster layer
+res(shrub_crop_e) # 0.007986 0.008370
+
+# JOE: random sample 
+shrub_rsample_e <- as.data.frame(sampleRandom(shrub_crop_e, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "e")
+# How do I pick how many points to sample? and is the buffer working?
+glimpse(shrub_rsample_e)
+hist(shrub_rsample_e$shrub_crop_latlong_agg)
+# write.csv(shrub_rsample_e, "datasets/berner_data/shrub_rsample_e.csv") # saving strip dataframe
+
+# Merging datasets North-south (strips a-e) ----
+shrub_all_random_NS <- rbind(shrub_rsample_a, shrub_rsample_b, shrub_rsample_c, shrub_rsample_d, shrub_rsample_e) 
+# write.csv(shrub_all_random_NS, "datasets/berner_data/shrub_all_random_NS.csv")
+
+# Distribution ----
+# Overall shrub biomass
+(hist_random_all_NS <-shrub_all_random_NS %>%
+    ggplot(aes(x = shrub_crop_latlong_agg)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
+    theme_bw())
+
+# By north-south strip
+(hist_random_NS <-shrub_all_random_NS %>%
+    ggplot(aes(x = shrub_crop_latlong_agg, fill = strip)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
+    scale_fill_manual(values=c("#404080", "#69b3a2", "red", "yellow", "green")) +
+    theme_bw())
 
 
 # LOGIC CHECKS ----
