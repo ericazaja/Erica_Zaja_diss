@@ -413,7 +413,14 @@ str(shrub_all_random_new_NS)
 # model biomass as function of latitude with strip as random effect
 model_b <- lmer(biomass ~ lat + (1|strip), data = shrub_all_random_new_NS)
 summary(model_b)
-# F-statistic:  7107 on 1 and 24998 DF,  p-value: < 2.2e-16
+
+# visualising scatter 
+(scatter_model_b <- ggplot(shrub_all_random_new_NS, aes(x = lat, y = biomass)) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_classic())
+# I think I need the ggpredict lmer plot
+# random slopes
 
 
 
@@ -479,7 +486,7 @@ buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
 # NB the histogram for the north is more skewed towards lower biomass
 
 
-## GRID -----
+## GRID???? -----
 # Dividing map into 10 plots
 
 # Plot (a) -----

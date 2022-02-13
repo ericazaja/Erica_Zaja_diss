@@ -23,10 +23,13 @@ library(viridis)
 library(rasterVis)
 library(lme4)
 
-# Loading CHELSA data ------
+# JOE: Loading CHELSA data ------
 temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
 precip <- raster("datasets/climate_data/CHELSA_bio10_18.tif")
+# are these the right variables?
+
 res(temp)
+
 # The spatial resolution of a raster refers the size of each cell in meters. 
 # This size in turn relates to the area on the ground that the pixel represents.
 # The higher the resolution for the same extent the crisper the image (and the larger the file size) 
@@ -40,14 +43,17 @@ plot(precip, main = "Mean monthly precipitation of the warmest quarter ((kg m-2)
 levelplot(precip)
 
 # Load the coordinates of the cropped shrub map
-coords <- read.csv("datasets/berner_data/shrub_all_random_new.csv") %>% 
+coords_WE <- read.csv("datasets/berner_data/shrub_all_random_new.csv") %>% 
+  dplyr::select(lat, long)
+
+coords_NS <- read.csv("datasets/berner_data/shrub_all_random_new_NS.csv") %>% 
   dplyr::select(lat, long)
   
 # Climatologies:
 # EXTRACTION ----
 
 # Create SpatialPoints (sp) object of unique coordinates
-coords_sp <- SpatialPoints(coords)
+coords_sp <- SpatialPoints(coords_NS)
 
 # create raster stack
 chelsa.stack <- stack(precip, temp)
@@ -68,9 +74,9 @@ coord.df$ID <- as.numeric(coord.df$ID) # Make numeric
 coord.chelsa.combo <- left_join(chelsa.extract, coord.df, by = c("ID" = "ID"))
 
 # loading the shrub biomass df
-biomass.df <- read.csv("datasets/berner_data/shrub_all_random_new.csv") %>%
+biomass.df <- read.csv("datasets/berner_data/shrub_all_random_new_NS.csv") %>%
   rename(ID = X) %>%
-  dplyr::select(ID, biomass, strip, biomass_level)
+  dplyr::select(ID, biomass, strip)
 
 # merging biomass df with climate df
 coord.chelsa.combo_try <- left_join(coord.chelsa.combo, biomass.df, by = c("ID" = "ID"))
@@ -103,33 +109,31 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
-# Plotting shrub raster (entire) with ggplot
 # model: biomass ~ temp
-model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|strip) + data = coord.chelsa.combo.3)
+model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|strip), data = coord.chelsa.combo.3)
 summary(model_3)
 
-# scatter: biomass ~temp
-(scatter_temp <- ggplot(coord.chelsa.combo.3, aes(x = biomass, y = CH_TempMeanSummer, colour = strip)) +
-    geom_point(size = 2) +
+# scatter: biomass ~ temp
+(scatter_temp <- ggplot(coord.chelsa.combo.3, aes(x = CH_TempMeanSummer, y = biomass)) +
+    geom_point(size = 0.1) +
     geom_smooth(method = "lm") +
     theme_shrub())
 
+
 # model: biomass ~ precip
-model_4 <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
+model_4 <- lmer(biomass ~ CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
 summary(model_4)
 
-# scatter: biomass ~temp
-(scatter_precip <- ggplot(coord.chelsa.combo.3, aes(x = biomass, y = CH_PrecipMeanSummer, colour = strip)) +
-    geom_point(size = 2) +
+# scatter: biomass ~precip
+(scatter_precip <- ggplot(coord.chelsa.combo.3, aes(x = CH_PrecipMeanSummer, y = biomass)) +
+    geom_point(size = 0.1) +
     geom_smooth(method = "lm") +
     theme_classic())
 
+
 # model: biomass ~ temp*precip
-model_5 <- lmer(biomass ~ CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
-summary(model_4)
-
-
-## NB aggregate biomass data (30x30m) to climatologies resolution (~1km)
+model_5 <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
+summary(model_5)
 
 
 
