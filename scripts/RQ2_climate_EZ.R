@@ -27,9 +27,18 @@ library(lme4)
 temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
 precip <- raster("datasets/climate_data/CHELSA_bio10_18.tif")
 res(temp)
+# The spatial resolution of a raster refers the size of each cell in meters. 
+# This size in turn relates to the area on the ground that the pixel represents.
+# The higher the resolution for the same extent the crisper the image (and the larger the file size) 
+
+
 # resolution = 0.008333333 0.008333333
 # resolution of map: [1] 30 30
 # > 30/0.008333333 =  3600
+
+plot(temp)
+plot(precip)
+levelplot(precip)
 
 # Load the coordinates of the cropped shrub map
 coords <- read.csv("datasets/berner_data/shrub_all_random_new.csv") %>% 
