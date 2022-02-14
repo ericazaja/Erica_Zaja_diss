@@ -50,12 +50,20 @@ ANWR_veg %>% group_by(YEAR) %>%
 unique(ANWR_veg$FuncGroup) # Unique functional groups names
 # [1] "Shrub"     "Lichen"    "Moss"      "Forb"      "Graminoid"
 unique(ANWR_veg$GENUS) # Unique genus names
-unique(ANWR_veg$SPECIES_NAME) # Unique species names
+unique(ANWR_veg$YEAR) # Unique species names
+
+ANWR_veg$GENUS <- as.factor(as.character(ANWR_veg$GENUS))
+ANWR_veg$SITE <- as.factor(as.character(ANWR_veg$SITE))
+ANWR_veg$PLOT <- as.factor(as.character(ANWR_veg$PLOT))
+ANWR_veg$YEAR <- as.numeric(ANWR_veg$YEAR)
+
+str(ANWR_veg)
 
 # Just shrub data
 ITEX_shrubs <-  ANWR_veg %>% filter (FuncGroup == "Shrub") # no alnus???
 unique(ITEX_shrubs$GENUS) # Unique genus names 
 # [1] "Dryas"          "Salix"          "Vaccinium"      "Arctostaphylos" "Betula"         "Cassiope"       "Ledum"         
+str(ITEX_shrubs)
 
 # Just graminoid data 
 ITEX_gram <-  ANWR_veg %>% filter (FuncGroup == "Graminoid") 
@@ -100,6 +108,7 @@ ITEX_shrubs <- ITEX_shrubs %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
+str(ITEX_shrubs)
 ### Mean shrub cover over time  
 (shrub_scatter <- (ggplot(ITEX_shrubs, aes(x = YEAR, y = Mean_cover))+
   geom_point(size = 2) +
@@ -221,6 +230,8 @@ library(ggpubr)  # For data visualisation formatting
 
 ITEX_all_veg <- rbind(ITEX_forbs,ITEX_gram, ITEX_lich, ITEX_shrubs, ITEX_moss)
 unique(ITEX_all_veg$FuncGroup) # checking I have all functional groups
+hist(ITEX_all_veg$Mean_cover)
+str(ITEX_all_veg)
 
 # Model ----
 # mixed model with functional group as fixed effect
@@ -270,6 +281,21 @@ summary(lm_all)
                     geom_smooth(method = "lm") + 
                     labs(y = "Mean vegetation cover\n", x = "\nYear") +
                     theme_shrub))
+
+### SHRUB SPECIES -----
+#shrub species
+unique(ITEX_shrubs$GENUS)
+
+# Mean shrub cover per plot per year
+ITEX_shrub_sp <- ITEX_shrubs %>%
+   group_by(YEAR, PLOT, GENUS) %>%
+   mutate(Mean_cover = mean(FuncPlotCover)) %>%
+   ungroup()
+
+
+
+
+
 
 #####################################################################################
 
