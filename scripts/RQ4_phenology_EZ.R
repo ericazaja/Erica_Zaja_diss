@@ -5,13 +5,14 @@
 #                                                         #
 ##%######################################################%##
 
-# Loading libraries -----
+# LOADING LIBRARIES -----
 library(readr)
 
-# Loading data -----
+# LOADING DATA  -----
 phenology_data <- read_csv("datasets/phenology_data/CCIN13215_20210302_tundra_phenology_database.csv")
 
-# Data wrangling -----
+# DATA WRANGLING  -----
+
 # Keep Toolik lake and Qikiqtaruk (close enough to PCH summer range) 
 # and perhaps Atqasuk, Utqiaġvik that are on the North slope of Alaska
 # NB the largest total number of phenology observations came from Utqiaġvik, Alaska
@@ -50,7 +51,7 @@ unique(phenology_new$phenophase) # Unique phenophase names
 # [1] "green"     "flower"    "flowerend" "seedmat"   "senesce"  
 
 # Theme 
-shrub.theme <- theme(legend.position = "right",
+theme_shrub <- theme(legend.position = "right",
                      axis.title.x = element_text(face="bold", size=20),
                      axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
                      axis.title.y = element_text(face="bold", size=20),
@@ -61,14 +62,65 @@ shrub.theme <- theme(legend.position = "right",
                      plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                      plot.margin = unit(c(1,1,1,1), units = , "cm"))
 
+# DATA VISUALISATION -----
 # Plot DOY on x and phenophase on y
-(greening <- (ggplot(phenology_new, aes(x = DOY, y = phenophase))+
+(phenophases <- (ggplot(phenology_new, aes(x = DOY, y = phenophase))+
                      geom_point(size = 2) +
                      geom_smooth(method = "lm") + 
                      labs(y = "Phenophase", x = "\nDay of Year") + 
-                     shrub.theme))
+                    theme_shrub))
 
 ## I need to compare onset of greening (DOY) across the years
+# filter for greening only
+phenology_green <- phenology_new %>%
+  filter(phenophase == "green")
+
+unique(phenology_green$phenophase) # only green
+
+(greening <- (ggplot(phenology_green, aes(x = DOY, y = phenophase))+
+                   geom_point(size = 2) +
+                   geom_smooth(method = "lm") + 
+                   labs(y = "Onset of greening", x = "\nDay of Year") + 
+                   theme_shrub))
+
+range(phenology_green$DOY) # range of DOY of onset of greening
+# 135 211
+# 76 days difference
+
+unique(phenology_green$year)
+
+# Classifying early vs late greening years -----
+
+# calculating mean onset of greening day per year
+phenology_green <- phenology_green %>%
+  group_by(year) %>%
+  mutate(mean_onset_greening = mean(DOY)) %>%
+  ungroup()
+
+range(phenology_green$mean_onset_greening)
+#157.4634 177.8000
+
+# greening < 76 DOY --> early greening year
+# greening > 76 DOY --> late greening year
+phenology_green <- phenology_green %>%
+  mutate(late_early = case_when(mean_onset_greening >= 167.6317 ~ 'late_year' ,
+                                mean_onset_greening < 167.6317 ~ 'early_year'))
+
+# late vs early phenology year as factor
+phenology_green$late_early <- as.factor(as.character(phenology_green$late_early))
+
+(scatter_green <- ggplot(phenology_green, aes(x = year, y = mean_onset_greening)) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_minimal())
+
+(boxplot(mean_onset_greening ~ year, data = phenology_green))
+
+(boxplot_green <- ggplot(phenology_green, aes(x = year, y = mean_onset_greening, fill = late_early)) +
+    geom_boxplot() +
+    theme_minimal()) # more early greening in later years!
+
+str(phenology_green)
 
 
 

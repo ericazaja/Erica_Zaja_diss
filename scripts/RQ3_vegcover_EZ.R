@@ -292,9 +292,10 @@ ITEX_shrub_sp <- ITEX_shrubs %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
-(scatter_shrub_by_sp <- (ggplot(ITEX_shrub_sp, aes(x = YEAR, y = Mean_cover, colour = GENUS))+
+(facet_scatter_shrub_by_sp <- (ggplot(ITEX_shrub_sp, aes(x = YEAR, y = Mean_cover, colour = GENUS))+
                              geom_point(size = 2) +
                              geom_smooth(method = "lm") + 
+                             facet_wrap(~ GENUS, scales = "free_y") +
                              labs(y = "Mean shrub cover\n", x = "\nYear") +
                              theme_shrub))
 
