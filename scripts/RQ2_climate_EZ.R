@@ -5,7 +5,8 @@
 #                                                         #
 ##%######################################################%##
 
-# RQ2: (a) Is shrub biomass greater in areas with higher summer temperatures? 
+# RQ2: how does biomass vary with temp and precip?
+# (a) Is shrub biomass greater in areas with higher summer temperatures? 
 # (b) Is shrub biomass greater in areas with higher summer precipitation? 
 # (c) Is shrub biomass greater in areas with higher summer temperature and precipitation? 
   
@@ -43,14 +44,14 @@ plot(precip, main = "Mean monthly precipitation of the warmest quarter ((kg m-2)
 levelplot(precip)
 
 # Load the coordinates of the cropped shrub map
-coords_WE <- read.csv("datasets/berner_data/shrub_all_random_new.csv") %>% 
+coords_WE <- read.csv("datasets/berner_data/shrub_all_random_new_WE.csv") %>% 
   dplyr::select(lat, long)
 
 coords_NS <- read.csv("datasets/berner_data/shrub_all_random_new_NS.csv") %>% 
   dplyr::select(lat, long)
   
 # Climatologies:
-# EXTRACTION ----
+# EXTRACTION for North - South data----
 
 # Create SpatialPoints (sp) object of unique coordinates
 coords_sp <- SpatialPoints(coords_NS)
@@ -70,7 +71,7 @@ coord.df <- as.data.frame(coords_sp)
 coord.df$ID <- row.names(coord.df)
 coord.df$ID <- as.numeric(coord.df$ID) # Make numeric
 
-# Merge the two dataframes: extracted CHELSA variables and the ITEX coordinates
+# Merge the two dataframes: extracted CHELSA variables and the coordinates
 coord.chelsa.combo <- left_join(chelsa.extract, coord.df, by = c("ID" = "ID"))
 
 # loading the shrub biomass df

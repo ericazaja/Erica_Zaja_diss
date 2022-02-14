@@ -6,7 +6,7 @@
 ##%######################################################%##
 
 ## RQ1: What areas within the PCH Alaskan summer range have high-medium-low shrub biomass cover?
-### Variation in shrub biomass across latitudes ? 
+### How does shrub biomass vary across latitudes? 
 
 # LOADING LIBRARIES -----
 library(sp)
@@ -84,7 +84,7 @@ res(shrub_crop_latlong)
 # 0.000726 m x 0.000270 m
 
 ### JOE: AGGREGATION -----
-# aggregate shrub data before extraction(?) using aggregate function()
+# aggregate shrub data to coarser resolution before extraction(?) using aggregate function()
 shrub_crop_latlong_agg <- aggregate(shrub_crop_latlong, fact=c(11.47842,30.8642), fun=mean, expand = TRUE) 
 # factor chosen dividing climate cell resolution 0.008333333 x 0.008333333 by the resolution of the cropped shrub map (latlong)
 
@@ -504,7 +504,6 @@ buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
 # NB the histogram for the north is more skewed towards lower biomass
 
 ### Questions: -----
-# NB do the East west strips
 # Buffer works?
 # now the whole map is being random sampled! Is that right? the scatter of biomass ~lat is same as with strips 
 # i.e do I need strips? I could use them to classify high-medium-low biomass? (see histogram)
@@ -516,6 +515,8 @@ buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
 # is the model the right logic: biomass~lat + strip random effect
 # do I make a grid? map divided into 10plots
 # is the sampleRandom function fine, or do I need raster::extract?
+
+# See why WE strips has overall less observations
 # for the climate- i need to extract for the west east data and try with the full map extracted data
 
 
