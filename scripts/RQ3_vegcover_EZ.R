@@ -292,10 +292,33 @@ ITEX_shrub_sp <- ITEX_shrubs %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
+(scatter_shrub_by_sp <- (ggplot(ITEX_shrub_sp, aes(x = YEAR, y = Mean_cover, colour = GENUS))+
+                             geom_point(size = 2) +
+                             geom_smooth(method = "lm") + 
+                             labs(y = "Mean shrub cover\n", x = "\nYear") +
+                             theme_shrub))
 
+# Model ----
 
+# mixed effect model with plot and year as random effects
+lmer_shrub_sp <- lmer(Mean_cover~YEAR + GENUS + (1|PLOT) + (1+YEAR), data = ITEX_shrub_sp)
+summary(lmer_shrub_sp)
 
+# Plotting fixed effects
+(fe.effects <- plot_model(lmer_shrub_sp , show.values = TRUE))
 
+# Plotting random effects
+(re.effects <- plot_model(lmer_shrub_sp , type = "re", show.values = TRUE))
+
+# Random slopes 
+predict_sp <- ggpredict(lmer_shrub_sp , terms = c("YEAR", "GENUS"), type = "re") 
+
+(pred_plot2 <- ggplot(predict_sp, aes(x = x, y = predicted, colour = group)) +
+      stat_smooth(method = "lm", se = FALSE)  +
+      # scale_y_continuous(limits = c(0, )) +
+      theme(legend.position = "bottom") +
+      labs(x = "\nYear", y = "Predicted mean % cover\n"))
+# all increasing?
 
 #####################################################################################
 
