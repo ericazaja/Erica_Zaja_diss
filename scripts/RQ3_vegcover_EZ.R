@@ -16,6 +16,9 @@ library(ggpubr)
 library(viridis)
 library(ggtern)
 library(lme4)
+library(ggeffects)
+library(sjPlot)  # to visualise model outputs
+
 
 # ITEX data 
 # Loading data ----
@@ -121,48 +124,91 @@ ITEX_gram <- ITEX_gram %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
-(graminoid_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = GraminoidMean))+
+(graminoid_scatter <- (ggplot(ITEX_gram, aes(x = YEAR, y = Mean_cover))+
    geom_point(size = 2) +
    geom_smooth(method = "lm") + 
       labs(y = "Mean graminoid cover\n", x = "\nYear") +
-       shrub.theme))
-## Graminoid cover decreasing
+       theme_shrub))
+## Graminoid cover incrasing
 
-lm_graminoid <- lmer(GraminoidMean~I(YEAR-1996)+(1|PLOT), data = ANWR_veg)
-summary(lm_graminoid) ## sig.
+lm_gram <- lm(Mean_cover~YEAR, data = ITEX_gram)
+summary(lm_gram) #not significant
+# F-statistic: 0.7655 on 1 and 214 DF,  p-value: 0.3826
+
+# mixed effect model with plot and year as random effects
+lmer_gram <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_gram)
+summary(lmer_gram)
+
 
 ### FORB COVER OVER TIME  ----
-(forb_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = ForbMean))+
+
+# Mean forb cover per plot per year
+ITEX_forbs <- ITEX_forbs %>%
+   group_by(YEAR, PLOT) %>%
+   mutate(Mean_cover = mean(FuncPlotCover)) %>%
+   ungroup()
+
+(forb_scatter <- (ggplot(ITEX_forbs, aes(x = YEAR, y = Mean_cover))+
    geom_point(size = 2) +
    geom_smooth(method = "lm") + 
       labs(y = "Mean forb cover\n", x = "\nYear") +
-      shrub.theme))
-## Forb cover increasing
+      theme_shrub))
+## Forb cover decreasing
 
-lm_forb <- lm(ForbMean~YEAR, data = ANWR_veg)
-summary(lm_forb) ## marginally sig.
+# Model ----
+lm_forb <- lm(Mean_cover~YEAR, data =ITEX_forbs)
+summary(lm_forb) # significant
+# F-statistic: 8.569 on 1 and 356 DF,  p-value: 0.003638
+
+# mixed effect model with plot and year as random effects
+lmer_forbs <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_forbs)
+summary(lmer_forbs)
 
 ### MOSS COVER OVER TIME  ----
-(moss_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = MossMean))+
+# Mean moss cover per plot per year
+ITEX_moss <- ITEX_moss %>%
+   group_by(YEAR, PLOT) %>%
+   mutate(Mean_cover = mean(FuncPlotCover)) %>%
+   ungroup()
+
+(moss_scatter <- (ggplot(ITEX_moss, aes(x = YEAR, y = Mean_cover))+
     geom_point(size = 2) +
     geom_smooth(method = "lm") + 
        labs(y = "Mean moss cover\n", x = "\nYear") +
-       shrub.theme))
-## Moss cover decreasing
+      theme_shrub))
+## Moss cover increasing 
 
-lm_moss <- lm(MossMean~YEAR, data = ANWR_veg)
-summary(lm_moss) ## not sig.
+# Model ----
+lm_moss <- lm(Mean_cover~YEAR, data = ITEX_moss)
+summary(lm_moss) ## significant 
+# F-statistic: 40.83 on 1 and 525 DF,  p-value: 3.664e-10
+
+# mixed effect model with plot and year as random effects
+lmer_moss <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_moss)
+summary(lmer_moss)
+
 
 ### LICHEN COVER OVER TIME  ----
-(lichen_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = LichenMean))+
+# Mean moss cover per plot per year
+ITEX_lich <- ITEX_lich %>%
+   group_by(YEAR, PLOT) %>%
+   mutate(Mean_cover = mean(FuncPlotCover)) %>%
+   ungroup()
+
+(lichen_scatter <- (ggplot(ITEX_lich, aes(x = YEAR, y = Mean_cover))+
     geom_point(size = 2) +
     geom_smooth(method = "lm") + 
        labs(y = "Mean lichen cover\n", x = "\nYear") +
-       shrub.theme))
+      theme_shrub))
 ## LIchen cover increasing
 
-lm_lichen<- lm(LichenMean~YEAR, data = ANWR_veg)
-summary(lm_lichen) ## sig. 
+lm_lichen<- lm(Mean_cover~YEAR, data = ITEX_lich)
+summary(lm_lichen) ## significant
+# F-statistic: 8.743 on 1 and 693 DF,  p-value: 0.003214
+
+# mixed effect model with plot and year as random effects
+lmer_lich <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_lich)
+summary(lmer_lich)
 
 ## Panel
 library(gridExtra)  # For making panels
@@ -171,6 +217,59 @@ library(ggpubr)  # For data visualisation formatting
                                        moss_scatter, lichen_scatter, 
                                        graminoid_scatter,nrow = 2)))
 
+# MERGING DATASETS -----
+
+ITEX_all_veg <- rbind(ITEX_forbs,ITEX_gram, ITEX_lich, ITEX_shrubs, ITEX_moss)
+unique(ITEX_all_veg$FuncGroup) # checking I have all functional groups
+
+# Model ----
+# mixed model with functional group as fixed effect
+lmer_all <- lmer(Mean_cover~YEAR+FuncGroup + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
+summary(lmer_all)
+
+# mixed model with functional group as random effect
+lmer_all_rand <- lmer(Mean_cover~YEAR+(1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
+summary(lmer_all_rand)
+
+# extracting model predictions
+pred.mm <- ggpredict(lmer_all_rand, terms = c("YEAR"))
+
+# Plotting fixed effects
+(fe.effects <- plot_model(lmer_all_rand, show.values = TRUE))
+
+# Plotting random effects
+(re.effects <- plot_model(lmer_all_rand, type = "re", show.values = TRUE))
+
+# Random slopes 
+predict <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"), type = "re") 
+
+(pred_plot2 <- ggplot(predict, aes(x = x, y = predicted, colour = group)) +
+      stat_smooth(method = "lm", se = FALSE)  +
+      # scale_y_continuous(limits = c(0, )) +
+      theme(legend.position = "bottom") +
+      labs(x = "\nYear", y = "Predicted mean % cover\n"))
+# all increasing? probably wrong
+
+
+#mixed model with interaction term
+lmer_all_int <- lmer(Mean_cover~YEAR*FuncGroup + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
+summary(lmer_all_int)
+
+# simple lm
+lm_all <- lm(Mean_cover ~ YEAR + FuncGroup, data = ITEX_all_veg)
+summary(lm_all)
+
+(scatter_all <- (ggplot(ITEX_all_veg, aes(x = YEAR, y = Mean_cover))+
+                       geom_point(size = 2) +
+                       geom_smooth(method = "lm") + 
+                       labs(y = "Mean vegetation cover\n", x = "\nYear") +
+                       theme_shrub))
+
+(scatter_all_by_group <- (ggplot(ITEX_all_veg, aes(x = YEAR, y = Mean_cover, colour = FuncGroup))+
+                    geom_point(size = 2) +
+                    geom_smooth(method = "lm") + 
+                    labs(y = "Mean vegetation cover\n", x = "\nYear") +
+                    theme_shrub))
 
 #####################################################################################
 
