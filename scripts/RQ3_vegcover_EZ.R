@@ -6,8 +6,9 @@
 ##%######################################################%##
 
 # RQ3: How has vegetation cover changed in the Arctic National Wildlife Refuge between 1996-2007? 
+# probably just focusing on shrub species 
 
-# Loading libraries ----
+# LOADING LIBRARIES  ----
 library(tidyverse)
 library(cowplot)
 library(brms)
@@ -22,45 +23,57 @@ load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_EZ_diss.RDat
 
 
 # DATA WRANGLING ----
-## NB the mosses and lichens might be not well recorded, check for ANWR
 
-## Exploration --
-max(ITEX_EZ_diss$YEAR) # latest year
-min(ITEX_EZ_diss$YEAR) # earliest year
+## Exploration 
+max(ITEX_EZ_diss$YEAR) # latest year: 2020
+min(ITEX_EZ_diss$YEAR) # earliest year: 1981
 unique(ITEX_EZ_diss$SITE) # Unique site names
 
 # Retaining only Arctic National Wildlife Refuge (ANWR) site 
 ANWR_veg <- ITEX_EZ_diss %>%
-  filter(SITE=="ANWR")
+  filter(SITE=="ANWR") %>% na.omit()
 
-# Range of years 
-range(ANWR_veg$YEAR) 
-# 1996-2007
+# Range of years of monitored data
+range(ANWR_veg$YEAR) # 1996-2007
 
-unique(ANWR_veg$PLOT) # Unique plot names
+unique(ANWR_veg$PLOT) # Unique plot names (1 to 10)
 length(unique(ANWR_veg$PLOT)) # 10 plots 
 
 # Group the dataframe by YEAR to see the number of plots per year
 ANWR_veg %>% group_by(YEAR) %>%
    summarise(plot.n = length(unique(PLOT)))
-## I think there are 10 plots per year
+## There are 10 plots per year
 
 unique(ANWR_veg$FuncGroup) # Unique functional groups names
 # [1] "Shrub"     "Lichen"    "Moss"      "Forb"      "Graminoid"
+unique(ANWR_veg$GENUS) # Unique genus names
+unique(ANWR_veg$SPECIES_NAME) # Unique species names
+
+# Just shrub data
+ITEX_shrubs <-  ANWR_veg %>% filter (FuncGroup == "Shrub") # no alnus???
+unique(ITEX_shrubs$GENUS) # Unique genus names 
+# [1] "Dryas"          "Salix"          "Vaccinium"      "Arctostaphylos" "Betula"         "Cassiope"       "Ledum"         
+
+# Just graminoid data 
+ITEX_gram <-  ANWR_veg %>% filter (FuncGroup == "Graminoid") 
+
+# Just forbs data 
+ITEX_forbs <-  ANWR_veg %>% filter (FuncGroup == "Forb")
+
+# Just moss data 
+ITEX_moss <-  ANWR_veg %>% filter (FuncGroup == "Moss")
+
+# Just lichen data
+ITEX_lich <-  ANWR_veg %>% filter (FuncGroup == "Lichen")
+
 
 # Calculate tot shrub cover each plot per year 
 # so that plot is basic replication unit
 # then find mean shrub cover per year (mean of plots)
 
-# Calculate tot cover 
-ANWR_veg <- ANWR_veg %>%
-   group_by(YEAR, PLOT) %>%
-   mutate(Mean_cover = length(unique(FuncGroup))) %>%
-   ungroup()
-
 
 ### Setting theme
-shrub.theme <- theme(legend.position = "right",
+theme_shrub <- theme(legend.position = "right",
                    axis.title.x = element_text(face="bold", size=20),
                    axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
                    axis.title.y = element_text(face="bold", size=20),
@@ -76,18 +89,38 @@ shrub.theme <- theme(legend.position = "right",
 ## per plot over time (more representative of FG cover over time)
 ### Q: is plotting mean cover right? 
 
-### Shrub cover over time  ----
-(shrub_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = ShrubMean))+
+### SHRUB COVER OVER TIME ------
+
+# Mean shrub cover per plot per year
+ITEX_shrubs <- ITEX_shrubs %>%
+   group_by(YEAR, PLOT) %>%
+   mutate(Mean_cover = mean(FuncPlotCover)) %>%
+   ungroup()
+
+### Mean shrub cover over time  
+(shrub_scatter <- (ggplot(ITEX_shrubs, aes(x = YEAR, y = Mean_cover))+
   geom_point(size = 2) +
   geom_smooth(method = "lm") + 
      labs(y = "Mean shrub cover\n", x = "\nYear") + 
-     shrub.theme))
+    theme_shrub))
 ## Shrub cover increasing 
 
-lm_shrub <- lm(ShrubMean~YEAR, data = ANWR_veg)
-summary(lm_shrub) ## not sig.
+# Model ----
+lm_shrub <- lm(Mean_cover~YEAR, data = ITEX_shrubs)
+summary(lm_shrub) # significant
+# F-statistic:  5.54 on 1 and 517 DF,  p-value: 0.01896
 
-### Graminoid cover over time  ----
+# mixed effect model with plot and year as random effects
+lmer_shrub <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_shrubs)
+summary(lmer_shrub)
+
+### GRAMINOID COVER OVER TIME  ----
+# Mean graminoid cover per plot per year
+ITEX_gram <- ITEX_gram %>%
+   group_by(YEAR, PLOT) %>%
+   mutate(Mean_cover = mean(FuncPlotCover)) %>%
+   ungroup()
+
 (graminoid_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = GraminoidMean))+
    geom_point(size = 2) +
    geom_smooth(method = "lm") + 
@@ -98,7 +131,7 @@ summary(lm_shrub) ## not sig.
 lm_graminoid <- lmer(GraminoidMean~I(YEAR-1996)+(1|PLOT), data = ANWR_veg)
 summary(lm_graminoid) ## sig.
 
-### Forb cover over time  ----
+### FORB COVER OVER TIME  ----
 (forb_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = ForbMean))+
    geom_point(size = 2) +
    geom_smooth(method = "lm") + 
@@ -109,7 +142,7 @@ summary(lm_graminoid) ## sig.
 lm_forb <- lm(ForbMean~YEAR, data = ANWR_veg)
 summary(lm_forb) ## marginally sig.
 
-### Moss cover over time  ----
+### MOSS COVER OVER TIME  ----
 (moss_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = MossMean))+
     geom_point(size = 2) +
     geom_smooth(method = "lm") + 
@@ -120,7 +153,7 @@ summary(lm_forb) ## marginally sig.
 lm_moss <- lm(MossMean~YEAR, data = ANWR_veg)
 summary(lm_moss) ## not sig.
 
-### Lichen cover over time  ----
+### LICHEN COVER OVER TIME  ----
 (lichen_scatter <- (ggplot(ANWR_veg, aes(x = YEAR, y = LichenMean))+
     geom_point(size = 2) +
     geom_smooth(method = "lm") + 
