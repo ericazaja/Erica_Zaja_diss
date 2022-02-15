@@ -55,7 +55,7 @@ shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 res(shrub_crop) # resolution 30m x 30m
 
 # plotting cropped shrub map to visualise extent
-(cropped_vis <- gplot(shrub_crop_5) +
+(cropped_vis <- gplot(shrub_crop_latlong_agg) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -74,7 +74,7 @@ res(shrub_crop) # resolution 30m x 30m
 # extent of the cropped shrub map
 st_bbox(shrub_crop) 
 
-# transforming CRS of cropped map from aea to lalong
+# transforming CRS of cropped map from proj = aea to proj = lalong
 shrub_crop_latlong <- projectRaster(shrub_crop, crs="+init=EPSG:4326", xy = TRUE) # changing to latitude longitude coords
 # writeRaster(shrub_crop_latlong, "datasets/berner_data/shrub_crop_latlong.tif")
 # shrub_crop_latlong <- raster("datasets/berner_data/shrub_crop_latlong.tif")
@@ -93,21 +93,6 @@ res(shrub_crop_latlong_agg)
 # not EXACTLY the same as climate resolution but close enough? 
 # writeRaster(shrub_crop_latlong_agg, "datasets/berner_data/shrub_crop_latlong_agg.tif")
 # shrub_crop_latlong_agg <- raster("datasets/berner_data/shrub_crop_latlong_agg.tif") # loding raster 
-
-# OR can aggregate using resample() function
-#shrub_crop_new_res <- resample(shrub_crop_latlong, precip, method="bilinear") # bilinear method is like mean for aggregate
-#res(shrub_crop_new_res)== res(precip) # checking shrub and climate rasters have same resolution
-# [1] TRUE TRUE but it doesnt plot
-
-
-# NOT SURE THIS WORKS Splitting raster into tiles ----
-nx <- 2 # number of tiles for x axis to be split into
-ny <- 5 # number of tiles for y axis to be split into
-raster_tiles <- splitRaster(shrub_crop_latlong_agg, nx, ny, c(2, 2), path ="datasets/berner_data")
-# buffer: 10 pixels along both axes
-layout(mat = matrix(seq_len(nx*ny), ncol = nx, nrow = ny))
-plotOrder <- c(1,2,3,4,5,6,7,8,9,10)
-if (interactive()) invisible(lapply(raster_tiles[plotOrder], plot))
 
 ### EXTRACTION (West-to-East) ----
 # subdividing cropped map into 5 smaller chunks (vertical strips from West to East) and extracting biomass 
@@ -427,7 +412,7 @@ model_b <- lmer(biomass ~ lat + (1|strip), data = shrub_all_random_new_NS)
 summary(model_b)
 
 # visualising scatter 
-(scatter_model_b <- ggplot(shrub_all_random_new_NS, aes(x = lat, y = biomass)) +
+(scatter_model_b <- ggplot(shrub_all_random_new_NS, aes(x = long, y = biomass)) +
     geom_point(size = 0.1) +
     geom_smooth(method = "lm") +
     theme_classic())
@@ -435,7 +420,7 @@ summary(model_b)
 # random slopes
 
 # JOE: SAMPLE WHOLE MAP ----
-shrub_rsample_0 <- as.data.frame(sampleRandom(shrub_crop_latlong, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+shrub_rsample_0 <- as.data.frame(sampleRandom(shrub_crop_latlong_agg, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy = TRUE))
 hist(shrub_rsample_0$shrub_crop_latlong)
 
@@ -532,6 +517,22 @@ buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
 # See why WE strips has overall less observations
 # for the climate- i need to extract for the west east data and try with the full map extracted data
 
+#####################################################################################
+# Experiments (ignore) ----
+
+# Can aggregate using resample() function
+#shrub_crop_new_res <- resample(shrub_crop_latlong, precip, method="bilinear") # bilinear method is like mean for aggregate
+#res(shrub_crop_new_res)== res(precip) # checking shrub and climate rasters have same resolution
+# [1] TRUE TRUE but it doesnt plot
+
+# Splitting raster into tiles 
+nx <- 2 # number of tiles for x axis to be split into
+ny <- 5 # number of tiles for y axis to be split into
+raster_tiles <- splitRaster(shrub_crop_latlong_agg, nx, ny, c(2, 2), path ="datasets/berner_data")
+# buffer: 10 pixels along both axes
+layout(mat = matrix(seq_len(nx*ny), ncol = nx, nrow = ny))
+plotOrder <- c(1,2,3,4,5,6,7,8,9,10)
+if (interactive()) invisible(lapply(raster_tiles[plotOrder], plot))
 
 
 

@@ -241,13 +241,6 @@ model_1 <- get(load("img/spatial_output/model_1_output.RData"))
 summary(model_1) # doesnt run
 # maybe something to do with my data being skewed 
 
-### DATA VIS ----
-# I want a boxplot: area on x axis (west VS east) and shrub biomass (g/m2) on y 
-# This will show me:
-# 1. if there is a difference in distribution of shrub biomass between east and west areas of the range.
-# 2. where shrubs with higher/lower biomass are 
-
-
 
 ### OTHER (Random) ----
 
