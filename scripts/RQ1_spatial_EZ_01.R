@@ -87,6 +87,7 @@ res(shrub_crop_latlong)
 # aggregate shrub data to coarser resolution before extraction(?) using aggregate function()
 shrub_crop_latlong_agg <- aggregate(shrub_crop_latlong, fact=c(11.47842,30.8642), fun=mean, expand = TRUE) 
 # factor chosen dividing climate cell resolution 0.008333333 x 0.008333333 by the resolution of the cropped shrub map (latlong)
+shrub_crop_latlong_agg <- raster("datasets/berner_data/shrub_crop_latlong_agg.tif")
 
 res(shrub_crop_latlong_agg)
 # 0.007986 x 0.008370 m
@@ -311,6 +312,9 @@ st_bbox(shrub_crop_latlong_agg)
 range_extent_a <- extent(-150.17942, -140.50837 ,69.97767, 70.37209 ) # class: extent
 shrub_crop_a <- crop(x = shrub_crop_latlong_agg, y = range_extent_a) # class: raster layer
 res(shrub_crop_a) # 0.007986 0.008370
+#create a buffer around the points
+sp_buffer <-st_buffer(st_as_sf(points),1000) 
+raster::extract(shrub_crop_a, sp_buffer)
 
 # JOE: random sample 
 shrub_rsample_a <- as.data.frame(sampleRandom(shrub_crop_a, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
@@ -419,26 +423,52 @@ summary(model_b)
 # I think I need the ggpredict lmer plot
 # random slopes
 
-# JOE: SAMPLE WHOLE MAP ----
-shrub_rsample_0 <- as.data.frame(sampleRandom(shrub_crop_latlong_agg, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
-                                              cells=TRUE, rowcol=FALSE, xy = TRUE))
-hist(shrub_rsample_0$shrub_crop_latlong)
+# RANDOM SAMPLE WHOLE MAP ----
 
-(scatter_model_b <- ggplot(shrub_rsample_0, aes(x = x, y = shrub_crop_latlong)) +
+# measuring area of raster
+#get sizes of all cells in raster [km2]
+cell_size<-area(shrub_crop_latlong_agg, na.rm=TRUE, weights=FALSE)
+#delete NAs from vector of all raster cells
+##NAs lie outside of the rastered region, can thus be omitted
+cell_size<-cell_size[!is.na(cell_size)]
+#compute area [km2] of all cells in geo_raster
+raster_area<-length(cell_size)*median(cell_size)
+#print area of shrub map according to raster object
+print(paste("Area of PCH Alaskan range (raster)", round(raster_area, digits=1),"km2"))
+# [1] "Area of PCH Alaskan range (raster) is 30842.3 km2"
+
+# deciding on buffer distance
+res(shrub_crop_latlong_agg)
+# 0.007986 0.008370
+# divided into 1km x 1km grid cells 
+# diagonal of a grid square = 1414.2 m
+# buffer = diagonal of grid cell means that no point will be taken from same grid cell
+points <- SpatialPoints(shrub_crop_latlong_agg)
+b <- buffer(points, 1414.2 )
+
+points <- SpatialPoints(shrub_crop_latlong_agg)
+b <- buffer(points, 1414.2 )
+plot(shrub_crop_latlong_agg)
+lines(b)
+
+shrub_rsample_0 <- as.data.frame(sampleRandom(shrub_crop_latlong_agg, 25000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE))
+hist(shrub_rsample_0$shrub_crop_latlong_agg)
+
+(scatter_model_b <- ggplot(shrub_rsample_0, aes(x = y, y = shrub_crop_latlong_agg)) +
   geom_point(size = 0.1) +
   geom_smooth(method = "lm") +
   theme_classic())
 # flat!
 
 #### BUFFER -----
+buff <- buffer(shrub_crop_latlong_agg, width=1414.2)
 
-buff <- buffer(shrub_crop_latlong, width=100000)
-
-r <- raster(ncol=36,nrow=18)
-values(r) <- NA
-r[500] <- 1
-b <- buffer(r, width=5000000) 
-plot(b)
+### Generate Grid Cell, BigRegion and Latitudinal Band information
+combo.cell <- combo.cut %>% 
+  mutate(LAT_grid = plyr::round_any(LAT, 0.5, f = floor),
+         LONG_grid = ifelse(LONG > 0, plyr::round_any(LONG, 0.5, f = floor), plyr::round_any(LONG, 0.5, f = ceiling))) %>% 
+  mutate(gridcell = paste0("_", LAT_grid, "_", LONG_grid))
 
 # LOGIC CHECKS ----
 # checking if norhtern strip has lower biomass than southern strip
@@ -533,6 +563,13 @@ raster_tiles <- splitRaster(shrub_crop_latlong_agg, nx, ny, c(2, 2), path ="data
 layout(mat = matrix(seq_len(nx*ny), ncol = nx, nrow = ny))
 plotOrder <- c(1,2,3,4,5,6,7,8,9,10)
 if (interactive()) invisible(lapply(raster_tiles[plotOrder], plot))
+
+# buffer try
+r <- raster(ncol=36,nrow=18)
+values(r) <- NA
+r[500] <- 1
+b <- buffer(r, width=5000000) 
+plot(b)
 
 
 

@@ -227,7 +227,7 @@ library(ggpubr)  # For data visualisation formatting
                                        graminoid_scatter,nrow = 2)))
 
 # MERGING DATASETS -----
-
+# NB here you might have 10 plots for each func group - you only want 10 in tot for each year
 ITEX_all_veg <- rbind(ITEX_forbs,ITEX_gram, ITEX_lich, ITEX_shrubs, ITEX_moss)
 unique(ITEX_all_veg$FuncGroup) # checking I have all functional groups
 hist(ITEX_all_veg$Mean_cover)

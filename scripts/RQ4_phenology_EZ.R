@@ -123,5 +123,16 @@ phenology_green$late_early <- as.factor(as.character(phenology_green$late_early)
 str(phenology_green)
 
 
+# TO DO -----
+# NB check I have same number of points per year? —> if not proportion of plots greening early. 
+# Work out the range: earliest day and latest day (76 days)
+# Take the mid-point, then classify each plot into early or late
+# Count of number of early years
+# Barplot of count of number of early years (x = year [1998-2020], y = count of number of early years)
+# lmer(count_no_early_years ~ years + (1 | SUBSITE))
+## Year (x) VS DOY of greening (y) —> negative trned 
+# lmer(DOY ~ YEAR  + (1|subsite)) 
+
+
 
 

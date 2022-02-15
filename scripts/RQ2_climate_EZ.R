@@ -136,6 +136,8 @@ summary(model_4)
 model_5 <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
 summary(model_5)
 
+## To display: Categorise precipitation dry moist wet: 3 lines in plot with temp on the x and biomass on y and points coloured by moist level
+
 
 
 ##############################################################################
