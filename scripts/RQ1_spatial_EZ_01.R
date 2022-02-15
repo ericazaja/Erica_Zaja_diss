@@ -332,6 +332,9 @@ shrub_rsample_a <- as.data.frame(sampleRandom(shrub_crop_a, 5000, buffer = 900, 
                                               cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "a")
 # How do I pick how many points to sample? For now i picked 5000 random samples for each strip - given strip e small size 
 # and is the buffer working?
+
+buff_a <- buffer(shrub_crop_a, width=100000)
+
 glimpse(shrub_rsample_a)
 hist(shrub_rsample_a$shrub_crop_latlong_agg)
 # write.csv(shrub_rsample_a, "datasets/berner_data/shrub_rsample_a.csv") # saving strip dataframe
@@ -441,6 +444,16 @@ hist(shrub_rsample_0$shrub_crop_latlong)
   geom_smooth(method = "lm") +
   theme_classic())
 # flat!
+
+#### BUFFER -----
+
+buff <- buffer(shrub_crop_latlong, width=100000)
+
+r <- raster(ncol=36,nrow=18)
+values(r) <- NA
+r[500] <- 1
+b <- buffer(r, width=5000000) 
+plot(b)
 
 # LOGIC CHECKS ----
 # checking if norhtern strip has lower biomass than southern strip
