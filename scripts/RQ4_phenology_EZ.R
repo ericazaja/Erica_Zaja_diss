@@ -83,38 +83,66 @@ unique(phenology_green$phenophase) # only green
                    labs(y = "Onset of greening", x = "\nDay of Year") + 
                    theme_shrub))
 
-range(phenology_green$DOY) # range of DOY of onset of greening
-# 135 211
-# 76 days difference
 
 unique(phenology_green$year)
+phenology_green_98 <- phenology_green %>% filter(year == "1998") # 451 obs
+phenology_green_99 <- phenology_green %>% filter(year == "1999") # 431
+phenology_green_00<- phenology_green %>% filter(year == "2000") # 450
+# NOT Same number of observations eachn year
+
+# Need to calculate proportion of plots greening early 
 
 # Classifying early vs late greening years -----
 
-# calculating mean onset of greening day per year
-phenology_green <- phenology_green %>%
-  group_by(year) %>%
-  mutate(mean_onset_greening = mean(DOY)) %>%
-  ungroup()
+range(phenology_green$DOY) # range of DOY of onset of greening
+# 135 (earliest greening DOY) 211 (latest greening DOY)
+# 76 days difference
+# > 211-135 = 76
+# 76/2= 38
+# 135+38 = 173 midpoint
 
-range(phenology_green$mean_onset_greening)
-#157.4634 177.8000
+# greening < 173 DOY --> early greening year
+# greening > 173 DOY --> late greening year
 
-# greening < 76 DOY --> early greening year
-# greening > 76 DOY --> late greening year
 phenology_green <- phenology_green %>%
-  mutate(late_early = case_when(mean_onset_greening >= 167.6317 ~ 'late_year' ,
-                                mean_onset_greening < 167.6317 ~ 'early_year'))
+  mutate(year_type = case_when(DOY >= 173 ~ 'late' , # late year
+                                DOY < 173 ~ 'early')) # early year
+
+# write.csv(phenology_green, file = "datasets/phenology_data/phenology_green.csv")
 
 # late vs early phenology year as factor
-phenology_green$late_early <- as.factor(as.character(phenology_green$late_early))
+phenology_green$year_type <- as.factor(as.character(phenology_green$year_type))
 
-(scatter_green <- ggplot(phenology_green, aes(x = year, y = mean_onset_greening)) +
+count_years <- phenology_green %>% group_by(year) %>% count(year_type)
+
+# EARLY YEARS -----
+count_years_early <- count_years %>% group_by(year) %>% filter(year_type=="early")
+
+(erly_years_count <- ggplot(count_years_early, aes(x = year, y = n)) +
     geom_point(size = 0.1) +
-    geom_smooth(method = "lm") +
+    geom_smooth(method = "lm")+
     theme_minimal())
 
-(boxplot(mean_onset_greening ~ year, data = phenology_green))
+# INCREASE in number (count) of early greening years 
+# need to add subsite?
+lm_early <- lm(n ~ year, data =count_years_early) 
+summary(lm_early) # sig
+# F-statistic: 6.113 on 1 and 23 DF,  p-value: 0.02125
+
+# LATE YEARS ----
+count_years_late <- count_years %>% group_by(year) %>% filter(year_type=="late")
+
+(late_years_count <- ggplot(count_years_late, aes(x = year, y = n)) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm")+
+    theme_minimal())
+
+# INCREASE in number (count) of late greening years 
+
+lm_late <- lm(n ~ year, data =count_years_late) 
+summary(lm_late) # not sig
+# F-statistic: 3.151 on 1 and 22 DF,  p-value: 0.08971
+
 
 (boxplot_green <- ggplot(phenology_green, aes(x = year, y = mean_onset_greening, fill = late_early)) +
     geom_boxplot() +
@@ -125,14 +153,18 @@ str(phenology_green)
 
 # TO DO -----
 # NB check I have same number of points per year? —> if not proportion of plots greening early. 
-# Work out the range: earliest day and latest day (76 days)
-# Take the mid-point, then classify each plot into early or late
 # Count of number of early years
 # Barplot of count of number of early years (x = year [1998-2020], y = count of number of early years)
 # lmer(count_no_early_years ~ years + (1 | SUBSITE))
 ## Year (x) VS DOY of greening (y) —> negative trned 
 # lmer(DOY ~ YEAR  + (1|subsite)) 
 
-
+##################################
+# Other ignore 
+# calculating mean onset of greening day per year
+phenology_green <- phenology_green %>%
+  group_by(year) %>%
+  mutate(mean_onset_greening = mean(DOY)) %>%
+  ungroup()
 
 

@@ -229,7 +229,14 @@ library(ggpubr)  # For data visualisation formatting
 # MERGING DATASETS -----
 # NB here you might have 10 plots for each func group - you only want 10 in tot for each year
 ITEX_all_veg <- rbind(ITEX_forbs,ITEX_gram, ITEX_lich, ITEX_shrubs, ITEX_moss)
-unique(ITEX_all_veg$FuncGroup) # checking I have all functional groups
+length(unique(ITEX_all_veg$PLOT)) 
+
+ITEX_all_veg %>% group_by(YEAR) %>%
+   summarise(plot.n = length(unique(PLOT)))
+## There are 10 plots per year
+
+       
+unique(ITEX_all_veg$FuncGroup)  # checking I have all functional groups
 hist(ITEX_all_veg$Mean_cover)
 str(ITEX_all_veg)
 
@@ -277,9 +284,9 @@ summary(lm_all)
                        theme_shrub))
 
 (scatter_all_by_group <- (ggplot(ITEX_all_veg, aes(x = YEAR, y = Mean_cover, colour = FuncGroup))+
-                    geom_point(size = 2) +
+                    geom_point(size = 0.5) +
                     geom_smooth(method = "lm") + 
-                    labs(y = "Mean vegetation cover\n", x = "\nYear") +
+                    labs(y = "Mean percentage cover\n", x = "\nYear") +
                     theme_shrub))
 
 ### SHRUB SPECIES -----
