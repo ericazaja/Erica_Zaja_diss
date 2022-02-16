@@ -85,7 +85,8 @@ shrub_crop_latlong <- projectRaster(shrub_crop, crs="+init=EPSG:4326", xy = TRUE
 res(shrub_crop_latlong)
 # 0.000726 m x 0.000270 m
 
-### JOE: AGGREGATION -----
+### AGGREGATION -----
+
 # aggregate shrub data to coarser resolution before extraction(?) using aggregate function()
 shrub_crop_latlong_agg <- aggregate(shrub_crop_latlong, fact=c(11.47842,30.8642), fun=mean, expand = TRUE) 
 # factor chosen dividing climate cell resolution 0.008333333 x 0.008333333 by the resolution of the cropped shrub map (latlong)
@@ -96,6 +97,140 @@ res(shrub_crop_latlong_agg)
 # not EXACTLY the same as climate resolution but close enough? 
 # writeRaster(shrub_crop_latlong_agg, "datasets/berner_data/shrub_crop_latlong_agg.tif")
 # shrub_crop_latlong_agg <- raster("datasets/berner_data/shrub_crop_latlong_agg.tif") # loding raster 
+
+
+
+# RANDOM SAMPLE WHOLE MAP ----
+
+# measuring area of raster
+#get sizes of all cells in raster [km2]
+cell_size<-area(shrub_crop_latlong_agg, na.rm=TRUE, weights=FALSE)
+#delete NAs from vector of all raster cells
+##NAs lie outside of the rastered region, can thus be omitted
+cell_size<-cell_size[!is.na(cell_size)]
+#compute area [km2] of all cells in geo_raster
+raster_area<-length(cell_size)*median(cell_size)
+#print area of shrub map according to raster object
+print(paste("Area of PCH Alaskan range (raster)", round(raster_area, digits=1),"km2"))
+# [1] "Area of PCH Alaskan range (raster) is 30842.3 km2"
+
+# deciding on buffer distance
+res(shrub_crop_latlong_agg)
+# 0.007986 0.008370
+# divided into 1km x 1km grid cells 
+# diagonal of a grid square = 1414.2 m
+# buffer = diagonal of grid cell means that no point will be taken from same grid cell
+
+# buffered random sampling
+shrub_rsample_0 <- as.data.frame(sampleRandom(shrub_crop_latlong_agg, 25000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE))
+
+hist(shrub_rsample_0$shrub_crop_latlong_agg)
+
+# scatter shrub biomass Vs lat
+(scatter_model_b <- ggplot(shrub_rsample_0, aes(x = y, y = shrub_crop_latlong_agg)) +
+  geom_point(size = 0.1) +
+  geom_smooth(method = "lm") +
+  theme_classic())
+# biomass decreases with increasing lat
+
+ggplot(shrub_rsample_0,aes(x=x,y=y))+ geom_point(aes(shrub_crop_latlong_agg))
+
+# checking buffer works
+shrub_rsample_01 <- shrub_rsample_0 %>% 
+  mutate(shrub_rsample_0, Distance = distHaversine(cbind(x, y),
+                                cbind(lag(x), lag(y))))
+         
+shrub_rsample_01 <- shrub_rsample_01 %>% 
+  mutate(buff = case_when(Distance >= 1414.2 ~ "T", Distance < 1414.2 ~ "F"))
+
+shrub_rsample_01 <- shrub_rsample_01 %>%  filter(buff %in% c("T"))
+# only keeping obseervations where buff worked
+
+unique(shrub_rsample_01$buff) # T
+
+# scatter shrub biomass Vs lat
+(scatter_model_b <- ggplot(shrub_rsample_01, aes(x = y, y = shrub_crop_latlong_agg)) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_classic())
+
+# Cleaning and making a gridcell column the new dataframe
+shrub_rsample_00 <- shrub_rsample_01 %>%
+  rename (cell_ID = "cell", 
+          lat = "y", long = "x", 
+          biomass = "shrub_crop_latlong_agg") %>%
+  mutate(lat = plyr::round_any(lat, 0.5, f = floor),
+         long = ifelse(long > 0, plyr::round_any(long, 0.5, f = floor), plyr::round_any(long, 0.5, f = ceiling))) %>% 
+  mutate(gridcell = paste0("_", lat, "_", long))%>%
+  select(cell_ID, long, lat, biomass, gridcell)
+
+# write.csv(shrub_rsample_00, file= "datasets/berner_data/shrub_rsample_00.csv")
+
+#### END -----
+
+
+
+# LOGIC CHECKS ----
+# checking if norhtern strip has lower biomass than southern strip
+
+# Northern strip 
+range_extent_n <- extent(165454.7, 521674.7, 2170618.1, 2200618.1) # class: extent
+shrub_crop_n <- crop(x = shrub_agb_p50, y = range_extent_n)
+poly_n <- as(range_extent_n, 'SpatialPolygons') # making extent into polygon
+class(poly_n) # checking it's a polygon
+
+## More datapoints in the Northern strip due to how map is
+## To the regions comparable: randomly sample the Northern strip to get down to the same sample size as the Southern strip. 
+
+# buffered random sampling in Northern strip
+shrub_sample_n <- as.data.frame(sampleRandom(shrub_crop_n, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+                                             cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(zone = "north")
+# 10000: positive integer giving the number of items to choose
+# cells = TRUE, sampled cell numbers are also returned
+# If xy = TRUE, coordinates of sampled cells are also returned
+hist(shrub_sample_n$shrub_agb_p50)
+
+#extracted_shrub_n <- raster::extract(x = shrub_crop_n, y = poly_n, df = TRUE) # extracting pixels
+#glimpse(extracted_shrub_n)
+#extracted_shrub_n <- na.omit(extracted_shrub_n)  %>% mutate(zone = "north")
+#hist(shrub_crop_n)
+#range(extracted_shrub_n) # 1-2248
+
+# Southern strip 
+range_extent_s <- extent(165454.7, 521674.7, 2100000.1, 2130000.1) # class: extent
+shrub_crop_s <- crop(x = shrub_agb_p50, y = range_extent_s)
+poly_s <- as(range_extent_s, 'SpatialPolygons') # making extent into polygon
+class(poly_s) # checking it's a polygon
+
+# buffered random sampling in Southern strip
+shrub_sample_s <- as.data.frame(sampleRandom(shrub_crop_s, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
+             cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(zone = "south")
+
+
+hist(shrub_sample_s$shrub_agb_p50)
+
+#extracted_shrub_s <- raster::extract(x = shrub_crop_s, y = poly_s, buffer = 900, fun = mean, cellnumbers = T, df = TRUE) # extracting pixels
+#glimpse(extracted_shrub_s)
+# create coordinate columns using xyFromCell
+#df.coords <- cbind(extracted_shrub_s, xyFromCell(shrub_crop_s, extracted_shrub_s[,1]))
+#glimpse(df.coords)
+#df.coords <- na.omit(df.coords) %>% mutate(zone = "south")
+#hist(df.coords$shrub_agb_p50)
+#str(df.coords)
+#range(extracted_shrub_s) # 1 2788
+
+
+# North and south strips in the same histogram 
+#shrub_check <- rbind(extracted_shrub_s, extracted_shrub_n)
+buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
+
+(hist_check <- buff_shrub_check %>%
+  ggplot(aes(x = shrub_agb_p50, fill = zone)) +
+  geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
+  scale_fill_manual(values=c("#404080", "#69b3a2")) +
+  theme_bw())
+# NB the histogram for the north is more skewed towards lower biomass
 
 ### EXTRACTION (West-to-East) ----
 # subdividing cropped map into 5 smaller chunks (vertical strips from West to East) and extracting biomass 
@@ -113,7 +248,7 @@ res(shrub_crop_1) # 0.007986 0.008370
 
 # random sample 
 shrub_rsample_1 <- as.data.frame(sampleRandom(shrub_crop_1, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
-                                             cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "1")
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "1")
 
 
 glimpse(shrub_rsample_1)
@@ -250,10 +385,10 @@ shrub_all_random_WE <- rbind(shrub_rsample_1, shrub_rsample_2, shrub_rsample_3, 
 ### Distribtion ----
 # Histogram of shrub biomass for each strip
 (hist_random <-shrub_all_random %>%
-    ggplot(aes(x = layer, fill = strip)) +
-    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
-    scale_fill_manual(values=c("#404080", "#69b3a2", "red", "yellow", "green")) +
-    theme_bw())
+   ggplot(aes(x = layer, fill = strip)) +
+   geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
+   scale_fill_manual(values=c("#404080", "#69b3a2", "red", "yellow", "green")) +
+   theme_bw())
 
 # Histogram of overall shrub biomass
 (hist_random_all <-shrub_all_random %>%
@@ -266,8 +401,8 @@ shrub_all_random_WE <- rbind(shrub_rsample_1, shrub_rsample_2, shrub_rsample_3, 
 ### Model 1: Biomass VS strip  ----
 shrub_all_random_new_WE <- shrub_all_random %>%
   rename (cell_ID = "cell", 
-              lat = x, long = y, 
-              biomass = layer) %>%
+          lat = x, long = y, 
+          biomass = layer) %>%
   mutate(biomass_level = case_when (biomass <= 160 ~ 'Low',
                                     biomass > 160  & biomass < 500 ~ 'Medium', 
                                     biomass >= 500 ~ 'High')) 
@@ -301,7 +436,7 @@ boxplot(biomass ~ strip, data = shrub_all_random_new)
 
 
 
-### JOE: EXTRACTION (North-to-South) ----
+### EXTRACTION (North-to-South) ----
 # STRIPS a to e
 # subdividing cropped map into 5 smaller chunks (horizontal strips from North to South) and extracting biomass 
 
@@ -390,9 +525,9 @@ shrub_all_random_NS <- rbind(shrub_rsample_a, shrub_rsample_b, shrub_rsample_c, 
 # Distribution ----
 # Overall shrub biomass
 (hist_random_all_NS <-shrub_all_random_NS %>%
-    ggplot(aes(x = shrub_crop_latlong_agg)) +
-    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
-    theme_bw())
+   ggplot(aes(x = shrub_crop_latlong_agg)) +
+   geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
+   theme_bw())
 
 # By north-south strip
 (hist_random_NS <-shrub_all_random_NS %>%
@@ -401,7 +536,7 @@ shrub_all_random_NS <- rbind(shrub_rsample_a, shrub_rsample_b, shrub_rsample_c, 
     scale_fill_manual(values=c("#404080", "#69b3a2", "red", "yellow", "green")) +
     theme_bw())
 
-# JOE: Model ----
+# Model ----
 shrub_all_random_new_NS <- shrub_all_random_NS %>%
   rename (cell_ID = "cell", 
           lat = x, long = y, 
@@ -426,157 +561,7 @@ summary(model_b)
 # I think I need the ggpredict lmer plot
 # random slopes
 
-# RANDOM SAMPLE WHOLE MAP ----
 
-# measuring area of raster
-#get sizes of all cells in raster [km2]
-cell_size<-area(shrub_crop_latlong_agg, na.rm=TRUE, weights=FALSE)
-#delete NAs from vector of all raster cells
-##NAs lie outside of the rastered region, can thus be omitted
-cell_size<-cell_size[!is.na(cell_size)]
-#compute area [km2] of all cells in geo_raster
-raster_area<-length(cell_size)*median(cell_size)
-#print area of shrub map according to raster object
-print(paste("Area of PCH Alaskan range (raster)", round(raster_area, digits=1),"km2"))
-# [1] "Area of PCH Alaskan range (raster) is 30842.3 km2"
-
-# deciding on buffer distance
-res(shrub_crop_latlong_agg)
-# 0.007986 0.008370
-# divided into 1km x 1km grid cells 
-# diagonal of a grid square = 1414.2 m
-# buffer = diagonal of grid cell means that no point will be taken from same grid cell
-
-# buffered random sampling
-shrub_rsample_0 <- as.data.frame(sampleRandom(shrub_crop_latlong_agg, 25000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
-                                              cells=TRUE, rowcol=FALSE, xy = TRUE))
-
-hist(shrub_rsample_0$shrub_crop_latlong_agg)
-
-# scatter shrub biomass Vs lat
-(scatter_model_b <- ggplot(shrub_rsample_0, aes(x = y, y = shrub_crop_latlong_agg)) +
-  geom_point(size = 0.1) +
-  geom_smooth(method = "lm") +
-  theme_classic())
-# biomass decreases with increasing lat
-
-ggplot(shrub_rsample_0,aes(x=x,y=y))+ geom_point(aes(shrub_crop_latlong_agg))
-
-# checking buffer works
-shrub_rsample_01 <- shrub_rsample_0 %>% 
-  mutate(shrub_rsample_0, Distance = distHaversine(cbind(x, y),
-                                cbind(lag(x), lag(y))))
-         
-shrub_rsample_01 <- shrub_rsample_01 %>% 
-  mutate(buff = case_when(Distance >= 1414.2 ~ "T", Distance < 1414.2 ~ "F"))
-
-shrub_rsample_01 <- shrub_rsample_01 %>%  filter(buff %in% c("T"))
-# only keeping obseervations where buff worked
-
-unique(shrub_rsample_01$buff) # T
-
-# scatter shrub biomass Vs lat
-(scatter_model_b <- ggplot(shrub_rsample_01, aes(x = y, y = shrub_crop_latlong_agg)) +
-    geom_point(size = 0.1) +
-    geom_smooth(method = "lm") +
-    theme_classic())
-
-shrub_rsample_00 <- shrub_rsample_01 %>%
-  rename (cell_ID = "cell", 
-          lat = "y", long = "x", 
-          biomass = "shrub_crop_latlong_agg") %>%
-  mutate(lat = plyr::round_any(lat, 0.5, f = floor),
-         long = ifelse(long > 0, plyr::round_any(long, 0.5, f = floor), plyr::round_any(long, 0.5, f = ceiling))) %>% 
-  mutate(gridcell = paste0("_", lat, "_", long))%>%
-  select(cell_ID, long, lat, biomass, gridcell)
-
-# write.csv(shrub_rsample_00, file= "datasets/berner_data/shrub_rsample_00.csv")
-
-### Generate Grid Cell, BigRegion and Latitudinal Band information
-shrub_sample_00 <- shrub_rsample_01 %>% 
-  mutate(LAT_grid = plyr::round_any(LAT, 0.5, f = floor),
-         LONG_grid = ifelse(LONG > 0, plyr::round_any(LONG, 0.5, f = floor), plyr::round_any(LONG, 0.5, f = ceiling))) %>% 
-  mutate(gridcell = paste0("_", LAT_grid, "_", LONG_grid))
-
-
-
-
-# LOGIC CHECKS ----
-# checking if norhtern strip has lower biomass than southern strip
-
-# Northern strip 
-range_extent_n <- extent(165454.7, 521674.7, 2170618.1, 2200618.1) # class: extent
-shrub_crop_n <- crop(x = shrub_agb_p50, y = range_extent_n)
-poly_n <- as(range_extent_n, 'SpatialPolygons') # making extent into polygon
-class(poly_n) # checking it's a polygon
-
-## More datapoints in the Northern strip due to how map is
-## To the regions comparable: randomly sample the Northern strip to get down to the same sample size as the Southern strip. 
-
-# buffered random sampling in Northern strip
-shrub_sample_n <- as.data.frame(sampleRandom(shrub_crop_n, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
-                                             cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(zone = "north")
-# 10000: positive integer giving the number of items to choose
-# cells = TRUE, sampled cell numbers are also returned
-# If xy = TRUE, coordinates of sampled cells are also returned
-hist(shrub_sample_n$shrub_agb_p50)
-
-#extracted_shrub_n <- raster::extract(x = shrub_crop_n, y = poly_n, df = TRUE) # extracting pixels
-#glimpse(extracted_shrub_n)
-#extracted_shrub_n <- na.omit(extracted_shrub_n)  %>% mutate(zone = "north")
-#hist(shrub_crop_n)
-#range(extracted_shrub_n) # 1-2248
-
-# Southern strip 
-range_extent_s <- extent(165454.7, 521674.7, 2100000.1, 2130000.1) # class: extent
-shrub_crop_s <- crop(x = shrub_agb_p50, y = range_extent_s)
-poly_s <- as(range_extent_s, 'SpatialPolygons') # making extent into polygon
-class(poly_s) # checking it's a polygon
-
-# buffered random sampling in Southern strip
-shrub_sample_s <- as.data.frame(sampleRandom(shrub_crop_s, 10000, buffer = 900, na.rm=TRUE, ext=NULL, 
-             cells=TRUE, rowcol=FALSE, xy=TRUE)) %>% mutate(zone = "south")
-
-
-hist(shrub_sample_s$shrub_agb_p50)
-
-#extracted_shrub_s <- raster::extract(x = shrub_crop_s, y = poly_s, buffer = 900, fun = mean, cellnumbers = T, df = TRUE) # extracting pixels
-#glimpse(extracted_shrub_s)
-# create coordinate columns using xyFromCell
-#df.coords <- cbind(extracted_shrub_s, xyFromCell(shrub_crop_s, extracted_shrub_s[,1]))
-#glimpse(df.coords)
-#df.coords <- na.omit(df.coords) %>% mutate(zone = "south")
-#hist(df.coords$shrub_agb_p50)
-#str(df.coords)
-#range(extracted_shrub_s) # 1 2788
-
-
-# North and south strips in the same histogram 
-#shrub_check <- rbind(extracted_shrub_s, extracted_shrub_n)
-buff_shrub_check <- rbind(shrub_sample_n, shrub_sample_s)
-
-(hist_check <- buff_shrub_check %>%
-  ggplot(aes(x = shrub_agb_p50, fill = zone)) +
-  geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
-  scale_fill_manual(values=c("#404080", "#69b3a2")) +
-  theme_bw())
-# NB the histogram for the north is more skewed towards lower biomass
-
-### Questions: -----
-# Buffer works?
-# now the whole map is being random sampled! Is that right? the scatter of biomass ~lat is same as with strips 
-# i.e do I need strips? I could use them to classify high-medium-low biomass? (see histogram)
-# how many datapoints do I random sample in each strip?
-# are the climatologies right?
-# seems like A LOT of datapoints when I plot the scatter - do I make means?
-# is the aggregation fine? resolution is not exactly the same
-# does dividing W-E mean I can model biomass ~long 
-# is the model the right logic: biomass~lat + strip random effect
-# do I make a grid? map divided into 10plots
-# is the sampleRandom function fine, or do I need raster::extract?
-
-# See why WE strips has overall less observations
-# for the climate- i need to extract for the west east data and try with the full map extracted data
 
 #####################################################################################
 # Experiments (ignore) ----
