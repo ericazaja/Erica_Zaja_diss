@@ -44,17 +44,12 @@ plot(precip, main = "Mean monthly precipitation of the warmest quarter ((kg m-2)
 levelplot(precip)
 
 # Load the coordinates of the cropped shrub map
-coords_WE <- read.csv("datasets/berner_data/shrub_all_random_new_WE.csv") %>% 
-  dplyr::select(lat, long)
+coords <- read.csv("datasets/berner_data/shrub_rsample_00.csv") %>% 
+  dplyr::select(long, lat)
 
-coords_NS <- read.csv("datasets/berner_data/shrub_all_random_new_NS.csv") %>% 
-  dplyr::select(lat, long)
-  
 # Climatologies:
-# EXTRACTION for North - South data----
-
 # Create SpatialPoints (sp) object of unique coordinates
-coords_sp <- SpatialPoints(coords_NS)
+coords_sp <- SpatialPoints(coords)
 
 # create raster stack
 chelsa.stack <- stack(precip, temp)
@@ -75,15 +70,15 @@ coord.df$ID <- as.numeric(coord.df$ID) # Make numeric
 coord.chelsa.combo <- left_join(chelsa.extract, coord.df, by = c("ID" = "ID"))
 
 # loading the shrub biomass df
-biomass.df <- read.csv("datasets/berner_data/shrub_all_random_new_NS.csv") %>%
+biomass.df <- read.csv("datasets/berner_data/shrub_rsample_00.csv") %>%
   rename(ID = X) %>%
-  dplyr::select(ID, biomass, strip)
+  dplyr::select(ID, biomass)
 
 # merging biomass df with climate df
-coord.chelsa.combo_try <- left_join(coord.chelsa.combo, biomass.df, by = c("ID" = "ID"))
+coord.chelsa.combo.1 <- left_join(coord.chelsa.combo, biomass.df, by = c("ID" = "ID"))
 
 # Modify some of the variables to more useful values
-coord.chelsa.combo.2 <- coord.chelsa.combo_try %>% 
+coord.chelsa.combo.2 <- coord.chelsa.combo.1 %>% 
   mutate(CHELSA_bio10_10 = CHELSA_bio10_10/10) # Divide by 10 to get to degC
 
 # Rename the variables to shorter column headings
