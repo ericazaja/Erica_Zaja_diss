@@ -447,16 +447,18 @@ res(shrub_crop_latlong_agg)
 # diagonal of a grid square = 1414.2 m
 # buffer = diagonal of grid cell means that no point will be taken from same grid cell
 
-
+# buffered random sampling
 shrub_rsample_0 <- as.data.frame(sampleRandom(shrub_crop_latlong_agg, 25000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy = TRUE))
 
 hist(shrub_rsample_0$shrub_crop_latlong_agg)
 
+# scatter shrub biomass Vs lat
 (scatter_model_b <- ggplot(shrub_rsample_0, aes(x = y, y = shrub_crop_latlong_agg)) +
   geom_point(size = 0.1) +
   geom_smooth(method = "lm") +
   theme_classic())
+# biomass decreases with increasing lat
 
 ggplot(shrub_rsample_0,aes(x=x,y=y))+ geom_point(aes(shrub_crop_latlong_agg))
 
@@ -465,23 +467,39 @@ shrub_rsample_01 <- shrub_rsample_0 %>%
   mutate(shrub_rsample_0, Distance = distHaversine(cbind(x, y),
                                 cbind(lag(x), lag(y))))
          
-shrub_rsample_01<- shrub_rsample_01 %>% 
+shrub_rsample_01 <- shrub_rsample_01 %>% 
   mutate(buff = case_when(Distance >= 1414.2 ~ "T", Distance < 1414.2 ~ "F"))
 
 shrub_rsample_01 <- shrub_rsample_01 %>%  filter(buff %in% c("T"))
+# only keeping obseervations where buff worked
 
-unique(shrub_rsample_01$buff)
+unique(shrub_rsample_01$buff) # T
 
+# scatter shrub biomass Vs lat
 (scatter_model_b <- ggplot(shrub_rsample_01, aes(x = y, y = shrub_crop_latlong_agg)) +
     geom_point(size = 0.1) +
     geom_smooth(method = "lm") +
     theme_classic())
 
+shrub_rsample_00 <- shrub_rsample_01 %>%
+  rename (cell_ID = "cell", 
+          lat = "y", long = "x", 
+          biomass = "shrub_crop_latlong_agg") %>%
+  mutate(lat = plyr::round_any(lat, 0.5, f = floor),
+         long = ifelse(long > 0, plyr::round_any(long, 0.5, f = floor), plyr::round_any(long, 0.5, f = ceiling))) %>% 
+  mutate(gridcell = paste0("_", lat, "_", long))%>%
+  select(cell_ID, long, lat, biomass, gridcell)
+
+# write.csv(shrub_rsample_00, file= "datasets/berner_data/shrub_rsample_00.csv")
+
 ### Generate Grid Cell, BigRegion and Latitudinal Band information
-combo.cell <- combo.cut %>% 
+shrub_sample_00 <- shrub_rsample_01 %>% 
   mutate(LAT_grid = plyr::round_any(LAT, 0.5, f = floor),
          LONG_grid = ifelse(LONG > 0, plyr::round_any(LONG, 0.5, f = floor), plyr::round_any(LONG, 0.5, f = ceiling))) %>% 
   mutate(gridcell = paste0("_", LAT_grid, "_", LONG_grid))
+
+
+
 
 # LOGIC CHECKS ----
 # checking if norhtern strip has lower biomass than southern strip
