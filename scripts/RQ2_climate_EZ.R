@@ -132,7 +132,6 @@ summary(try)
 
 
 # model: biomass ~ precip
-model_4 <- lmer(biomass ~ CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
 summary(model_4)
 
 # scatter: biomass ~precip
@@ -145,6 +144,7 @@ summary(model_4)
 # model: biomass ~ temp*precip
 model_5 <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
 summary(model_5)
+
 
 ## To display interaction: 
 ## Categorise precipitation dry moist wet: 
@@ -168,10 +168,13 @@ unique(coord.chelsa.combo.4$moisture)
 coord.chelsa.combo.4$moisture <- as.factor(as.character(coord.chelsa.combo.4$moisture)) # moisture as factor
 str(coord.chelsa.combo.4)
 
-write.csv(coord.chelsa.combo.4, file = "datasets/climate_data/coord.chelsa.combo.4.csv")
+# write.csv(coord.chelsa.combo.4, file = "datasets/climate_data/coord.chelsa.combo.4.csv")
 
-
-
+# scatter: biomass ~precip*temp
+(scatter_precip <- ggplot(coord.chelsa.combo.4, aes(x = CH_TempMeanSummer, y = biomass, colour = moisture)) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_classic())
 
 ##############################################################################
 

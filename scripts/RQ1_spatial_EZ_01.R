@@ -174,7 +174,7 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
 # MODELLING ----
-
+hist(shrub_rsample_00$biomass)
 # biomass vs lat 
 model_1 <- lmer(biomass~lat + (1|gridcell), data = shrub_rsample_00)
 summary(model_1)
@@ -195,6 +195,7 @@ summary(model_2)
     theme_shrub())
 
 # NB need to extract and plot model predictions
+
 
 #### END -----
 
