@@ -146,15 +146,30 @@ summary(model_4)
 model_5 <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
 summary(model_5)
 
+## To display interaction: 
+## Categorise precipitation dry moist wet: 
+## 3 lines in plot with temp on the x and biomass on y and points coloured by moist level
 range(coord.chelsa.combo.3$CH_PrecipMeanSummer)
 # 55 (min) 174 (max)
 # 174-55 = 119
-# 119/2 = 59.5
-# 55 + 59+5 = midpoint
+# 119/3 = 39.66667
+# 55 + 40 = 95 
+# 95 + 40 = 135
+# 135+40 = 175
 # 55 (dry), 114.5 (moist), 174 (wet)
 
+coord.chelsa.combo.4 <- coord.chelsa.combo.3 %>% 
+ mutate(moisture = case_when(CH_PrecipMeanSummer >= 55 & CH_PrecipMeanSummer < 95 ~ "dry",
+                             CH_PrecipMeanSummer >= 95 & CH_PrecipMeanSummer < 135  ~ "moist",
+                             CH_PrecipMeanSummer >= 135 & CH_PrecipMeanSummer <= 174  ~ "wet"))
 
-## To display: Categorise precipitation dry moist wet: 3 lines in plot with temp on the x and biomass on y and points coloured by moist level
+
+unique(coord.chelsa.combo.4$moisture)
+coord.chelsa.combo.4$moisture <- as.factor(as.character(coord.chelsa.combo.4$moisture)) # moisture as factor
+str(coord.chelsa.combo.4)
+
+write.csv(coord.chelsa.combo.4, file = "datasets/climate_data/coord.chelsa.combo.4.csv")
+
 
 
 
