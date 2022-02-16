@@ -149,12 +149,6 @@ shrub_rsample_01 <- shrub_rsample_01 %>%  filter(buff %in% c("T"))
 
 unique(shrub_rsample_01$buff) # T
 
-# scatter shrub biomass Vs lat
-(scatter_model_b <- ggplot(shrub_rsample_01, aes(x = y, y = shrub_crop_latlong_agg)) +
-    geom_point(size = 0.1) +
-    geom_smooth(method = "lm") +
-    theme_classic())
-
 # Cleaning and making a gridcell column the new dataframe
 shrub_rsample_00 <- shrub_rsample_01 %>%
   rename (cell_ID = "cell", 
@@ -166,6 +160,41 @@ shrub_rsample_00 <- shrub_rsample_01 %>%
   select(cell_ID, long, lat, biomass, gridcell)
 
 # write.csv(shrub_rsample_00, file= "datasets/berner_data/shrub_rsample_00.csv")
+
+# THEME----
+theme_shrub <- function(){ theme(legend.position = "right",
+                                 axis.title.x = element_text(face="bold", size=20),
+                                 axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
+                                 axis.title.y = element_text(face="bold", size=20),
+                                 axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
+                                 panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
+                                 panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
+                                 panel.background = element_blank(), axis.line = element_line(colour = "black"), 
+                                 plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
+                                 plot.margin = unit(c(1,1,1,1), units = , "cm"))}
+
+# MODELLING ----
+
+# biomass vs lat 
+model_1 <- lmer(biomass~lat + (1|gridcell), data = shrub_rsample_00)
+summary(model_1)
+
+# scatter shrub biomass Vs lat
+(scatter_model_1 <- ggplot(shrub_rsample_00, aes(x = lat, y = biomass)) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_shrub())
+
+# biomass vs long
+model_2 <- lmer(biomass~long + (1|gridcell), data = shrub_rsample_00)
+summary(model_2)
+
+(scatter_model_2 <- ggplot(shrub_rsample_00, aes(x = long, y = biomass)) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_shrub())
+
+# NB need to extract and plot model predictions
 
 #### END -----
 

@@ -72,7 +72,7 @@ coord.chelsa.combo <- left_join(chelsa.extract, coord.df, by = c("ID" = "ID"))
 # loading the shrub biomass df
 biomass.df <- read.csv("datasets/berner_data/shrub_rsample_00.csv") %>%
   rename(ID = X) %>%
-  dplyr::select(ID, biomass)
+  dplyr::select(ID, biomass, gridcell)
 
 # merging biomass df with climate df
 coord.chelsa.combo.1 <- left_join(coord.chelsa.combo, biomass.df, by = c("ID" = "ID"))
@@ -84,7 +84,8 @@ coord.chelsa.combo.2 <- coord.chelsa.combo.1 %>%
 # Rename the variables to shorter column headings
 coord.chelsa.combo.3 <- coord.chelsa.combo.2 %>% 
   rename(CH_TempMeanSummer = CHELSA_bio10_10,
-         CH_PrecipMeanSummer = CHELSA_bio10_18)
+         CH_PrecipMeanSummer = CHELSA_bio10_18) %>% na.omit()
+
 
 
 # EXPORT TO CSV
@@ -92,7 +93,7 @@ coord.chelsa.combo.3 <- coord.chelsa.combo.2 %>%
 # Export the dataframe to combine with ITEX data
 write.csv(coord.chelsa.combo.3, "datasets/climate_data/coord_chelsa_combo.csv")
 
-# MODELLING -----
+# THEME ----
 # setting a theme 
 theme_shrub <- function(){ theme(legend.position = "right",
                                  axis.title.x = element_text(face="bold", size=20),
@@ -105,9 +106,23 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
-# model: biomass ~ temp
-model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|strip), data = coord.chelsa.combo.3)
+# DATA MANIPULATION ----
+str(coord.chelsa.combo.3)
+unique(coord.chelsa.combo.3$gridcell)
+
+# making grid cell into a factor
+coord.chelsa.combo.3$gridcell <- as.factor(as.character(coord.chelsa.combo.3$gridcell))
+
+# MODELLING ----
+
+# model 3: biomass ~ temp + random effect gridcell
+model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|gridcell), data = coord.chelsa.combo.3)
 summary(model_3)
+
+try <- lm(biomass ~ CH_TempMeanSummer, data = coord.chelsa.combo.3)
+summary(try)
+# F-statistic:  41.4 on 1 and 24901 DF,  p-value: 1.263e-10
+# biomass increases with temp
 
 # scatter: biomass ~ temp
 (scatter_temp <- ggplot(coord.chelsa.combo.3, aes(x = CH_TempMeanSummer, y = biomass)) +
@@ -130,6 +145,14 @@ summary(model_4)
 # model: biomass ~ temp*precip
 model_5 <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
 summary(model_5)
+
+range(coord.chelsa.combo.3$CH_PrecipMeanSummer)
+# 55 (min) 174 (max)
+# 174-55 = 119
+# 119/2 = 59.5
+# 55 + 59+5 = midpoint
+# 55 (dry), 114.5 (moist), 174 (wet)
+
 
 ## To display: Categorise precipitation dry moist wet: 3 lines in plot with temp on the x and biomass on y and points coloured by moist level
 
