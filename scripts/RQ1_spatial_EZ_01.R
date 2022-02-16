@@ -55,7 +55,7 @@ shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 res(shrub_crop) # resolution 30m x 30m
 
 # plotting cropped shrub map to visualise extent
-(cropped_vis <- gplot(shrub_crop_latlong_agg) +
+(cropped_vis <- gplot(shrub_rsample_0) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -112,6 +112,7 @@ res(shrub_crop_1) # 0.007986 0.008370
 # random sample 
 shrub_rsample_1 <- as.data.frame(sampleRandom(shrub_crop_1, 5000, buffer = 900, na.rm=TRUE, ext=NULL, 
                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) %>% mutate(strip = "1")
+
 
 glimpse(shrub_rsample_1)
 hist(shrub_rsample_1$shrub_crop_latlong_agg)
@@ -451,7 +452,7 @@ b <- buffer(points, 1414.2 )
 plot(shrub_crop_latlong_agg)
 lines(b)
 
-shrub_rsample_0 <- as.data.frame(sampleRandom(shrub_crop_latlong_agg, 25000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
+shrub_rsample_0 <- as.data.frame(sampleRandom(shrub_crop_latlong_agg, 1000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy = TRUE))
 hist(shrub_rsample_0$shrub_crop_latlong_agg)
 
@@ -459,7 +460,8 @@ hist(shrub_rsample_0$shrub_crop_latlong_agg)
   geom_point(size = 0.1) +
   geom_smooth(method = "lm") +
   theme_classic())
-# flat!
+
+ggplot(shrub_rsample_0,aes(x=x,y=y))+ geom_point(aes(shrub_crop_latlong_agg))
 
 #### BUFFER -----
 buff <- buffer(shrub_crop_latlong_agg, width=1414.2)
