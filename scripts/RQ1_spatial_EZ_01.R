@@ -25,6 +25,8 @@ library(tidyverse)
 library(lme4)
 library(Require)
 library(SpaDES.tools)
+library(geosphere)
+library(dplyr)
 
 
 ### LOADING DATA -----
@@ -444,16 +446,11 @@ res(shrub_crop_latlong_agg)
 # divided into 1km x 1km grid cells 
 # diagonal of a grid square = 1414.2 m
 # buffer = diagonal of grid cell means that no point will be taken from same grid cell
-points <- SpatialPoints(shrub_crop_latlong_agg)
-b <- buffer(points, 1414.2 )
 
-points <- SpatialPoints(shrub_crop_latlong_agg)
-b <- buffer(points, 1414.2 )
-plot(shrub_crop_latlong_agg)
-lines(b)
 
-shrub_rsample_0 <- as.data.frame(sampleRandom(shrub_crop_latlong_agg, 1000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
+shrub_rsample_0 <- as.data.frame(sampleRandom(shrub_crop_latlong_agg, 25000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy = TRUE))
+
 hist(shrub_rsample_0$shrub_crop_latlong_agg)
 
 (scatter_model_b <- ggplot(shrub_rsample_0, aes(x = y, y = shrub_crop_latlong_agg)) +
@@ -463,8 +460,22 @@ hist(shrub_rsample_0$shrub_crop_latlong_agg)
 
 ggplot(shrub_rsample_0,aes(x=x,y=y))+ geom_point(aes(shrub_crop_latlong_agg))
 
-#### BUFFER -----
-buff <- buffer(shrub_crop_latlong_agg, width=1414.2)
+# checking buffer works
+shrub_rsample_01 <- shrub_rsample_0 %>% 
+  mutate(shrub_rsample_0, Distance = distHaversine(cbind(x, y),
+                                cbind(lag(x), lag(y))))
+         
+shrub_rsample_01<- shrub_rsample_01 %>% 
+  mutate(buff = case_when(Distance >= 1414.2 ~ "T", Distance < 1414.2 ~ "F"))
+
+shrub_rsample_01 <- shrub_rsample_01 %>%  filter(buff %in% c("T"))
+
+unique(shrub_rsample_01$buff)
+
+(scatter_model_b <- ggplot(shrub_rsample_01, aes(x = y, y = shrub_crop_latlong_agg)) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_classic())
 
 ### Generate Grid Cell, BigRegion and Latitudinal Band information
 combo.cell <- combo.cut %>% 
@@ -574,6 +585,12 @@ b <- buffer(r, width=5000000)
 plot(b)
 
 
+points <- SpatialPoints(shrub_crop_latlong_agg)
+b <- buffer(points, 1414.2 )
 
+points <- SpatialPoints(shrub_crop_latlong_agg)
+b <- buffer(points, 1414.2 )
+plot(shrub_crop_latlong_agg)
+lines(b)
 
 
