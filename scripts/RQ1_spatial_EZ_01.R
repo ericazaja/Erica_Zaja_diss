@@ -203,8 +203,6 @@ plot_model_1 <- (ggplot(pred_model_1) +
     theme_shrub()
 )
 
-# index????? scale?
-
 # biomass vs long
 model_2 <- lmer(biomass~long + (1|gridcell), data = shrub_rsample_00)
 summary(model_2)

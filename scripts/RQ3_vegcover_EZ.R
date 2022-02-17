@@ -100,7 +100,7 @@ theme_shrub <- theme(legend.position = "right",
 ## per plot over time (more representative of FG cover over time)
 ### Q: is plotting mean cover right? 
 
-### SHRUB COVER OVER TIME ------
+### SHRUB COVER ------
 
 # Mean shrub cover per plot per year
 ITEX_shrubs <- ITEX_shrubs %>%
@@ -117,16 +117,32 @@ str(ITEX_shrubs)
     theme_shrub))
 ## Shrub cover increasing 
 
-# Model ----
+# Model 6: Shrub cover over time ----
 lm_shrub <- lm(Mean_cover~YEAR, data = ITEX_shrubs)
 summary(lm_shrub) # significant
 # F-statistic:  5.54 on 1 and 517 DF,  p-value: 0.01896
 
 # mixed effect model with plot and year as random effects
-lmer_shrub <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_shrubs)
-summary(lmer_shrub)
+model_6 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_shrubs)
+summary(model_6)
 
-### GRAMINOID COVER OVER TIME  ----
+# Extracting model predictions 
+pred_model_6 <- ggpredict(model_6, terms = c("YEAR"))  # this gives overall predictions for the model
+write.csv(pred_model_6, file = "datasets/pred_model_6.csv")
+
+# Plot the predictions 
+(plot_model_6 <- (ggplot(pred_model_6) + 
+                    geom_line(aes(x = x, y = predicted)) +          # slope
+                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                                fill = "lightgrey", alpha = 0.5) +  # error band
+                    geom_point(data = ITEX_shrubs,                      # adding the raw data 
+                               aes(x = YEAR, y = Mean_cover), size = 0.5) + 
+                    labs(x = "Year", y = "Shrub cover (%)", 
+                         title = "Shrub % cover increase in the ANWR") + 
+                    theme_shrub()
+))
+
+### GRAMINOID COVER ----
 # Mean graminoid cover per plot per year
 ITEX_gram <- ITEX_gram %>%
    group_by(YEAR, PLOT) %>%
@@ -140,16 +156,29 @@ ITEX_gram <- ITEX_gram %>%
        theme_shrub))
 ## Graminoid cover incrasing
 
-lm_gram <- lm(Mean_cover~YEAR, data = ITEX_gram)
-summary(lm_gram) #not significant
-# F-statistic: 0.7655 on 1 and 214 DF,  p-value: 0.3826
-
+# Model 7: Graminoid cover over time -----
 # mixed effect model with plot and year as random effects
-lmer_gram <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_gram)
-summary(lmer_gram)
+model_7 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_gram)
+summary(model_7)
+
+# Extracting model predictions 
+pred_model_7 <- ggpredict(model_7, terms = c("YEAR"))  # this gives overall predictions for the model
+write.csv(pred_model_7, file = "datasets/pred_model_7.csv")
+
+# Plot the predictions 
+(plot_model_7 <- (ggplot(pred_model_7) + 
+                     geom_line(aes(x = x, y = predicted)) +          # slope
+                     geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                                 fill = "lightgrey", alpha = 0.5) +  # error band
+                     geom_point(data = ITEX_gram,                      # adding the raw data 
+                                aes(x = YEAR, y = Mean_cover), size = 0.5) + 
+                     labs(x = "Year", y = "Graminoid cover (%)", 
+                          title = "Graminoid cover (%) constant in the ANWR") + 
+                     theme_shrub()
+))
 
 
-### FORB COVER OVER TIME  ----
+### FORB COVER ----
 
 # Mean forb cover per plot per year
 ITEX_forbs <- ITEX_forbs %>%
@@ -164,14 +193,27 @@ ITEX_forbs <- ITEX_forbs %>%
       theme_shrub))
 ## Forb cover decreasing
 
-# Model ----
-lm_forb <- lm(Mean_cover~YEAR, data =ITEX_forbs)
-summary(lm_forb) # significant
-# F-statistic: 8.569 on 1 and 356 DF,  p-value: 0.003638
+# Model 8: Forb cover over time ----
 
 # mixed effect model with plot and year as random effects
-lmer_forbs <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_forbs)
-summary(lmer_forbs)
+model_8 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_forbs)
+summary(model_8)
+
+# Extracting model predictions 
+pred_model_8 <- ggpredict(model_8, terms = c("YEAR"))  # this gives overall predictions for the model
+write.csv(pred_model_8, file = "datasets/pred_model_8.csv")
+
+# Plot the predictions 
+(plot_model_8 <- (ggplot(pred_model_8) + 
+                     geom_line(aes(x = x, y = predicted)) +          # slope
+                     geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                                 fill = "lightgrey", alpha = 0.5) +  # error band
+                     geom_point(data = ITEX_forbs,                      # adding the raw data 
+                                aes(x = YEAR, y = Mean_cover), size = 0.5) + 
+                     labs(x = "Year", y = "Forb cover (%)", 
+                          title = "Forb cover (%) decrease in the ANWR") + 
+                     theme_shrub()
+))
 
 ### MOSS COVER OVER TIME  ----
 # Mean moss cover per plot per year
