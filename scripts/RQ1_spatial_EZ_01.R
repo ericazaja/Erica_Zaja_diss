@@ -230,8 +230,6 @@ plot_model_2 <- (ggplot(pred_model_2) +
                    theme_shrub()
 )
 
-# index????? scale?
-
 #### END -----
 
 

@@ -119,10 +119,23 @@ coord.chelsa.combo.3$gridcell <- as.factor(as.character(coord.chelsa.combo.3$gri
 model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|gridcell), data = coord.chelsa.combo.3)
 summary(model_3)
 
-try <- lm(biomass ~ CH_TempMeanSummer, data = coord.chelsa.combo.3)
-summary(try)
-# F-statistic:  41.4 on 1 and 24901 DF,  p-value: 1.263e-10
-# biomass increases with temp
+# Extracting model predictions 
+pred_model_3 <- ggpredict(model_3, terms = c("CH_TempMeanSummer"))  # this gives overall predictions for the model
+# write.csv(pred_model_3, file = "datasets/pred_model_3.csv")
+
+# Plot the predictions 
+plot_model_3 <- (ggplot(pred_model_3) + 
+                   geom_line(aes(x = x, y = predicted)) +          # slope
+                   geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                               fill = "lightgrey", alpha = 0.5) +  # error band
+                   geom_point(data = coord.chelsa.combo.3,                      # adding the raw data 
+                              aes(x = CH_TempMeanSummer, y = biomass), size = 0.5) + 
+                   labs(x = "Mean summer temperature (degrees C)", y = "Shrub biomass (g/m2)", 
+                        title = "Mean summer temperature does not affect shrub biomass") + 
+                   theme_shrub()
+)
+
+# biomass does not vary with temp
 
 # scatter: biomass ~ temp
 (scatter_temp <- ggplot(coord.chelsa.combo.3, aes(x = CH_TempMeanSummer, y = biomass)) +
@@ -131,8 +144,27 @@ summary(try)
     theme_shrub())
 
 
-# model: biomass ~ precip
+# model 4: biomass ~ precip
+model_4 <- lmer(biomass ~ CH_PrecipMeanSummer + (1|gridcell), data = coord.chelsa.combo.3)
 summary(model_4)
+
+# Extracting model predictions 
+pred_model_4 <- ggpredict(model_4, terms = c("CH_PrecipMeanSummer"))  # this gives overall predictions for the model
+# write.csv(pred_model_4, file = "datasets/pred_model_4.csv")
+
+# Plot the predictions 
+plot_model_4 <- (ggplot(pred_model_4) + 
+                   geom_line(aes(x = x, y = predicted)) +          # slope
+                   geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                               fill = "lightgrey", alpha = 0.5) +  # error band
+                   geom_point(data = coord.chelsa.combo.3,                      # adding the raw data 
+                              aes(x = CH_PrecipMeanSummer, y = biomass), size = 0.5) + 
+                   labs(x = "Mean summer precipitation (kg/m)", y = "Shrub biomass (g/m2)", 
+                        title = "Shrub biomass increases with mean summer precipiation") + 
+                   theme_shrub()
+)
+
+# shrub biomass increases with mean summer precip
 
 # scatter: biomass ~precip
 (scatter_precip <- ggplot(coord.chelsa.combo.3, aes(x = CH_PrecipMeanSummer, y = biomass)) +
@@ -141,10 +173,7 @@ summary(model_4)
     theme_classic())
 
 
-# model: biomass ~ temp*precip
-model_5 <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer + (1|strip), data = coord.chelsa.combo.3)
-summary(model_5)
-
+# model 5: biomass ~ temp*precip
 
 ## To display interaction: 
 ## Categorise precipitation dry moist wet: 
@@ -169,6 +198,27 @@ coord.chelsa.combo.4$moisture <- as.factor(as.character(coord.chelsa.combo.4$moi
 str(coord.chelsa.combo.4)
 
 # write.csv(coord.chelsa.combo.4, file = "datasets/climate_data/coord.chelsa.combo.4.csv")
+
+model_5 <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer + (1|gridcell), data = coord.chelsa.combo.4)
+summary(model_5)
+
+# Extracting model predictions 
+pred_model_5 <- ggpredict(model_5, terms = c("CH_TempMeanSummer"))  # this gives overall predictions for the model
+# write.csv(pred_model_4, file = "datasets/pred_model_4.csv")
+
+# Plot the predictions 
+(plot_model_5 <- (ggplot(pred_model_5) + 
+                   geom_line(aes(x = x, y = predicted)) +          # slope
+                   geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                               fill = "lightgrey", alpha = 0.5) +  # error band
+                   geom_point(data = coord.chelsa.combo.4,                      # adding the raw data 
+                              aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size = 0.5) +
+                    geom_line(aes(x = ))
+                   labs(x = "Mean summer temperature (degrees C))", y = "Shrub biomass (g/m2)", 
+                        title = "Shrub biomass increases with mean summer precipiation") + 
+                   theme_shrub()
+))
+
 
 # scatter: biomass ~precip*temp
 (scatter_precip <- ggplot(coord.chelsa.combo.4, aes(x = CH_TempMeanSummer, y = biomass, colour = moisture)) +
