@@ -27,6 +27,7 @@ library(Require)
 library(SpaDES.tools)
 library(geosphere)
 library(dplyr)
+library(ggeffects)
 
 
 ### LOADING DATA -----
@@ -174,8 +175,9 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
 # MODELLING ----
-hist(shrub_rsample_00$biomass)
-# biomass vs lat 
+hist(shrub_rsample_00$biomass) # distribution 
+
+# Model 1. biomass vs lat 
 model_1 <- lmer(biomass~lat + (1|gridcell), data = shrub_rsample_00)
 summary(model_1)
 
@@ -184,6 +186,24 @@ summary(model_1)
     geom_point(size = 0.1) +
     geom_smooth(method = "lm") +
     theme_shrub())
+
+# Extracting model predictions 
+pred_model_1 <- ggpredict(model_1, terms = c("lat"))  # this gives overall predictions for the model
+# write.csv(pred_model_1, file = "datasets/pred_model_1.csv")
+
+# Plot the predictions 
+plot_model_1 <- (ggplot(pred_model_1) + 
+    geom_line(aes(x = x, y = predicted)) +          # slope
+    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                fill = "lightgrey", alpha = 0.5) +  # error band
+    geom_point(data = shrub_rsample_00,                      # adding the raw data 
+               aes(x = lat, y = biomass), size = 0.5) + 
+    labs(x = "Latitude", y = "Shrub biomass (g/m2)", 
+         title = "Shrub biomass decreases with latitude") + 
+    theme_shrub()
+)
+
+# index????? scale?
 
 # biomass vs long
 model_2 <- lmer(biomass~long + (1|gridcell), data = shrub_rsample_00)
@@ -194,8 +214,23 @@ summary(model_2)
     geom_smooth(method = "lm") +
     theme_shrub())
 
-# NB need to extract and plot model predictions
+# Extracting model predictions 
+pred_model_2 <- ggpredict(model_2, terms = c("long"))  # this gives overall predictions for the model
+# write.csv(pred_model_2, file = "datasets/pred_model_2.csv")
 
+# Plot the predictions 
+plot_model_2 <- (ggplot(pred_model_2) + 
+                   geom_line(aes(x = x, y = predicted)) +          # slope
+                   geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                               fill = "lightgrey", alpha = 0.5) +  # error band
+                   geom_point(data = shrub_rsample_00,                      # adding the raw data 
+                              aes(x = long, y = biomass), size = 0.5) + 
+                   labs(x = "Longitude", y = "Shrub biomass (g/m2)", 
+                        title = "Shrub biomass does not vary with longitude") + 
+                   theme_shrub()
+)
+
+# index????? scale?
 
 #### END -----
 
