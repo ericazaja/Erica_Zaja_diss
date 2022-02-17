@@ -199,25 +199,27 @@ str(coord.chelsa.combo.4)
 
 # write.csv(coord.chelsa.combo.4, file = "datasets/climate_data/coord.chelsa.combo.4.csv")
 
-model_5 <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer + (1|gridcell), data = coord.chelsa.combo.4)
-summary(model_5)
+# Model 5a: biomass Vs temp*moisture
+model_5a <- lmer(biomass ~ CH_TempMeanSummer*moisture + (1|gridcell), data = coord.chelsa.combo.4)
+summary(model_5a)
 
 # Extracting model predictions 
-pred_model_5 <- ggpredict(model_5, terms = c("CH_TempMeanSummer"))  # this gives overall predictions for the model
-# write.csv(pred_model_4, file = "datasets/pred_model_4.csv")
+pred_model_5a <- ggpredict(model_5a, terms = c("CH_TempMeanSummer", "moisture"))  # this gives overall predictions for the model
+#write.csv(pred_model_5a, file = "datasets/pred_model_5a.csv")
 
+plot_model(model_5a, type = "pred", terms = c("CH_TempMeanSummer", "moisture"))
+
+# Model 5b: biomass Vs temp*precip
 # Plot the predictions 
-(plot_model_5 <- (ggplot(pred_model_5) + 
-                   geom_line(aes(x = x, y = predicted)) +          # slope
-                   geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                               fill = "lightgrey", alpha = 0.5) +  # error band
-                   geom_point(data = coord.chelsa.combo.4,                      # adding the raw data 
-                              aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size = 0.5) +
-                    geom_line(aes(x = ))
-                   labs(x = "Mean summer temperature (degrees C))", y = "Shrub biomass (g/m2)", 
-                        title = "Shrub biomass increases with mean summer precipiation") + 
-                   theme_shrub()
-))
+model_5b <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer+ (1|gridcell), data = coord.chelsa.combo.4)
+summary(model_5b)
+
+# Extracting model predictions 
+pred_model_5b <- ggpredict(model_5b, terms = c("CH_TempMeanSummer", "CH_PrecipMeanSummer"))  # this gives overall predictions for the model
+# write.csv(pred_model_5b, file = "datasets/pred_model_5b.csv")
+
+plot_model(model_5b, type = "pred", terms = c("CH_TempMeanSummer", "CH_PrecipMeanSummer"))
+
 
 
 # scatter: biomass ~precip*temp
