@@ -215,7 +215,7 @@ write.csv(pred_model_8, file = "datasets/pred_model_8.csv")
                      theme_shrub()
 ))
 
-### MOSS COVER OVER TIME  ----
+### MOSS COVER  ----
 # Mean moss cover per plot per year
 ITEX_moss <- ITEX_moss %>%
    group_by(YEAR, PLOT) %>%
@@ -229,15 +229,26 @@ ITEX_moss <- ITEX_moss %>%
       theme_shrub))
 ## Moss cover increasing 
 
-# Model ----
-lm_moss <- lm(Mean_cover~YEAR, data = ITEX_moss)
-summary(lm_moss) ## significant 
-# F-statistic: 40.83 on 1 and 525 DF,  p-value: 3.664e-10
-
+# Model 9: Moss cover over time----
 # mixed effect model with plot and year as random effects
-lmer_moss <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_moss)
-summary(lmer_moss)
+model_9 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_moss)
+summary(model_9)
 
+# Extracting model predictions 
+pred_model_9 <- ggpredict(model_9, terms = c("YEAR"))  # this gives overall predictions for the model
+write.csv(pred_model_9, file = "datasets/pred_model_9.csv")
+
+# Plot the predictions 
+(plot_model_9 <- (ggplot(pred_model_9) + 
+                     geom_line(aes(x = x, y = predicted)) +          # slope
+                     geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                                 fill = "lightgrey", alpha = 0.5) +  # error band
+                     geom_point(data = ITEX_moss,                      # adding the raw data 
+                                aes(x = YEAR, y = Mean_cover), size = 0.5) + 
+                     labs(x = "Year", y = "Moss cover (%)", 
+                          title = "Moss cover (%) increase in the ANWR") + 
+                     theme_shrub()
+))
 
 ### LICHEN COVER OVER TIME  ----
 # Mean moss cover per plot per year
@@ -245,22 +256,37 @@ ITEX_lich <- ITEX_lich %>%
    group_by(YEAR, PLOT) %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
+str(ITEX_lich)
 
 (lichen_scatter <- (ggplot(ITEX_lich, aes(x = YEAR, y = Mean_cover))+
     geom_point(size = 2) +
     geom_smooth(method = "lm") + 
        labs(y = "Mean lichen cover\n", x = "\nYear") +
       theme_shrub))
-## LIchen cover increasing
+## Lichen cover increasing
 
-lm_lichen<- lm(Mean_cover~YEAR, data = ITEX_lich)
-summary(lm_lichen) ## significant
-# F-statistic: 8.743 on 1 and 693 DF,  p-value: 0.003214
-
+# Model 10: Lichen cover over time -----
 # mixed effect model with plot and year as random effects
-lmer_lich <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_lich)
-summary(lmer_lich)
+model_10 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_lich)
+summary(model_10)
 
+# Extracting model predictions 
+pred_model_10 <- ggpredict(model_10, terms = c("YEAR"))  # this gives overall predictions for the model
+write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
+
+# Plot the predictions 
+(plot_model_10 <- (ggplot(pred_model_10) + 
+                     geom_line(aes(x = x, y = predicted)) +          # slope
+                     geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                                 fill = "lightgrey", alpha = 0.5) +  # error band
+                     geom_point(data = ITEX_lich,                      # adding the raw data 
+                                aes(x = YEAR, y = Mean_cover), size = 0.5) + 
+                     labs(x = "Year", y = "Lichen cover (%)", 
+                          title = "Lichen cover (%) increase in the ANWR") + 
+                      # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
+                     theme_shrub()))
+   
+library(scales)
 ## Panel
 library(gridExtra)  # For making panels
 library(ggpubr)  # For data visualisation formatting
