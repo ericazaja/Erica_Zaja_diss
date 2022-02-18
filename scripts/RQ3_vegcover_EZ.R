@@ -420,6 +420,24 @@ summary(lmer_all)
 lmer_all_rand <- lmer(Mean_cover~YEAR+(1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
 summary(lmer_all_rand)
 
+# Extracting model predictions 
+pred_model_all_rand <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"))  # this gives overall predictions for the model
+# write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
+
+# Plot the predictions 
+(plot_model_all_rand <- (ggplot(pred_model_all_rand) + 
+                      geom_line(aes(x = x, y = predicted, fill = group)) +          # slope
+                      # geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                                  #fill = "lightgrey", alpha = 0.5) +  # error band
+                      geom_point(data = ITEX_all_veg,                      # adding the raw data 
+                                 aes(x = YEAR, y = Mean_cover, colour= FuncGroup), size = 0.5) + 
+                      labs(x = "Year", y = "Vegetation cover (%)", 
+                           title = "") + 
+                      # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
+                      theme_minimal()))
+
+
+
 # extracting model predictions
 pred.mm <- ggpredict(lmer_all_rand, terms = c("YEAR"))
 
@@ -487,17 +505,32 @@ summary(lmer_shrub_sp)
 pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"))  # this gives overall predictions for the model
 # write.csv(pred_model_9, file = "datasets/pred_model_9.csv")
 
+
 # Plot the predictions 
 (plot_model_shrub_sp <- (ggplot(pred_model_shrub_sp) + 
-                     geom_line(aes(x = x, y = predicted)) +          # slope
+                     geom_line(aes(x = x, y = predicted, colour= group) )+          # slope
                      geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                  fill = "lightgrey", alpha = 0.5) +  # error band
                      geom_point(data = ITEX_shrub_sp,                      # adding the raw data 
-                                aes(x = YEAR, y = Mean_cover), size = 0.5) + 
-                     labs(x = "Year", y = "Moss cover (%)", 
-                          title = "Moss cover (%) increase in the ANWR") + 
+                                aes(x = YEAR, y = Mean_cover, colour = GENUS),size = 0.5) + 
+                        facet_wrap(~GENUS) +
+                     labs(x = "Year", y = "Shrub species cover (%)", 
+                          title = "Shrub species cover (%) in the ANWR") + 
                      theme_shrub()
-))
+)) # wrong
+
+# trying diff graph
+ITEX_shrub_sp$Predicted <- predict(lmer_shrub_sp, ITEX_shrub_sp)
+
+# plot predicted values
+ggplot(ITEX_shrub_sp, aes(YEAR, Predicted)) +
+   facet_wrap(~GENUS) +
+   geom_point(aes(x = YEAR, y = Mean_cover, colour= GENUS), size = .5) +
+   geom_smooth(aes(y = Predicted, colour= GENUS), linetype = "solid", 
+               se = T, method = "lm") +
+   guides(color=guide_legend(override.aes=list(fill=NA))) +  
+   theme_shrub() + 
+   xlab("Year")
 
 # Plotting fixed effects
 (fe.effects <- plot_model(lmer_shrub_sp , show.values = TRUE))
@@ -536,17 +569,17 @@ qhi_add <- read.csv("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/qh
 ## FUNCTIONS 
 `%notin%` <- Negate(`%in%`)
 
-## THEME 
-bio.theme <- theme(legend.position = "right",
-                   axis.title.x = element_text(face="bold", size=20),
-                   axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
-                   axis.title.y = element_text(face="bold", size=20),
-                   axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
-                   panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
-                   panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
-                   panel.background = element_blank(), axis.line = element_line(colour = "black"), 
-                   plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
-                   plot.margin = unit(c(1,1,1,1), units = , "cm"))
+# THEME ----
+theme_shrub <- function(){ theme(legend.position = "right",
+                                 axis.title.x = element_text(face="bold", size=20),
+                                 axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
+                                 axis.title.y = element_text(face="bold", size=20),
+                                 axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
+                                 panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
+                                 panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
+                                 panel.background = element_blank(), axis.line = element_line(colour = "black"), 
+                                 plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
+                                 plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
 # Check structure
 glimpse(perccov_all)
