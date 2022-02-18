@@ -115,9 +115,30 @@ coord.chelsa.combo.3$gridcell <- as.factor(as.character(coord.chelsa.combo.3$gri
 
 # MODELLING ----
 
-# model 3: biomass ~ temp + random effect gridcell
+# Model 3 ----
+# biomass ~ temp + random effect gridcell
 model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|gridcell), data = coord.chelsa.combo.3)
 summary(model_3)
+# total variance: 10707 + 10483 =21190
+# variance for gridcell =  10707 
+# amount of variance explained by random effect: 10707 /21190 =0.5052855= ~50%
+# I.e. differences between grid cells explain ~50% of the variance 
+# that’s “left over” after the variance explained by our fixed effect (mean summer temperature).
+# estimate for temperature (exp variable =  -9.486 ) i.e. temperature negatively impacts biomass
+# not significant effect of temp on biomass 
+
+# Checking model 3 assumptions ----
+plot(model_3)
+qqnorm(resid(model_3))
+qqline(resid(model_3))  # points fall nicely onto the line - good!
+
+# Output table model 3 ----
+library(stargazer)
+
+stargazer(model_3, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
 
 # Extracting model predictions 
 pred_model_3 <- ggpredict(model_3, terms = c("CH_TempMeanSummer"))  # this gives overall predictions for the model
@@ -144,9 +165,30 @@ plot_model_3 <- (ggplot(pred_model_3) +
     theme_shrub())
 
 
-# model 4: biomass ~ precip
+# Model 4  -----
+# biomass ~ precip +  random effect gridcell
 model_4 <- lmer(biomass ~ CH_PrecipMeanSummer + (1|gridcell), data = coord.chelsa.combo.3)
 summary(model_4)
+# total variance: 4202 + 10485  =14687
+# variance for gridcell =   4202 
+# amount of variance explained by random effect:  4202 /14687 = 0.2861034= ~29%
+# I.e. differences between grid cells explain ~29% of the variance 
+# that’s “left over” after the variance explained by our fixed effect (mean precip).
+# estimate for precip (exp variable =  2.860*** ) i.e. precip positively impacts biomass
+# significant effect of precip on biomass  = 2.860*** 
+
+# Checking model 4 assumptions ----
+plot(model_4)
+qqnorm(resid(model_4))
+qqline(resid(model_4))  # points fall nicely onto the line - good!
+
+# Output table model 4 ----
+library(stargazer)
+
+stargazer(model_4, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
 
 # Extracting model predictions 
 pred_model_4 <- ggpredict(model_4, terms = c("CH_PrecipMeanSummer"))  # this gives overall predictions for the model
