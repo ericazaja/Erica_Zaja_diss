@@ -50,17 +50,17 @@ phenology_new$phenophase[phenology_new$phenophase == "SeedMat"] <- "seedmat"
 unique(phenology_new$phenophase) # Unique phenophase names
 # [1] "green"     "flower"    "flowerend" "seedmat"   "senesce"  
 
-# Theme 
-theme_shrub <- theme(legend.position = "right",
-                     axis.title.x = element_text(face="bold", size=20),
-                     axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
-                     axis.title.y = element_text(face="bold", size=20),
-                     axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
-                     panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
-                     panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
-                     panel.background = element_blank(), axis.line = element_line(colour = "black"), 
-                     plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
-                     plot.margin = unit(c(1,1,1,1), units = , "cm"))
+# THEME ----
+theme_shrub <- function(){ theme(legend.position = "right",
+                                 axis.title.x = element_text(face="bold", size=20),
+                                 axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
+                                 axis.title.y = element_text(face="bold", size=20),
+                                 axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
+                                 panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
+                                 panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
+                                 panel.background = element_blank(), axis.line = element_line(colour = "black"), 
+                                 plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
+                                 plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
 # DATA VISUALISATION -----
 # Plot DOY on x and phenophase on y
@@ -121,7 +121,8 @@ count_years_early <- count_years %>% group_by(year) %>% filter(year_type=="early
 (erly_years_count <- ggplot(count_years_early, aes(x = year, y = n)) +
     geom_point(size = 0.1) +
     geom_smooth(method = "lm")+
-    theme_minimal())
+    labs(x = "Year", y = "Early greening years (n)") +
+    theme_shrub())
 
 # INCREASE in number (count) of early greening years 
 # need to add subsite?
@@ -135,11 +136,12 @@ count_years_late <- count_years %>% group_by(year) %>% filter(year_type=="late")
 (late_years_count <- ggplot(count_years_late, aes(x = year, y = n)) +
     geom_point(size = 0.1) +
     geom_smooth(method = "lm")+
-    theme_minimal())
+    labs(x = "Year", y = "Late greening years (n)") +
+    theme_shrub())
 
 # INCREASE in number (count) of late greening years 
 
-lm_late <- lm(n ~ year, data =count_years_late) 
+lm_late <- lm(n ~ year, data = count_years_late) 
 summary(lm_late) # not sig
 # F-statistic: 3.151 on 1 and 22 DF,  p-value: 0.08971
 

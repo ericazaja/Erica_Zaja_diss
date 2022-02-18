@@ -436,6 +436,19 @@ pred_model_all_rand <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup")) 
                       # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
                       theme_minimal()))
 
+# trying diff graph
+ITEX_all_veg$Predicted <- predict(lmer_all_rand, ITEX_all_veg)
+
+# plot predicted values
+ggplot(ITEX_all_veg, aes(YEAR, Predicted)) +
+   facet_wrap(~FuncGroup) +
+   geom_point(aes(x = YEAR, y = Mean_cover, colour= FuncGroup), size = .5) +
+   geom_smooth(aes(y = Predicted, colour= FuncGroup), linetype = "solid", 
+               se = T, method = "lm") +
+   guides(color=guide_legend(override.aes=list(fill=NA))) +  
+   theme_shrub() + 
+   xlab("Year")
+
 
 
 # extracting model predictions
