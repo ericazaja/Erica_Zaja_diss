@@ -177,9 +177,29 @@ theme_shrub <- function(){ theme(legend.position = "right",
 # MODELLING ----
 hist(shrub_rsample_00$biomass) # distribution 
 
-# Model 1. biomass vs lat 
+# Model 1. biomass vs lat ----
 model_1 <- lmer(biomass~lat + (1|gridcell), data = shrub_rsample_00)
 summary(model_1)
+# total variance: 6713 + 10450 =17163
+# variance for gridcell =  6713 
+# amount of variance explained by random effect: 6713/17163 =0.3911321 = ~40%
+# I.e. differences between grid cells explain ~40% of the variance 
+# that’s “left over” after the variance explained by our fixed effect (lat).
+# estimate for latitude (exp variable =  -115.16 ) i.e. latitude negatively impacts biomass
+# significant effect of lat on biomass: -115.165***  
+
+# Checking model 1 assumptions ----
+plot(model_1)
+qqnorm(resid(model_1))
+qqline(resid(model_1))  # points fall nicely onto the line - good!
+
+# Output table model 1----
+library(stargazer)
+
+stargazer(model_1, type = "text",
+digits = 3,
+star.cutoffs = c(0.05, 0.01, 0.001),
+digit.separator = "")
 
 # scatter shrub biomass Vs lat
 (scatter_model_1 <- ggplot(shrub_rsample_00, aes(x = lat, y = biomass)) +
@@ -203,9 +223,28 @@ plot_model_1 <- (ggplot(pred_model_1) +
     theme_shrub()
 )
 
-# biomass vs long
+# Model 2. biomass vs long ----
 model_2 <- lmer(biomass~long + (1|gridcell), data = shrub_rsample_00)
 summary(model_2)
+# total variance: 10797+ 10450 =21247
+# variance for gridcell =  10797 
+# amount of variance explained by random effect: 10797 /21247 =0.5081659 = ~50%
+# I.e. differences between grid cells explain ~40% of the variance 
+# that’s “left over” after the variance explained by our fixed effect (long).
+# estimate for latitude (exp variable =  4.065  ) 
+# not significant effect of long on biomass
+
+
+# Checking model 2 assumptions ----
+plot(model_2)
+qqnorm(resid(model_2))
+qqline(resid(model_2))  # points fall nicely onto the line - good!
+
+# Output table model 2 ----
+stargazer(model_2, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
 
 (scatter_model_2 <- ggplot(shrub_rsample_00, aes(x = long, y = biomass)) +
     geom_point(size = 0.1) +

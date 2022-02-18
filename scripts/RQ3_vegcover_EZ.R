@@ -286,7 +286,7 @@ write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
                       # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
                      theme_shrub()))
    
-library(scales)
+
 ## Panel
 library(gridExtra)  # For making panels
 library(ggpubr)  # For data visualisation formatting
@@ -379,6 +379,22 @@ ITEX_shrub_sp <- ITEX_shrubs %>%
 # mixed effect model with plot and year as random effects
 lmer_shrub_sp <- lmer(Mean_cover~YEAR + GENUS + (1|PLOT) + (1+YEAR), data = ITEX_shrub_sp)
 summary(lmer_shrub_sp)
+
+# Extracting model predictions 
+pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"))  # this gives overall predictions for the model
+# write.csv(pred_model_9, file = "datasets/pred_model_9.csv")
+
+# Plot the predictions 
+(plot_model_shrub_sp <- (ggplot(pred_model_shrub_sp) + 
+                     geom_line(aes(x = x, y = predicted)) +          # slope
+                     geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                                 fill = "lightgrey", alpha = 0.5) +  # error band
+                     geom_point(data = ITEX_shrub_sp,                      # adding the raw data 
+                                aes(x = YEAR, y = Mean_cover), size = 0.5) + 
+                     labs(x = "Year", y = "Moss cover (%)", 
+                          title = "Moss cover (%) increase in the ANWR") + 
+                     theme_shrub()
+))
 
 # Plotting fixed effects
 (fe.effects <- plot_model(lmer_shrub_sp , show.values = TRUE))
