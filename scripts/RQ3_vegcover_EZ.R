@@ -204,8 +204,6 @@ stargazer(model_7, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
-
-
 # Extracting model predictions 
 pred_model_7 <- ggpredict(model_7, terms = c("YEAR"))  # this gives overall predictions for the model
 write.csv(pred_model_7, file = "datasets/pred_model_7.csv")
@@ -243,27 +241,26 @@ ITEX_forbs <- ITEX_forbs %>%
 # mixed effect model with plot and year as random effects
 model_8 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_forbs)
 summary(model_8)
-# total variance: 4202 + 10485  =14687
-# variance for gridcell =   4202 
-# amount of variance explained by random effect:  4202 /14687 = 0.2861034= ~29%
-# I.e. differences between grid cells explain ~29% of the variance 
-# that’s “left over” after the variance explained by our fixed effect (mean precip).
-# estimate for precip (exp variable =  2.860*** ) i.e. precip positively impacts biomass
-# significant effect of precip on biomass  = 2.860*** 
+# total variance: 5.687 + 13.076   =18.763
+# variance for plot =   5.687 
+# amount of variance explained by random effect:  5.687  /18.763 = 0.3030965= ~30%
+# I.e. differences between plots explain ~30% of the variance 
+# that’s “left over” after the variance explained by our fixed effect (year).
+# estimate for year (exp variable = -0.201*** ) i.e. year negatively impats forb cover
+# significant effect of year on forb cover  = -0.201***        
 
-# Checking model 4 assumptions ----
-plot(model_4)
-qqnorm(resid(model_4))
-qqline(resid(model_4))  # points fall nicely onto the line - good!
+# Checking model 8 assumptions ----
+plot(model_8)
+qqnorm(resid(model_8))
+qqline(resid(model_8))  # points fall nicely onto the line - good!
 
-# Output table model 4 ----
+# Output table model 8 ----
 library(stargazer)
 
-stargazer(model_4, type = "text",
+stargazer(model_8, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
-
 
 # Extracting model predictions 
 pred_model_8 <- ggpredict(model_8, terms = c("YEAR"))  # this gives overall predictions for the model
@@ -299,6 +296,26 @@ ITEX_moss <- ITEX_moss %>%
 # mixed effect model with plot and year as random effects
 model_9 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_moss)
 summary(model_9)
+# total variance: 15.09    + 61.07   =76.16
+# variance for plot =   15.09
+# amount of variance explained by random effect:  15.09  /76.16=0.1981355= ~20%
+# I.e. differences between plots explain ~20% of the variance 
+# that’s “left over” after the variance explained by our fixed effect (year).
+# estimate for year (exp variable = 6.353e-01***  ) year positively impacts moss cover 
+# significant effect of year on moss cover  = 0.635***        
+
+# Checking model 9 assumptions ----
+plot(model_9)
+qqnorm(resid(model_9))
+qqline(resid(model_9))  # points fall nicely onto the line - good!
+
+# Output table model 9 ----
+library(stargazer)
+
+stargazer(model_9, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
 
 # Extracting model predictions 
 pred_model_9 <- ggpredict(model_9, terms = c("YEAR"))  # this gives overall predictions for the model
@@ -335,10 +352,30 @@ str(ITEX_lich)
 # mixed effect model with plot and year as random effects
 model_10 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_lich)
 summary(model_10)
+# total variance: 99.37     + 260.29  = 359.66
+# variance for plot =   99.37
+# amount of variance explained by random effect:  99.37  /359.66=0.2762887= ~28%
+# I.e. differences between plots explain ~28% of the variance 
+# that’s “left over” after the variance explained by our fixed effect (year).
+# estimate for year (exp variable =  0.445** ) year positively impacts moss cover 
+# significant effect of year on lichen cover  = 0.445**         
+
+# Checking model 9 assumptions ----
+plot(model_10)
+qqnorm(resid(model_10))
+qqline(resid(model_10))  # points fall nicely onto the line - good!
+
+# Output table model 9 ----
+library(stargazer)
+
+stargazer(model_10, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
 
 # Extracting model predictions 
 pred_model_10 <- ggpredict(model_10, terms = c("YEAR"))  # this gives overall predictions for the model
-write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
+# write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
 # Plot the predictions 
 (plot_model_10 <- (ggplot(pred_model_10) + 
