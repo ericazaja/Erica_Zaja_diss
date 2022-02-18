@@ -215,7 +215,8 @@ plot_model_4 <- (ggplot(pred_model_4) +
     theme_classic())
 
 
-# model 5: biomass ~ temp*precip
+# Model 5 ----
+# biomass ~ temp*precip +  random effect gridcell
 
 ## To display interaction: 
 ## Categorise precipitation dry moist wet: 
@@ -244,6 +245,13 @@ str(coord.chelsa.combo.4)
 # Model 5a: biomass Vs temp*moisture
 model_5a <- lmer(biomass ~ CH_TempMeanSummer*moisture + (1|gridcell), data = coord.chelsa.combo.4)
 summary(model_5a)
+# significant interaction effect 
+
+# model 5a output table 
+stargazer(model_5a, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
 
 # Extracting model predictions 
 pred_model_5a <- ggpredict(model_5a, terms = c("CH_TempMeanSummer", "moisture"))  # this gives overall predictions for the model
@@ -255,6 +263,13 @@ plot_model(model_5a, type = "pred", terms = c("CH_TempMeanSummer", "moisture"))
 # Plot the predictions 
 model_5b <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer+ (1|gridcell), data = coord.chelsa.combo.4)
 summary(model_5b)
+# NOT significant interaction
+
+stargazer(model_5b, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
 
 # Extracting model predictions 
 pred_model_5b <- ggpredict(model_5b, terms = c("CH_TempMeanSummer", "CH_PrecipMeanSummer"))  # this gives overall predictions for the model

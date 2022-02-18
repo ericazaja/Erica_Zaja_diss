@@ -115,6 +115,7 @@ str(ITEX_shrubs)
   geom_smooth(method = "lm") + 
      labs(y = "Mean shrub cover\n", x = "\nYear") + 
     theme_shrub))
+
 ## Shrub cover increasing 
 
 # Model 6: Shrub cover over time ----
@@ -125,6 +126,28 @@ summary(lm_shrub) # significant
 # mixed effect model with plot and year as random effects
 model_6 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_shrubs)
 summary(model_6)
+
+# total variance: 17.20 + 13.67   =30.87
+# variance for plot =   17.20
+# amount of variance explained by random effect:  17.20 /30.87 = 0.5571753= ~56%
+# I.e. differences between plots explain ~56% of the variance 
+# that’s “left over” after the variance explained by our fixed effect (year).
+# estimate for precip (exp variable =   0.154***    ) i.e. year positively impacts shrub cover
+# significant effect of year on shrub cover  = 0.154***    
+
+# Checking model 6 assumptions ----
+plot(model_6)
+qqnorm(resid(model_6))
+qqline(resid(model_6))  # points fall nicely onto the line - good!
+
+# Output table model 6 ----
+library(stargazer)
+
+stargazer(model_6, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
 
 # Extracting model predictions 
 pred_model_6 <- ggpredict(model_6, terms = c("YEAR"))  # this gives overall predictions for the model
@@ -160,6 +183,28 @@ ITEX_gram <- ITEX_gram %>%
 # mixed effect model with plot and year as random effects
 model_7 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_gram)
 summary(model_7)
+# total variance: 19.36 + 59.00 =78.36
+# variance for plot =  19.36
+# amount of variance explained by random effect:  19.36 /78.36 = 0.2470648= ~25%
+# I.e. differences between plots explain ~25% of the variance 
+# that’s “left over” after the variance explained by our fixed effect (year).
+# estimate for precip (exp variable = 0.0867)
+# not significant effect of year on gram cover 
+
+# Checking model 7 assumptions ----
+plot(model_7)
+qqnorm(resid(model_7))
+qqline(resid(model_7))  # points fall nicely onto the line - good!
+
+# Output table model 7 ----
+library(stargazer)
+
+stargazer(model_7, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
+
 
 # Extracting model predictions 
 pred_model_7 <- ggpredict(model_7, terms = c("YEAR"))  # this gives overall predictions for the model
@@ -198,10 +243,31 @@ ITEX_forbs <- ITEX_forbs %>%
 # mixed effect model with plot and year as random effects
 model_8 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_forbs)
 summary(model_8)
+# total variance: 4202 + 10485  =14687
+# variance for gridcell =   4202 
+# amount of variance explained by random effect:  4202 /14687 = 0.2861034= ~29%
+# I.e. differences between grid cells explain ~29% of the variance 
+# that’s “left over” after the variance explained by our fixed effect (mean precip).
+# estimate for precip (exp variable =  2.860*** ) i.e. precip positively impacts biomass
+# significant effect of precip on biomass  = 2.860*** 
+
+# Checking model 4 assumptions ----
+plot(model_4)
+qqnorm(resid(model_4))
+qqline(resid(model_4))  # points fall nicely onto the line - good!
+
+# Output table model 4 ----
+library(stargazer)
+
+stargazer(model_4, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
 
 # Extracting model predictions 
 pred_model_8 <- ggpredict(model_8, terms = c("YEAR"))  # this gives overall predictions for the model
-write.csv(pred_model_8, file = "datasets/pred_model_8.csv")
+# write.csv(pred_model_8, file = "datasets/pred_model_8.csv")
 
 # Plot the predictions 
 (plot_model_8 <- (ggplot(pred_model_8) + 
