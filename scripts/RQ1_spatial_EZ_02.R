@@ -49,6 +49,9 @@ projection(PCH_core_range)
 projection(shrub_agb_p50)
 # same projection
 
+crs(PCH_core_range) 
+crs(shrub_agb_p50) 
+
 ### DATA VISUALISATION -----
 
 # setting a theme 
@@ -92,12 +95,13 @@ plot(PCH_core_range[, "Id"], key.width = lcm(5), key.pos = 4)
 plot(st_geometry(PCH_core_range))
 
 # map overlay ----
-plot(shrub_agb_p50, xlim = c(-540475.3,849222.0), axes = TRUE)
-plot(st_geometry(PCH_core_range), xlim = c(165444.3, 849222.0), add = TRUE)
+plot(shrub_agb_p50, xlim = c(-540475.3,  921674.7), ylim = c(1933928.1,2380628.1))
+plot(st_geometry(PCH_core_range), xlim = c(165444.3, 1049222.0), add = TRUE)
 
 # converting to latitude-longitude from aes projection
 # shrub_latlong <- projectRaster(shrub_agb_p50, crs = "+proj=longlat +lat_0=50 
 # +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs") # takes too long
+range(shrub_rsample_00$lat)
 
 ### BASE MAP of North America ----
 # Full map of canada

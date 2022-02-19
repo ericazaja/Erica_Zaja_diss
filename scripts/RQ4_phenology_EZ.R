@@ -19,8 +19,6 @@ phenology_data <- read_csv("datasets/phenology_data/CCIN13215_20210302_tundra_ph
 # with 60,434 observations of phenological events of 48 species over 26 years in control
 # and experimentally warmed plots
 
-# I need DOI, phenophase of shrubs (Salix?) 
-
 # Data exploration
 range(phenology_data$year)
 # 1992-2019
@@ -36,6 +34,10 @@ unique(phenology_new$functional_group) # Unique functional group names
 
 phenology_new <- phenology_new %>%
   filter(functional_group %in% c("evergreen shrub", "deciduous shrub"))
+
+unique(phenology_new$genus)
+#  [1] "Cassiope"       "Diapensia"      "Ledum"          "Vaccinium"      "Salix"          "Betula"        
+# [7] "Dryas"          "Arctostaphylos" "Loiseleuria"    "Andromeda"   
 
 unique(phenology_new$phenophase) # Unique phenophase names
 # "green"     "flower"    "flowerend" "seedmat"   "senesce"   "Flower"    "Flowerend"
@@ -68,7 +70,7 @@ theme_shrub <- function(){ theme(legend.position = "right",
                      geom_point(size = 2) +
                      geom_smooth(method = "lm") + 
                      labs(y = "Phenophase", x = "\nDay of Year") + 
-                    theme_shrub))
+                    theme_shrub()))
 
 ## I need to compare onset of greening (DOY) across the years
 # filter for greening only
@@ -81,10 +83,16 @@ unique(phenology_green$phenophase) # only green
                    geom_point(size = 2) +
                    geom_smooth(method = "lm") + 
                    labs(y = "Onset of greening", x = "\nDay of Year") + 
-                   theme_shrub))
+                   theme_shrub()))
 
 
 unique(phenology_green$year)
+# Group the dataframe by year to see the number of plots per year
+phenology_green %>% group_by(year) %>%
+summarise(plot.n = length(unique(plot)))
+## There are 10 plots per year
+
+str(phenology_green)
 phenology_green_98 <- phenology_green %>% filter(year == "1998") # 451 obs
 phenology_green_99 <- phenology_green %>% filter(year == "1999") # 431
 phenology_green_00<- phenology_green %>% filter(year == "2000") # 450
@@ -104,11 +112,18 @@ range(phenology_green$DOY) # range of DOY of onset of greening
 # greening < 173 DOY --> early greening year
 # greening > 173 DOY --> late greening year
 
+phenology_green$plot <- as.factor(as.character(phenology_green$plot))
+phenology_green <- phenology_green %>% group_by(year) %>% unique(plot)
+
+
+
 phenology_green <- phenology_green %>%
+  group_by(year, plot) %>%
   mutate(year_type = case_when(DOY >= 173 ~ 'late' , # late year
                                 DOY < 173 ~ 'early')) # early year
 
 # write.csv(phenology_green, file = "datasets/phenology_data/phenology_green.csv")
+phenology_green <- read.csv("datasets/phenology_data/phenology_green.csv")
 
 # late vs early phenology year as factor
 phenology_green$year_type <- as.factor(as.character(phenology_green$year_type))

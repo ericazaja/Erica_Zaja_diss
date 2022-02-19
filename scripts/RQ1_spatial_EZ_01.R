@@ -40,25 +40,23 @@ shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif")
 ### PCH CORE RANGE DATA: from Porcupine Caribou Management Board (2016)
 # Loading polygon of PCH range 
 PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") #loading data
-
 st_bbox(PCH_core_range) # extent of the PCH range
 
 ### CROPPING SHRUB MAP -----
-
 # plotting shrub raster (entire) 
 plot(shrub_agb_p50)
 
 # defining extent of the PCH range polygon
 range_extent <- extent(165444.3,  849222.0, 1697872.7, 2270606.5) # xmin, xmax, ymin, ymax
 
-# cropping shrub map to extent of the PCH range
+# cropping shrub map to extent of the PCH range (WRONG)
 shrub_crop <- crop(x = shrub_agb_p50, y = range_extent)
 
 # exploring resolution 
 res(shrub_crop) # resolution 30m x 30m
 
 # plotting cropped shrub map to visualise extent
-(cropped_vis <- gplot(shrub_rsample_0) +
+(cropped_vis <- gplot(r3_latlong_agg) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
@@ -82,6 +80,15 @@ shrub_crop_latlong <- projectRaster(shrub_crop, crs="+init=EPSG:4326", xy = TRUE
 # writeRaster(shrub_crop_latlong, "datasets/berner_data/shrub_crop_latlong.tif")
 # shrub_crop_latlong <- raster("datasets/berner_data/shrub_crop_latlong.tif")
 
+# RIGHT crop and mask ---- 
+r2 <- crop(shrub_agb_p50, extent(PCH_core_range))
+r3 <- mask(r2, PCH_core_range)
+plot(r3) 
+plot(PCH_core_range, add=TRUE, lwd=2)
+
+r3_latlong <- projectRaster(r3, crs="+init=EPSG:4326", xy = TRUE)
+writeRaster(r3_latlong, "datasets/berner_data/r3_latlong.tif")
+
 # resolution of cropped map
 res(shrub_crop_latlong)
 # 0.000726 m x 0.000270 m
@@ -99,13 +106,13 @@ res(shrub_crop_latlong_agg)
 # writeRaster(shrub_crop_latlong_agg, "datasets/berner_data/shrub_crop_latlong_agg.tif")
 # shrub_crop_latlong_agg <- raster("datasets/berner_data/shrub_crop_latlong_agg.tif") # loding raster 
 
-
+r3_latlong_agg <- aggregate(r3_latlong, fact=c(11.47842,30.8642), fun=mean, expand = TRUE) 
+writeRaster(r3_latlong_agg, "datasets/berner_data/r3_latlong_agg.tif")
 
 # RANDOM SAMPLE WHOLE MAP ----
-
 # measuring area of raster
 #get sizes of all cells in raster [km2]
-cell_size<-area(shrub_crop_latlong_agg, na.rm=TRUE, weights=FALSE)
+cell_size<-area(r3_latlong_agg, na.rm=TRUE, weights=FALSE)
 #delete NAs from vector of all raster cells
 ##NAs lie outside of the rastered region, can thus be omitted
 cell_size<-cell_size[!is.na(cell_size)]
@@ -113,7 +120,7 @@ cell_size<-cell_size[!is.na(cell_size)]
 raster_area<-length(cell_size)*median(cell_size)
 #print area of shrub map according to raster object
 print(paste("Area of PCH Alaskan range (raster)", round(raster_area, digits=1),"km2"))
-# [1] "Area of PCH Alaskan range (raster) is 30842.3 km2"
+# [1] "Area of PCH Alaskan range (raster) is 9583.6 km2"
 
 # deciding on buffer distance
 res(shrub_crop_latlong_agg)
