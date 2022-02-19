@@ -254,6 +254,10 @@ r3_rsample_categ <- r3_rsample_00 %>%
     theme_shrub())
 
 
+(scatter_high_medium_low <- ggplot(r3_rsample_categ, aes(x = lat, y = biomass, colour = biomass_level)) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_shrub())
 
 
 
