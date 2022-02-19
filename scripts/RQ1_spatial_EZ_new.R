@@ -113,11 +113,117 @@ r3_rsample_01 <- r3_rsample_01 %>%  filter(buff %in% c("T"))
 unique(r3_rsample_01$buff) # T
 
 # Cleaning and making a gridcell column the new dataframe
-shrub_rsample_00 <- shrub_rsample_01 %>%
+r3_rsample_00 <- r3_rsample_01 %>%
   rename (cell_ID = "cell", 
           lat = "y", long = "x", 
-          biomass = "shrub_crop_latlong_agg") %>%
+          biomass = "shrub_agb_p50") %>%
   mutate(lat = plyr::round_any(lat, 0.5, f = floor),
          long = ifelse(long > 0, plyr::round_any(long, 0.5, f = floor), plyr::round_any(long, 0.5, f = ceiling))) %>% 
   mutate(gridcell = paste0("_", lat, "_", long))%>%
   select(cell_ID, long, lat, biomass, gridcell)
+
+# write.csv(r3_rsample_00, file= "datasets/berner_data/r3_rsample_00.csv")
+
+# THEME----
+theme_shrub <- function(){ theme(legend.position = "right",
+                                 axis.title.x = element_text(face="bold", size=20),
+                                 axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
+                                 axis.title.y = element_text(face="bold", size=20),
+                                 axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
+                                 panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
+                                 panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
+                                 panel.background = element_blank(), axis.line = element_line(colour = "black"), 
+                                 plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
+                                 plot.margin = unit(c(1,1,1,1), units = , "cm"))}
+
+# MODELLING ----
+hist(r3_rsample_00$biomass) # distribution 
+
+# Model 1. biomass vs lat ----
+model_1 <- lmer(biomass~lat + (1|gridcell), data = r3_rsample_00)
+summary(model_1)
+# total variance: 
+# variance for gridcell =  
+# amount of variance explained by random effect: 
+# I.e. differences between grid cells explain  of the variance 
+# that’s “left over” after the variance explained by our fixed effect (long).
+# estimate for latitude (exp variable =   ) 
+# not significant effect of long on biomass
+
+# Checking model 1 assumptions ----
+plot(model_1)
+qqnorm(resid(model_1))
+qqline(resid(model_1))  # points fall nicely onto the line - good!
+
+# Output table model 1----
+library(stargazer)
+
+stargazer(model_1, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
+# Extracting model predictions 
+pred_model_1 <- ggpredict(model_a, terms = c("lat"))  # this gives overall predictions for the model
+# write.csv(pred_model_1, file = "datasets/pred_model_1.csv")
+
+# Plot the predictions 
+(plot_model_1 <- (ggplot(pred_model_a) + 
+                   geom_line(aes(x = x, y = predicted)) +          # slope
+                   geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                               fill = "lightgrey", alpha = 0.5) +  # error band
+                   geom_point(data = r3_rsample_00,                      # adding the raw data 
+                              aes(x = lat, y = biomass), size = 0.5) + 
+                   labs(x = "Latitude", y = "Shrub biomass (g/m2)", 
+                        title = "Shrub biomass decreases with latitude") + 
+                   theme_shrub())
+)
+
+dev.off()
+
+# Model 2. biomass vs long ----
+model_2 <- lmer(biomass~long + (1|gridcell), data = r3_rsample_00)
+summary(model_2)
+# total variance: 
+# variance for gridcell =  
+# amount of variance explained by random effect: 
+# I.e. differences between grid cells explain  of the variance 
+# that’s “left over” after the variance explained by our fixed effect (long).
+# estimate for latitude (exp variable =   ) 
+# not significant effect of long on biomass
+
+
+# Checking model 2 assumptions ----
+plot(model_2)
+qqnorm(resid(model_2))
+qqline(resid(model_2))  # points fall nicely onto the line - good!
+
+# Output table model 2 ----
+stargazer(model_2, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
+(scatter_model_2 <- ggplot(shrub_rsample_00, aes(x = long, y = biomass)) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_shrub())
+
+# Extracting model predictions 
+pred_model_2 <- ggpredict(model_2, terms = c("long"))  # this gives overall predictions for the model
+# write.csv(pred_model_2, file = "datasets/pred_model_2.csv")
+
+# Plot the predictions 
+(plot_model_2 <- (ggplot(pred_model_2) + 
+                   geom_line(aes(x = x, y = predicted)) +          # slope
+                   geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                               fill = "lightgrey", alpha = 0.5) +  # error band
+                   geom_point(data = r3_rsample_00,                      # adding the raw data 
+                              aes(x = long, y = biomass), size = 0.5) + 
+                   labs(x = "Longitude", y = "Shrub biomass (g/m2)", 
+                        title = "Shrub biomass does not vary with longitude") + 
+                   theme_shrub())
+)
+
+
+
