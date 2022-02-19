@@ -22,31 +22,32 @@ library(rgeos)
 library(rworldmap)
 library(rnaturalearth)
 library(rnaturalearthdata)
+library(ggmap)
+library(tmap)
+library(tmaptools)
+
 
 
 # LOADING DATA ----
-shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif") # shrub data
-PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") # PCH range data
+shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif") # shrub data (ratser)
+PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") # PCH range data (polygon)
 
-res(shrub_agb_p50)
-# resolution of map: [1] 30 30
+# Data exploration ------
+class(shrub_agb_p50) # RasterLayer
+class(PCH_core_range) # sf dataframe
 
-# visualising shrub map
-ggplot() +
-  geom_raster(shrub_agb_p50) + 
-  scale_fill_gradientn(name = "Bathymetry", colors = terrain.colors(10)) +
-  geom_sf(data = PCH_core_range, color = "blue", fill = NA) +
-  coord_sf()
+res(shrub_agb_p50) # resolution of map: [1] 30 30
+st_bbox(PCH_core_range) 
+# xmin      ymin      xmax      ymax 
+# 165444.3 1697872.7  849222.0 2270606.5 
+st_bbox(shrub_agb_p50) 
+#  xmin      ymin      xmax      ymax 
+# -540475.3 1933928.1  521674.7 2380628.1 
 
-
-ggplot() +
-  geom_sf(data = st_as_sfc(st_bbox(shrub_agb_p50)), fill = "green",
-          color = "green", alpha = .2) +  
-  geom_raster(data = erie_bathy_Cropped_df,
-              aes(x = x, y = y, fill =shrub_agb_p50)) + 
-  scale_fill_gradientn(name = "Bathymetry", colors = terrain.colors(10)) + 
-  coord_sf()
-
+# Checking PCH range and shrub map have same projection
+projection(PCH_core_range)
+projection(shrub_agb_p50)
+# same projection
 
 ### DATA VISUALISATION -----
 
@@ -80,37 +81,41 @@ theme_shrub <- function(){ theme(legend.position = "right",
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 0, hjust = 1)))  # rotates x axis text
 
-
 # Plotting PCH core range (entire) using ggplot
 (PCH_range_map <- ggplot() + 
     geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "grey") + 
     theme_shrub()+
     ggtitle("PCH core range 2016")) 
 
+plot(PCH_core_range)
+plot(PCH_core_range[, "Id"], key.width = lcm(5), key.pos = 4)
+plot(st_geometry(PCH_core_range))
 
-# Checking PCH range and shrub map have same projection
-projection(PCH_core_range)
-projection(shrub_agb_p50)
-# same projection
+# map overlay ----
+plot(shrub_agb_p50, xlim = c(-540475.3,849222.0), axes = TRUE)
+plot(st_geometry(PCH_core_range), xlim = c(165444.3, 849222.0), add = TRUE)
 
 # converting to latitude-longitude from aes projection
 # shrub_latlong <- projectRaster(shrub_agb_p50, crs = "+proj=longlat +lat_0=50 
 # +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs") # takes too long
 
-
 ### BASE MAP of North America ----
+# Full map of canada
+canada <- raster::getData("GADM", country = "CAN", level = 1)
+plot(canada)
+yukon <- canada[canada$NAME_1 != "Yukon"]
+
+
 world <- ne_countries(scale = "medium", returnclass = "sf") 
 class(world)
 
 Alaska_coords <- data.frame(longitude = c(-180, -80), latitude = c(60, 75)) # making a datafrme of coordinates of Alaska/Yukon
 
 # plotting map 
-(Alaska_Yukon <- ggplot(data = world) +
-    geom_point(data = Alaska_coords, aes(x = longitude, y = latitude)) +
-  geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "grey") +
-  coord_sf(xlim = c(-180, -80), ylim = c(60, 75), expand = FALSE))
+(Alaska_Yukon <- ggplot(data = Alaska_coords) +
+    geom_point(aes(x = longitude, y = latitude)) +
+  coord_sf())
 
-class(PCH_core_range)
 
 ### OVERLAYING MAPS 
 # trying to overlay polygon of PCH range onto the basemap 
@@ -147,22 +152,19 @@ cropped_latlong <- projectRaster(cropped, crs="+init=EPSG:4326") # works but the
 cropped_latlong <- projectRaster(cropped, crs = "+proj=longlat +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs") 
 projection(cropped_latlong)
 
-### measuring area of focal area 
-# shrub_latlong <- projectRaster(shrub_crop, crs = "+init=epsg:4326") # doesnt work 
-cell_size <- area(shrub_latlong, na.rm=TRUE, weights=FALSE)
-cell_size  <-cell_size[!is.na(cell_size)]
-raster_area<-length(cell_size)*median(cell_size)
-#print(paste("Area of focal area (raster):“,round(raster_area, digits=1),“km2″))
+
+# Loading cropped map
+shrub_crop_latlong_agg <- raster("datasets/berner_data/shrub_crop_latlong_agg.tif")
 
 # Cropped map with viridis palette
-(cropped_viridis <- gplot(cropped_latlong) +
+(cropped_viridis <- gplot(shrub_crop_latlong_agg) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
-      ifelse(x<1000, 
+      ifelse(x<500, 
              scales::rescale(x,
                              to = to,
-                             from = c(min(x, na.rm = TRUE), 1000)),
+                             from = c(min(x, na.rm = TRUE), 500)),
              1)}) +
     coord_quickmap()+
     theme_classic() +  # Remove ugly grey background
@@ -174,14 +176,14 @@ raster_area<-length(cell_size)*median(cell_size)
           axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
 
 # Cropped map with personalised colour palette (low-mid)
-(cropped_my_palette <- gplot(cropped) +
+(cropped_my_palette <- gplot(shrub_crop_latlong_agg) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_gradient(low = "tan", high = "green4", 
                         rescaler = function(x, to = c(0, 1), from = NULL) {
-                          ifelse(x<1000, scales::rescale(x,
+                          ifelse(x<500, scales::rescale(x,
                                                          to = to,
-                                                         from = c(min(x, na.rm = TRUE), 1000)),
+                                                         from = c(min(x, na.rm = TRUE), 500)),
                                  1)}) +
     coord_quickmap()+
     theme_classic() +  # Remove ugly grey background
@@ -194,10 +196,10 @@ raster_area<-length(cell_size)*median(cell_size)
 
 
 # Cropped map with personalised colour palette (low-mid-high) and lat long
-(cropped_new_mid <- gplot(cropped) +
+(cropped_new_mid <- gplot(shrub_crop_latlong_agg) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
-    scale_fill_gradient2(low = "green", mid = "green4", high = "brown", midpoint = 50) +
+    scale_fill_gradient2(low = "yellow", mid = "green4", high = "brown", midpoint = 500) +
     coord_quickmap()+
     theme_classic() +  # Remove ugly grey background
     xlab("Longitude") +
@@ -211,35 +213,33 @@ dev.off()
 
 
 
-# (cropped_histogram <- ggplot(cropped_data, aes(x = shrub_agb_p50, fill = y)) +  
-#geom_histogram(stat = "count") +
-#geom_vline(aes(xintercept = mean(shrub_agb_p50)),            
-# colour = "red", linetype = "dashed", size = 1))
+shrub_rsample_00 <- read.csv("datasets/berner_data/shrub_rsample_00.csv")
+range(shrub_rsample_00$biomass)
+# 2.000 1484.069
 
-dev.off()
+
 
 ### CATEGORISE into HIGH/MEDIUM/LOW biomass and EAST VS WEST range area
-cropped_shrub_categ <- cropped_shrub %>%
-  mutate(biomass_level = case_when (shrub_agb_p50 <= 100 ~ 'Low',
-                                    shrub_agb_p50 > 100  & shrub_agb_p50 < 500 ~ 'Medium', 
-                                    shrub_agb_p50 >= 500 ~ 'High'), 
-         area = case_when (x >= 300000 ~ 'East' ,
-                           x < 300000 ~ 'West'))
+mean(shrub_rsample_00$biomass)
+# 255.8016 mean biomass
 
-glimpse(cropped_shrub_categ)
-str(cropped_shrub_categ)
+shrub_rsample_categ <- shrub_rsample_00 %>%
+  mutate(biomass_level = case_when (biomass <= 200 ~ 'Low',
+                                    biomass > 200  & biomass < 500 ~ 'Medium', 
+                                    biomass >= 500 ~ 'High'))
 
-## MODEL ----
-# making area a factor with two levels (west and east)
-cropped_shrub_categ$area <- as.factor(as.character(cropped_shrub_categ$area))   
+# Hist 
+(hist_random <-shrub_rsample_categ %>%
+    ggplot(aes(x = biomass, fill = biomass_level )) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
+    geom_vline(aes(xintercept = mean(biomass)),            
+               colour = "red", linetype = "dashed", size = 1) +
+    scale_fill_manual(values=c( "green4", "tan", "yellow")) +
+    theme_shrub())
 
-model_1 <- lm(shrub_agb_p50 ~ area, data = cropped_shrub_categ) # doesnt run
-save(model_1, file = "img/spatial_output/model_1_output.RData")
 
-model_1 <- get(load("img/spatial_output/model_1_output.RData"))
 
-summary(model_1) # doesnt run
-# maybe something to do with my data being skewed 
+dev.off()
 
 
 ### OTHER (Random) ----
@@ -299,6 +299,20 @@ exp_df <- as.data.frame(crop, xy=TRUE)
     ylab("Latitude") ) 
 
 
-### Questions: 
+plot(shrub_agb_p50,
+     main = "Shrub aboveground biomass in the PCH summer range",
+     axes = FALSE,
+     #ext = extent(PCH_core_range),
+     box = FALSE)
+plot(PCH_core_range,
+     col = "white",
+     add = TRUE)
+
+mask <- mask(shrub_agb_p50, PCH_core_range)
+
+(tm_shape(mask,  xlim = c(-540475.3,849222.0) )+
+    tm_raster(col="shrub_agb_p50", style= "cont")+
+    tm_shape(PCH_core_range, xlim = c(165444.3, 849222.0), ylim = c(1697872.7,2380628.1) )+
+    tm_borders(col="black"))
 
 
