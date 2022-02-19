@@ -1,15 +1,14 @@
 ##%######################################################%##
 #                                                          #
-####         RQ2: SHRUB BIOMASS VS CLIMATE -----        #### 
+####         RQ2: SHRUB BIOMASS VS CLIMATE              #### 
 #               Erica Zaja - 22/10/2021                   ##
 #                                                         #
 ##%######################################################%##
 
 # RQ2: how does biomass vary with temp and precip?
-# (a) Is shrub biomass greater in areas with higher summer temperatures? 
-# (b) Is shrub biomass greater in areas with higher summer precipitation? 
-# (c) Is shrub biomass greater in areas with higher summer temperature and precipitation? 
-  
+# Does shrub biomass increase with temperature/precipitation/the interaction between them?
+
+# Data information
 # Shrub data from Berner et al 2018
 # Climate data from CHELSA 2022
 # Temperature climatologies: mean daily mean air temperatures of the warmest quarter (bio10) (°C). Offset -273.15
@@ -25,77 +24,69 @@ library(rasterVis)
 library(lme4)
 library(sjPlot)
 
-# JOE: Loading CHELSA data ------
+# Loading CHELSA data ------
 temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
 precip <- raster("datasets/climate_data/CHELSA_bio10_18.tif")
-# are these the right variables?
 
+# EXPLORATION -----
+# checking resolution of rasters
 res(temp)
-
+# 0.008333333 0.008333333
 # The spatial resolution of a raster refers the size of each cell in meters. 
 # This size in turn relates to the area on the ground that the pixel represents.
 # The higher the resolution for the same extent the crisper the image (and the larger the file size) 
 
-# resolution = 0.008333333 0.008333333
-# resolution of map: [1] 30 30
-# > 30/0.008333333 =  3600
-
+# Visualising climate rasters
 plot(temp, main = "Mean daily mean air temperatures of the warmest quarter (°C)")
 plot(precip, main = "Mean monthly precipitation of the warmest quarter ((kg m-2)")
 levelplot(precip)
 
-# Load the coordinates of the cropped shrub map
+# EXTRACTION ------
+# Loading the coordinates of the cropped shrub map
 coords <- read.csv("datasets/berner_data/shrub_rsample_00.csv") %>% 
-  dplyr::select(long, lat)
+  dplyr::select(long, lat) # keeping lat and long info
 
-# Climatologies:
-# Create SpatialPoints (sp) object of unique coordinates
+# Creating SpatialPoints (sp) object of unique coordinates
 coords_sp <- SpatialPoints(coords)
 
-# create raster stack
+# Creating raster stack of temp and precip 
 chelsa.stack <- stack(precip, temp)
 
-# Extract variables values for each pair of coordinates
-chelsa.extract <- raster::extract(chelsa.stack, coords_sp, df = TRUE) # extract coords 
+# extracting variables values for each pair of coordinates
+chelsa.extract <- raster::extract(chelsa.stack, coords_sp, df = TRUE)  
 
-# COMBINED DATAFRAMES 
-
-# Convert the SpatialPoints (sp) object into a dataframe 
+# Combining dataframes:
+# Converting the SpatialPoints (sp) object into a dataframe 
 coord.df <- as.data.frame(coords_sp)
 
-# Reassign the 'ID' to the coordinates dataframe
+# Reassigning the 'ID' to the coordinates dataframe
 coord.df$ID <- row.names(coord.df)
 coord.df$ID <- as.numeric(coord.df$ID) # Make numeric
 
-# Merge the two dataframes: extracted CHELSA variables and the coordinates
+# Merging the two dataframes: extracted CHELSA variables and the coordinates
 coord.chelsa.combo <- left_join(chelsa.extract, coord.df, by = c("ID" = "ID"))
 
-# loading the shrub biomass df
+# Loading the shrub biomass df 
 biomass.df <- read.csv("datasets/berner_data/shrub_rsample_00.csv") %>%
   rename(ID = X) %>%
-  dplyr::select(ID, biomass, gridcell)
+  dplyr::select(ID, biomass, gridcell) 
 
-# merging biomass df with climate df
+# Merging biomass df with climate df
 coord.chelsa.combo.1 <- left_join(coord.chelsa.combo, biomass.df, by = c("ID" = "ID"))
 
-# Modify some of the variables to more useful values
+# Modifying some of the variables to more useful values
 coord.chelsa.combo.2 <- coord.chelsa.combo.1 %>% 
   mutate(CHELSA_bio10_10 = CHELSA_bio10_10/10) # Divide by 10 to get to degC
 
-# Rename the variables to shorter column headings
+# Renaming the variables to shorter column headings
 coord.chelsa.combo.3 <- coord.chelsa.combo.2 %>% 
   rename(CH_TempMeanSummer = CHELSA_bio10_10,
          CH_PrecipMeanSummer = CHELSA_bio10_18) %>% na.omit()
 
-
-
-# EXPORT TO CSV
-
-# Export the dataframe to combine with ITEX data
-write.csv(coord.chelsa.combo.3, "datasets/climate_data/coord_chelsa_combo.csv")
+# Exporting to csv
+# write.csv(coord.chelsa.combo.3, "datasets/climate_data/coord_chelsa_combo.csv")
 
 # THEME ----
-# setting a theme 
 theme_shrub <- function(){ theme(legend.position = "right",
                                  axis.title.x = element_text(face="bold", size=20),
                                  axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
@@ -110,23 +101,21 @@ theme_shrub <- function(){ theme(legend.position = "right",
 # DATA MANIPULATION ----
 str(coord.chelsa.combo.3)
 unique(coord.chelsa.combo.3$gridcell)
-
 # making grid cell into a factor
 coord.chelsa.combo.3$gridcell <- as.factor(as.character(coord.chelsa.combo.3$gridcell))
 
 # MODELLING ----
-
 # Model 3 ----
 # biomass ~ temp + random effect gridcell
 model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|gridcell), data = coord.chelsa.combo.3)
 summary(model_3)
-# total variance: 10707 + 10483 =21190
-# variance for gridcell =  10707 
-# amount of variance explained by random effect: 10707 /21190 =0.5052855= ~50%
-# I.e. differences between grid cells explain ~50% of the variance 
+# total variance: 9631 + 11737 =21368
+# variance for gridcell = 9631
+# amount of variance explained by random effect: 9631/21368 =0.4507207= ~45%
+# I.e. differences between grid cells explain ~45% of the variance 
 # that’s “left over” after the variance explained by our fixed effect (mean summer temperature).
-# estimate for temperature (exp variable =  -9.486 ) i.e. temperature negatively impacts biomass
-# not significant effect of temp on biomass 
+# estimate for temperature (exp variable = -24.06 ) i.e. temperature negatively impacts biomass
+#  significant effect of temp on biomass 
 
 # Checking model 3 assumptions ----
 plot(model_3)
@@ -134,7 +123,6 @@ qqnorm(resid(model_3))
 qqline(resid(model_3))  # points fall nicely onto the line - good!
 
 # Output table model 3 ----
-library(stargazer)
 
 stargazer(model_3, type = "text",
           digits = 3,
