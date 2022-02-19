@@ -225,5 +225,28 @@ pred_model_2 <- ggpredict(model_2, terms = c("long"))  # this gives overall pred
                    theme_shrub())
 )
 
+# Hih-medium-low ----
+### CATEGORISE into HIGH/MEDIUM/LOW biomass 
+mean(r3_rsample_00$biomass)
+# 267.1607 mean biomass
+range(r3_rsample_00$biomass)
+# 4.709974 1144.706055
+
+r3_rsample_categ <- r3_rsample_00 %>%
+  mutate(biomass_level = case_when (biomass < 267.1607 ~ 'Low', # lower than mean biomass
+                                    biomass >= 267.1607 & biomass < 400 ~ 'Medium', 
+                                    biomass >= 400 ~ 'High'))
+
+# Hist 
+(hist_random <- r3_rsample_categ %>%
+    ggplot(aes(x = biomass, fill = biomass_level )) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
+    geom_vline(aes(xintercept = mean(biomass)),            
+               colour = "red", linetype = "dashed", size = 1) +
+    scale_fill_manual(values=c( "green4", "tan", "yellow")) +
+    theme_shrub())
+
+
+
 
 

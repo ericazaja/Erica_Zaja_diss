@@ -9,7 +9,7 @@
 # (a) Is shrub biomass greater in areas with higher summer temperatures? 
 # (b) Is shrub biomass greater in areas with higher summer precipitation? 
 # (c) Is shrub biomass greater in areas with higher summer temperature and precipitation? 
-  
+
 # Shrub data from Berner et al 2018
 # Climate data from CHELSA 2022
 # Temperature climatologies: mean daily mean air temperatures of the warmest quarter (bio10) (°C). Offset -273.15
@@ -25,7 +25,7 @@ library(rasterVis)
 library(lme4)
 library(sjPlot)
 
-# JOE: Loading CHELSA data ------
+# Loading CHELSA data ------
 temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
 precip <- raster("datasets/climate_data/CHELSA_bio10_18.tif")
 # are these the right variables?
@@ -45,7 +45,7 @@ plot(precip, main = "Mean monthly precipitation of the warmest quarter ((kg m-2)
 levelplot(precip)
 
 # Load the coordinates of the cropped shrub map
-coords <- read.csv("datasets/berner_data/shrub_rsample_00.csv") %>% 
+coords <- read.csv("datasets/berner_data/r3_rsample_00.csv") %>% 
   dplyr::select(long, lat)
 
 # Climatologies:
@@ -71,7 +71,7 @@ coord.df$ID <- as.numeric(coord.df$ID) # Make numeric
 coord.chelsa.combo <- left_join(chelsa.extract, coord.df, by = c("ID" = "ID"))
 
 # loading the shrub biomass df
-biomass.df <- read.csv("datasets/berner_data/shrub_rsample_00.csv") %>%
+biomass.df <- read.csv("datasets/berner_data/r3_rsample_00.csv") %>%
   rename(ID = X) %>%
   dplyr::select(ID, biomass, gridcell)
 
@@ -92,7 +92,7 @@ coord.chelsa.combo.3 <- coord.chelsa.combo.2 %>%
 # EXPORT TO CSV
 
 # Export the dataframe to combine with ITEX data
-write.csv(coord.chelsa.combo.3, "datasets/climate_data/coord_chelsa_combo.csv")
+write.csv(coord.chelsa.combo.3, "datasets/climate_data/coord_chelsa_combo_new.csv")
 
 # THEME ----
 # setting a theme 
@@ -120,13 +120,13 @@ coord.chelsa.combo.3$gridcell <- as.factor(as.character(coord.chelsa.combo.3$gri
 # biomass ~ temp + random effect gridcell
 model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|gridcell), data = coord.chelsa.combo.3)
 summary(model_3)
-# total variance: 10707 + 10483 =21190
-# variance for gridcell =  10707 
-# amount of variance explained by random effect: 10707 /21190 =0.5052855= ~50%
-# I.e. differences between grid cells explain ~50% of the variance 
+# total variance: 
+# variance for gridcell =  
+# amount of variance explained by random effect: 
+# I.e. differences between grid cells explain of the variance 
 # that’s “left over” after the variance explained by our fixed effect (mean summer temperature).
-# estimate for temperature (exp variable =  -9.486 ) i.e. temperature negatively impacts biomass
-# not significant effect of temp on biomass 
+# estimate for temperature (exp variable =   ) i.e. temperature negatively impacts biomass
+# significant effect of temp on biomass 
 
 # Checking model 3 assumptions ----
 plot(model_3)
@@ -134,8 +134,6 @@ qqnorm(resid(model_3))
 qqline(resid(model_3))  # points fall nicely onto the line - good!
 
 # Output table model 3 ----
-library(stargazer)
-
 stargazer(model_3, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -146,16 +144,15 @@ pred_model_3 <- ggpredict(model_3, terms = c("CH_TempMeanSummer"))  # this gives
 # write.csv(pred_model_3, file = "datasets/pred_model_3.csv")
 
 # Plot the predictions 
-plot_model_3 <- (ggplot(pred_model_3) + 
+(plot_model_3 <- (ggplot(pred_model_3) + 
                    geom_line(aes(x = x, y = predicted)) +          # slope
                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                fill = "lightgrey", alpha = 0.5) +  # error band
                    geom_point(data = coord.chelsa.combo.3,                      # adding the raw data 
                               aes(x = CH_TempMeanSummer, y = biomass), size = 0.5) + 
                    labs(x = "Mean summer temperature (degrees C)", y = "Shrub biomass (g/m2)", 
-                        title = "Mean summer temperature does not affect shrub biomass") + 
-                   theme_shrub()
-)
+                        title = "Mean summer temperature negatively impacts shrub biomass") + 
+                   theme_shrub()))
 
 # biomass does not vary with temp
 
@@ -184,8 +181,6 @@ qqnorm(resid(model_4))
 qqline(resid(model_4))  # points fall nicely onto the line - good!
 
 # Output table model 4 ----
-library(stargazer)
-
 stargazer(model_4, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -196,7 +191,7 @@ pred_model_4 <- ggpredict(model_4, terms = c("CH_PrecipMeanSummer"))  # this giv
 # write.csv(pred_model_4, file = "datasets/pred_model_4.csv")
 
 # Plot the predictions 
-plot_model_4 <- (ggplot(pred_model_4) + 
+(plot_model_4 <- (ggplot(pred_model_4) + 
                    geom_line(aes(x = x, y = predicted)) +          # slope
                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                fill = "lightgrey", alpha = 0.5) +  # error band
@@ -204,8 +199,7 @@ plot_model_4 <- (ggplot(pred_model_4) +
                               aes(x = CH_PrecipMeanSummer, y = biomass), size = 0.5) + 
                    labs(x = "Mean summer precipitation (kg/m)", y = "Shrub biomass (g/m2)", 
                         title = "Shrub biomass increases with mean summer precipiation") + 
-                   theme_shrub()
-)
+                   theme_shrub()))
 
 # shrub biomass increases with mean summer precip
 
@@ -232,9 +226,9 @@ range(coord.chelsa.combo.3$CH_PrecipMeanSummer)
 # 55 (dry), 114.5 (moist), 174 (wet)
 
 coord.chelsa.combo.4 <- coord.chelsa.combo.3 %>% 
- mutate(moisture = case_when(CH_PrecipMeanSummer >= 55 & CH_PrecipMeanSummer < 95 ~ "dry",
-                             CH_PrecipMeanSummer >= 95 & CH_PrecipMeanSummer < 135  ~ "moist",
-                             CH_PrecipMeanSummer >= 135 & CH_PrecipMeanSummer <= 174  ~ "wet"))
+  mutate(moisture = case_when(CH_PrecipMeanSummer >= 55 & CH_PrecipMeanSummer < 95 ~ "dry",
+                              CH_PrecipMeanSummer >= 95 & CH_PrecipMeanSummer < 135  ~ "moist",
+                              CH_PrecipMeanSummer >= 135 & CH_PrecipMeanSummer <= 174  ~ "wet"))
 
 
 unique(coord.chelsa.combo.4$moisture)
@@ -271,7 +265,6 @@ stargazer(model_5b, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
-
 # Extracting model predictions 
 pred_model_5b <- ggpredict(model_5b, terms = c("CH_TempMeanSummer", "CH_PrecipMeanSummer"))  # this gives overall predictions for the model
 # write.csv(pred_model_5b, file = "datasets/pred_model_5b.csv")
@@ -285,98 +278,3 @@ plot_model(model_5b, type = "pred", terms = c("CH_TempMeanSummer", "CH_PrecipMea
     geom_point(size = 0.1) +
     geom_smooth(method = "lm") +
     theme_classic())
-
-##############################################################################
-
-# COPY OF CHELSA raster data extraction ------
-# Joseph Everest (with help from M. Garcia Criado and J. Assmann)
-# February 2021, adapted October 2021
-# Modified by Erica Zaja - 01/02/2022
-
-# PACKAGES 
-
-# Load required packages
-library(tidyverse)
-library(raster)
-library(rgdal)
-library(rasterVis)
-library(sp)
-library(broom)
-
-
-# DATA IMPORT 
-
-# Load the ITEX coordinates
-itex <- read.csv("scripts/josephjeverest/FuncDiv_v2/data/output_01_itex_coords.csv") %>% 
-  dplyr::select(-X)
-
-# Climatologies:
-# CHELSA climatologies (.tif) are stored locally on a hard drive and on the Team Shrub Data Store due to their size
-# Contact Joe Everest (joseph.everest@ed.ac.uk) for more information on access or visit https://chelsa-climate.org/downloads/
-
-# Defining the filepath to the climatology files
-folderpath.chelsa <- ("E:/CHELSA/") # Hard drive
-# folderpath.chelsa <- ("T:/Climate_Data/Chelsa/CHELSA_updated_2021/") # Team Shrub Data Store
-filenames.chelsa <- list.files(folderpath.chelsa, pattern = "*.tif")
-filepath.chelsa = paste0(folderpath.chelsa, filenames.chelsa)
-
-
-# EXTRACTION 
-
-# Create SpatialPoints (sp) object of unique coordinates
-itex.coord <- SpatialPoints(itex)
-
-# create raster stack
-chelsa.stack <- stack(filepath.chelsa)
-
-# Extract variables values for each pair of coordinates
-chelsa.extract <- raster::extract(chelsa.stack, itex.coord, df = TRUE) # extract coords from the itex
-
-
-# COMBINED DATAFRAMES
-
-# Convert the SpatialPoints (sp) object into a dataframe 
-itex.coord.df <- as.data.frame(itex.coord)
-
-# Reassign the 'ID' to the ITEX coordinates dataframe
-itex.coord.df$ID <- row.names(itex.coord.df)
-itex.coord.df$ID <- as.numeric(itex.coord.df$ID) # Make numeric
-
-# Merge the two dataframes: extracted CHELSA variables and the ITEX coordinates
-coord.chelsa.combo.1 <- left_join(chelsa.extract, itex.coord.df, by = c("ID" = "ID"))
-
-
-# FORMAT THE DATAFRAME 
-
-# Modify some of the variables to more useful values
-coord.chelsa.combo.2 <- coord.chelsa.combo.1 %>% 
-  mutate(CHELSA_bio10_05 = CHELSA_bio10_05/10, # Divide by 10 to get to degC
-         CHELSA_bio10_06 = CHELSA_bio10_06/10, # Divide by 10 to get to degC
-         CHELSA_bio10_10 = CHELSA_bio10_10/10, # Divide by 10 to get to degC
-         CHELSA_bio10_11 = CHELSA_bio10_11/10, # Divide by 10 to get to degC
-         CHELSA_bio10_12_minus_bio10_18 = CHELSA_bio10_12 - CHELSA_bio10_18) %>% # Snow = annual precip. - summer precip.
-  dplyr::select(-ID, -CHELSA_bio10_18) %>% # No longer need summer precip. values as calculated snow already
-  relocate(LONG, LAT, before = CHELSA_bio10_04)
-
-# Rename the variables to shorter column headings
-coord.chelsa.combo.3 <- coord.chelsa.combo.2 %>% 
-  rename(CH_TempMaxSummer = CHELSA_bio10_04,
-         CH_TempMinWinter = CHELSA_bio10_06,
-         CH_TempMeanSummer = CHELSA_bio10_10,
-         CH_TempMeanWinter = CHELSA_bio10_11,
-         CH_TempSeason = CHELSA_bio10_04,
-         CH_PrecipAnnual = CHELSA_bio10_12,
-         CH_PrecipSeason = CHELSA_bio10_15,
-         CH_SnowAnnual = CHELSA_bio10_12_minus_bio10_18)
-
-
-# EXPORT TO CSV
-
-# Export the dataframe to combine with ITEX data
-write.csv(coord.chelsa.combo.3, "scripts/josephjeverest/FuncDiv_v2/data/output_03_chelsa.csv")
-
-
-#####################################################
-# OTHER (Random) -----
-## eg. code to make site/block/plot categorical from https://ourcodingclub.github.io/tutorials/model-design/ 
-
