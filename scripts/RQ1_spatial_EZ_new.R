@@ -70,13 +70,14 @@ r3_latlong <- projectRaster(r3, crs="+init=EPSG:4326", xy = TRUE)
 
 ## AGGREGATION ----
 r3_latlong_agg <- aggregate(r3_latlong, fact=c(11.47842,30.8642), fun=mean, expand = TRUE) 
-writeRaster(r3_latlong_agg, "datasets/berner_data/r3_latlong_agg.tif")
+# writeRaster(r3_latlong_agg, "datasets/berner_data/r3_latlong_agg.tif")
 
 # RANDOM SAMPLE WHOLE MAP ----
 
 # measuring area of raster
-#get sizes of all cells in raster [km2]
-cell_size<-area(r3_latlong_agg, na.rm=TRUE, weights=FALSE)
+
+# get sizes of all cells in raster [km2]
+cell_size <-area(r3_latlong_agg, na.rm=TRUE, weights=FALSE)
 #delete NAs from vector of all raster cells
 ##NAs lie outside of the rastered region, can thus be omitted
 cell_size<-cell_size[!is.na(cell_size)]
@@ -85,6 +86,10 @@ raster_area<-length(cell_size)*median(cell_size)
 #print area of shrub map according to raster object
 print(paste("Area of PCH Alaskan range (raster)", round(raster_area, digits=1),"km2"))
 # [1] "Area of PCH Alaskan range (raster) is 9583.6 km2"
+
+# I think this means there are 9583.6 cells of ~1km x 1km 
+# sampling 2 pixels per raster cell :9583.6 cells  *2 = 19167.2 --> I sample 20000 pixels
+
 
 # deciding on buffer distance
 res(r3_latlong_agg)
@@ -95,9 +100,11 @@ res(r3_latlong_agg)
 
 # buffered random sampling
 r3_rsample_0 <- as.data.frame(sampleRandom(r3_latlong_agg, 20000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
-                                              cells=TRUE, rowcol=FALSE, xy = TRUE))
+                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) 
 
-hist(r3_rsample_0$shrub_agb_p50)
+r3_rsample_0_try <- as.data.frame(sampleRandom(r3_latlong_agg, 30000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
+                                           cells=TRUE, rowcol=FALSE, xy = TRUE)) # 30000 pixels 
+hist(r3_rsample_0_try$shrub_agb_p50)
 
 # checking buffer works
 r3_rsample_01 <- r3_rsample_0  %>% 
