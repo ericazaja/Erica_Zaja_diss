@@ -1,13 +1,11 @@
 ##%######################################################%##
 #                                                          #
-###              RQ1: SPATIAL ANALYSIS                  ####
+###                   MAPPING SCRIPT                    ####
 #               Erica Zaja - 04/02/2022                    #
 #                                                          #
 ##%######################################################%##
 
-## RQ1: What areas within the PCH Alaskan summer range have high-medium-low shrub biomass cover?
-
-# LOADING LIBRARIES -----
+## LOADING LIBRARIES -----
 library(sp)
 library(rgdal)
 library(raster)
@@ -16,7 +14,6 @@ library(viridis)
 library(rasterVis)
 library(sf)
 library(tidyverse)
-library(ggmap)
 library(maptools)
 library(rgeos)
 library(rworldmap)
@@ -26,35 +23,40 @@ library(ggmap)
 library(tmap)
 library(tmaptools)
 
+## LOADING DATA ----
+shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif") # shrub data (from Berner et al 2018)
+PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") # PCH range data 
 
-
-# LOADING DATA ----
-shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif") # shrub data (ratser)
-PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") # PCH range data (polygon)
-
-# Data exploration ------
+## EXPLORING DATA ------
+# class: what type of data 
 class(shrub_agb_p50) # RasterLayer
 class(PCH_core_range) # sf dataframe
 
-res(shrub_agb_p50) # resolution of map: [1] 30 30
+# resolution of shrub map 
+res(shrub_agb_p50) # resolution of map: [1] 30m x 30m
+
+# extent of range polygon
 st_bbox(PCH_core_range) 
 # xmin      ymin      xmax      ymax 
 # 165444.3 1697872.7  849222.0 2270606.5 
+
+# extent of shrub map
 st_bbox(shrub_agb_p50) 
 #  xmin      ymin      xmax      ymax 
 # -540475.3 1933928.1  521674.7 2380628.1 
 
-# Checking PCH range and shrub map have same projection
+# projection
 projection(PCH_core_range)
 projection(shrub_agb_p50)
 # same projection
 
+# coordinate ref system (CRS)
 crs(PCH_core_range) 
 crs(shrub_agb_p50) 
+# same CRS: +proj=aea +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs 
 
-### DATA VISUALISATION -----
-
-# setting a theme 
+## DATA VISUALISATION -----
+# setting a personalised theme 
 theme_shrub <- function(){ theme(legend.position = "right",
                                  axis.title.x = element_text(face="bold", size=20),
                                  axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
@@ -66,35 +68,39 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
+# 1. Shrub map ----
 # Plotting shrub raster (entire) with ggplot
 (gplot_shrub_agb_p50 <- gplot(shrub_agb_p50) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
     scale_fill_viridis_c(rescaler = function(x, to = c(0, 1), from = NULL) {
-      ifelse(x<1000, 
-             scales::rescale(x,
-                             to = to,
-                             from = c(min(x, na.rm = TRUE), 1000)),1)}) +
+      ifelse(x<1000, scales::rescale(x, to = to, from = c(min(x, na.rm = TRUE), 1000)),1)}, na.value="white") +
     coord_quickmap()+
     theme_shrub() +  # Remove ugly grey background
-    xlab("Longitude") +
-    ylab("Latitude") +
-    ggtitle("Shrub biomass cover (g/m2) of Alaskan north slope") +
+    xlab("\nLongitude") +
+    ylab("Latitude\n") +
+    ggtitle("Shrub biomass cover (g/m2) of Alaskan north slope\n") +
     theme(plot.title = element_text(hjust = 0.5),     # centres plot title
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 0, hjust = 1)))  # rotates x axis text
 
+# ggsave("output/figures/gplot_shrub_agb_p50.png")
+
+# 2. PCH range ----
 # Plotting PCH core range (entire) using ggplot
 (PCH_range_map <- ggplot() + 
-    geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "grey") + 
+    geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "white") + 
     theme_shrub()+
     ggtitle("PCH core range 2016")) 
 
+# ggsave("output/figures/PCH_range_map.png")
+
+# plotting PCH geometry only 
 plot(PCH_core_range)
 plot(PCH_core_range[, "Id"], key.width = lcm(5), key.pos = 4)
 plot(st_geometry(PCH_core_range))
 
-# map overlay ----
+# 3. Map overlay ----
 plot(shrub_agb_p50, xlim = c(-540475.3,  921674.7), ylim = c(1933928.1,2380628.1))
 plot(st_geometry(PCH_core_range), xlim = c(165444.3, 1049222.0), add = TRUE)
 

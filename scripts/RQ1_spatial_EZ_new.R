@@ -232,7 +232,7 @@ pred_model_2 <- ggpredict(model_2, terms = c("long"))  # this gives overall pred
                    theme_shrub())
 )
 
-# Hih-medium-low ----
+# Hih-medium-low biomass----
 ### CATEGORISE into HIGH/MEDIUM/LOW biomass 
 mean(r3_rsample_00$biomass)
 # 267.1607 mean biomass
@@ -242,11 +242,17 @@ range(r3_rsample_00$biomass)
 r3_rsample_categ <- r3_rsample_00 %>%
   mutate(biomass_level = case_when (biomass < 267.1607 ~ 'Low', # lower than mean biomass
                                     biomass >= 267.1607 & biomass < 400 ~ 'Medium', 
-                                    biomass >= 400 ~ 'High'))
+                                    biomass >= 400 ~ 'High')) %>%
+  mutate(biomass_level_0 = case_when (biomass_level == 'Low' ~ 0, # 0 = low level
+                                    biomass_level == 'Medium' ~ 1, # 1 = medium level
+                                    biomass_level == 'High'~ 2)) # 2 = high level
 
-# Hist 
+r3_rsample_categ$biomass_level <- as.factor(as.character(r3_rsample_categ$biomass_level))
+
+
+# Histogram of biomass level
 (hist_random <- r3_rsample_categ %>%
-    ggplot(aes(x = biomass, fill = biomass_level )) +
+    ggplot(aes(x = biomass, fill = biomass_level_0)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
     geom_vline(aes(xintercept = mean(biomass)),            
                colour = "red", linetype = "dashed", size = 1) +
@@ -258,6 +264,14 @@ r3_rsample_categ <- r3_rsample_00 %>%
     geom_point(size = 0.1) +
     geom_smooth(method = "lm") +
     theme_shrub())
+
+# Biomass level ~ lat
+model_level <- lmer(biomass_level_0~lat + (1|gridcell), data = r3_rsample_categ)
+summary(model_level)
+# latitude has a negative effect on biomass level 
+
+# I need Categorical logistic regression ?
+
 
 
 
