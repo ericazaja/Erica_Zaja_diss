@@ -14,7 +14,7 @@
 # Temperature climatologies: mean daily mean air temperatures of the warmest quarter (bio10) (°C). Offset -273.15
 # Precipitation climatologies: mean monthly precipitation amount of the warmest quarter (bio18) (kg m-2)
 
-# Loading libraries -----
+# LOADING LIBRARIES -----
 library(sp)
 library(rgdal)
 library(raster)
@@ -24,11 +24,11 @@ library(rasterVis)
 library(lme4)
 library(sjPlot)
 
-# Loading CHELSA data ------
+# LOADING DATA ------
 temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
 precip <- raster("datasets/climate_data/CHELSA_bio10_18.tif")
 
-# EXPLORATION -----
+# DATA EXPLORATION -----
 # checking resolution of rasters
 res(temp)
 res(precip)
@@ -47,45 +47,45 @@ levelplot(precip)
 coords <- read.csv("datasets/berner_data/r3_rsample_00.csv") %>% 
   dplyr::select(long, lat) # keeping lat and long
 
-# Create SpatialPoints (sp) object of unique coordinates
+# Creating SpatialPoints (sp) object of unique coordinates
 coords_sp <- SpatialPoints(coords)
 
-# create raster stack
+# creating raster stack
 chelsa.stack <- stack(precip, temp)
 
-# Extract variables values for each pair of coordinates
+# Extracting variables values for each pair of coordinates
 chelsa.extract <- raster::extract(chelsa.stack, coords_sp, df = TRUE) # extract coords 
 
 # Combining dataframes:
-# Convert the SpatialPoints (sp) object into a dataframe 
+# Converting the SpatialPoints (sp) object into a dataframe 
 coord.df <- as.data.frame(coords_sp)
 
-# Reassign the 'ID' to the coordinates dataframe
+# Reassigning the 'ID' to the coordinates dataframe
 coord.df$ID <- row.names(coord.df)
 coord.df$ID <- as.numeric(coord.df$ID) # Make numeric
 
-# Merge the two dataframes: extracted CHELSA variables and the coordinates
+# Merging the two dataframes: extracted CHELSA variables and the coordinates
 coord.chelsa.combo <- left_join(chelsa.extract, coord.df, by = c("ID" = "ID"))
 
-# loading the shrub biomass df
+# Loading the shrub biomass df
 biomass.df <- read.csv("datasets/berner_data/r3_rsample_00.csv") %>%
   rename(ID = X) %>%
   dplyr::select(ID, biomass, gridcell)
 
-# merging biomass df with climate df
+# Merging biomass df with climate df
 coord.chelsa.combo.a <- left_join(coord.chelsa.combo, biomass.df, by = c("ID" = "ID"))
 
-# Modify some of the variables to more useful values
+# Modifying some of the variables to more useful values
 coord.chelsa.combo.b <- coord.chelsa.combo.a %>% 
   mutate(CHELSA_bio10_10 = CHELSA_bio10_10/10) # Divide by 10 to get to degC
 
-# Rename the variables to shorter column headings
+# Renaming the variables to shorter column headings
 coord.chelsa.combo.c <- coord.chelsa.combo.b %>% 
   rename(CH_TempMeanSummer = CHELSA_bio10_10,
          CH_PrecipMeanSummer = CHELSA_bio10_18) %>% na.omit()
 
-# Export the dataframe to csv
-write.csv(coord.chelsa.combo.c, "datasets/climate_data/coord_chelsa_combo_new.csv")
+# Exporting the dataframe to csv
+# write.csv(coord.chelsa.combo.c, "datasets/climate_data/coord_chelsa_combo_new.csv")
 
 # THEME ----
 theme_shrub <- function(){ theme(legend.position = "right",
@@ -106,6 +106,7 @@ unique(coord.chelsa.combo.c$gridcell)
 coord.chelsa.combo.c$gridcell <- as.factor(as.character(coord.chelsa.combo.c$gridcell))
 
 # MODELLING ----
+
 # Model 3 ----
 # biomass ~ temp + random effect gridcell
 model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|gridcell), data = coord.chelsa.combo.c)
@@ -118,35 +119,38 @@ summary(model_3)
 # estimate for temperature (exp variable =   ) i.e. temperature negatively impacts biomass
 # significant effect of temp on biomass 
 
-# Checking model 3 assumptions ----
+# Checking model 3 assumptions
 plot(model_3)
 qqnorm(resid(model_3))
 qqline(resid(model_3))  # points fall nicely onto the line - good!
 
-# Output table model 3 ----
+# Output table model 3 
 stargazer(model_3, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
+          digit.separator = "") 
+# temperature significant
+# shrub biomass decreases with mean summer temp
+
 
 # Extracting model predictions 
 pred_model_3 <- ggpredict(model_3, terms = c("CH_TempMeanSummer"))  # this gives overall predictions for the model
 # write.csv(pred_model_3, file = "datasets/pred_model_3.csv")
 
 # Plot the predictions 
-(plot_model_3 <- (ggplot(pred_model_3) + 
+(biomass_vs_temp <- (ggplot(pred_model_3) + 
                    geom_line(aes(x = x, y = predicted)) +          # slope
                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                fill = "lightgrey", alpha = 0.5) +  # error band
                    geom_point(data = coord.chelsa.combo.c,                      # adding the raw data 
                               aes(x = CH_TempMeanSummer, y = biomass), size = 0.5) + 
-                   labs(x = "Mean summer temperature (degrees C)", y = "Shrub biomass (g/m2)", 
-                        title = "Mean summer temperature negatively impacts shrub biomass") + 
+                   labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n", 
+                        title = "Shrub biomass decreases with temperature\n") + 
                    theme_shrub()))
 
-# biomass does not vary with temp
+# ggsave(file = "output/figures/biomass_vs_temp.png")
 
-# scatter: biomass ~ temp
+# Quick scatter: biomass ~ temp
 (scatter_temp <- ggplot(coord.chelsa.combo.3, aes(x = CH_TempMeanSummer, y = biomass)) +
     geom_point(size = 0.1) +
     geom_smooth(method = "lm") +
@@ -165,35 +169,37 @@ summary(model_4)
 # estimate for precip (exp variable =  2.860*** ) i.e. precip positively impacts biomass
 # significant effect of precip on biomass  = 2.860*** 
 
-# Checking model 4 assumptions ----
+# Checking model 4 assumptions 
 plot(model_4)
 qqnorm(resid(model_4))
 qqline(resid(model_4))  # points fall nicely onto the line - good!
 
-# Output table model 4 ----
+# Output table model 4 
 stargazer(model_4, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
+# precipitation significant 
+# shrub biomass increases with mean summer precip
 
 # Extracting model predictions 
 pred_model_4 <- ggpredict(model_4, terms = c("CH_PrecipMeanSummer"))  # this gives overall predictions for the model
 # write.csv(pred_model_4, file = "datasets/pred_model_4.csv")
 
 # Plot the predictions 
-(plot_model_4 <- (ggplot(pred_model_4) + 
+(biomass_vs_precip <- (ggplot(pred_model_4) + 
                    geom_line(aes(x = x, y = predicted)) +          # slope
                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                fill = "lightgrey", alpha = 0.5) +  # error band
                    geom_point(data = coord.chelsa.combo.c,                      # adding the raw data 
                               aes(x = CH_PrecipMeanSummer, y = biomass), size = 0.5) + 
-                   labs(x = "Mean summer precipitation (kg/m)", y = "Shrub biomass (g/m2)", 
-                        title = "Shrub biomass increases with mean summer precipiation") + 
+                   labs(x = "\nMean summer precipitation (kg/m2)", y = "Shrub biomass (kg/m2)\n", 
+                        title = "Shrub biomass increases with precipiation\n") + 
                    theme_shrub()))
 
-# shrub biomass increases with mean summer precip
+# ggsave(file = "output/figures/biomass_vs_precip.png")
 
-# scatter: biomass ~precip
+# Quick scatter: biomass ~precip
 (scatter_precip <- ggplot(coord.chelsa.combo.c, aes(x = CH_PrecipMeanSummer, y = biomass)) +
     geom_point(size = 0.1) +
     geom_smooth(method = "lm") +
@@ -201,19 +207,20 @@ pred_model_4 <- ggpredict(model_4, terms = c("CH_PrecipMeanSummer"))  # this giv
 
 
 # Model 5 ----
-# biomass ~ temp*precip +  random effect gridcell
+# biomass ~ temp*precip + random effect gridcell
 
-## To display interaction: 
-## Categorise precipitation dry moist wet: 
-## 3 lines in plot with temp on the x and biomass on y and points coloured by moist level
+# To display interaction: categorise precipitation 'dry', 'moist', 'wet': 
+# Plot 3 lines in plot with temp on the x and biomass on y and points coloured by moisture level
 range(coord.chelsa.combo.c$CH_PrecipMeanSummer)
-# 55 (min) 174 (max)
+# 55 (min) 174 (max precip (kg m-2))
 # 174-55 = 119
 # 119/3 = 39.66667
 # 55 + 40 = 95 
 # 95 + 40 = 135
 # 135+40 = 175
 # 55 (dry), 114.5 (moist), 174 (wet)
+mean(coord.chelsa.combo.c$CH_PrecipMeanSummer)
+# 101.8274
 
 coord.chelsa.combo.d <- coord.chelsa.combo.c %>% 
   mutate(moisture = case_when(CH_PrecipMeanSummer >= 55 & CH_PrecipMeanSummer < 95 ~ "dry",
@@ -261,8 +268,10 @@ pred_model_5b <- ggpredict(model_5b, terms = c("CH_TempMeanSummer", "CH_PrecipMe
 
 plot_model(model_5b, type = "pred", terms = c("CH_TempMeanSummer", "CH_PrecipMeanSummer"))
 
-# scatter: biomass ~precip*temp
+# scatter: biomass ~ precip*temp
 (scatter_precip <- ggplot(coord.chelsa.combo.d, aes(x = CH_TempMeanSummer, y = biomass, colour = moisture)) +
     geom_point(size = 0.1) +
     geom_smooth(method = "lm") +
     theme_classic())
+
+# END -----
