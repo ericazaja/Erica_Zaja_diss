@@ -81,7 +81,7 @@ theme_shrub <- function(){ theme(legend.position = "right",
     theme_shrub() +  # Remove ugly grey background
     xlab("\nLongitude") +
     ylab("Latitude\n") +
-    ggtitle("Shrub biomass cover (g/m2) of Alaskan north slope\n") +
+    ggtitle("Shrub biomass cover (kg/m2) of Alaskan north slope\n") +
     theme(plot.title = element_text(hjust = 0.5),     # centres plot title
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 0, hjust = 1)))  # rotates x axis text
@@ -149,7 +149,7 @@ r3_latlong_agg <- raster("datasets/berner_data/r3_latlong_agg.tif")
     theme_shrub() +  # Remove ugly grey background
     xlab("\nLongitude") +
     ylab("Latitude\n") +
-    ggtitle("Shrub biomass cover (g/m2) of the PCH alaskan range\n") +
+    ggtitle("Shrub biomass cover (kg/m2) of the PCH alaskan range\n") +
     theme(plot.title = element_text(hjust = 0.5),             # centres plot title
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 30, hjust = 1)))  # rotates x axis text
@@ -168,12 +168,12 @@ r3_latlong_agg <- raster("datasets/berner_data/r3_latlong_agg.tif")
     theme_shrub() +  # Remove ugly grey background
     xlab("\nLongitude") +
     ylab("Latitude\n") +
-    ggtitle("Shrub biomass cover (g/m2) of the PCH alaskan range") +
+    ggtitle("Shrub biomass cover (kg/m2) of the PCH alaskan range") +
     theme(plot.title = element_text(hjust = 0.5),             # centres plot title
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 30, hjust = 1)))  # rotates x axis text
 
-#ggsave("output/figures/r3_cropped_my_palette.png")
+# ggsave("output/figures/r3_cropped_my_palette.png")
 
 # Cropped map with personalised colour palette (low-mid-high) 
 (r3_cropped_my_palette_2 <- gplot(r3_latlong_agg) +
@@ -184,7 +184,7 @@ r3_latlong_agg <- raster("datasets/berner_data/r3_latlong_agg.tif")
     theme_shrub() +  # Remove ugly grey background
     xlab("\nLongitude") +
     ylab("Latitude\n") +
-    ggtitle("Shrub biomass cover (g/m2) of the PCH alaskan range\n") +
+    ggtitle("Shrub biomass cover (kg/m2) of the PCH alaskan range\n") +
     theme(plot.title = element_text(hjust = 0.5),             # centres plot title
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 30, hjust = 1)))  # rotates x axis text

@@ -5,6 +5,8 @@
 #                                                          #
 ##%######################################################%##
 
+# ***Problems***
+  
 ## RQ1: What areas within the PCH Alaskan summer range have high-medium-low shrub biomass cover?
 ### How does shrub biomass vary across latitudes? 
 
@@ -28,58 +30,70 @@ library(SpaDES.tools)
 library(geosphere)
 library(dplyr)
 library(ggeffects)
+library(stargazer)
 
-# LOADING DATA -----
-## SHRUB DATA: from Berner et al 2018
-# Loading raster of shrub biomass (g/m2) on Alaskan North Slope  
+
+##  LOADING DATA -----
+#1. SHRUB DATA: from Berner et al 2018
+# Loading raster of shrub biomass (kg/m2) on Alaskan North Slope  
 shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif") 
 # Using the best-estimates: the 50th percentile of the 1,000 permutations
 
-### PCH CORE RANGE DATA: from Porcupine Caribou Management Board (2016)
+# 2. PCH CORE RANGE DATA: from Porcupine Caribou Management Board (2016)
 # Loading polygon of PCH range 
 PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") #loading data
 st_bbox(PCH_core_range) # extent of the PCH range
 
-### CROPPING -----
-# Crop and mask ---- 
+## CROPPING -----
+# Cropping shrub raster to the PCH range and mask 
 r2 <- crop(shrub_agb_p50, extent(PCH_core_range))
 r3 <- mask(r2, PCH_core_range)
-plot(r3) 
+plot(r3) # cropped raster
 plot(PCH_core_range, add=TRUE, lwd=2)
 
-# changing coordinates to lat long
+# transforming CRS of cropped map from proj = aea to proj = lalong
 r3_latlong <- projectRaster(r3, crs="+init=EPSG:4326", xy = TRUE)
-# writeRaster(r3_latlong, "datasets/berner_data/r3_latlong.tif")
+# writeRaster(r3_latlong, "datasets/berner_data/r3_latlong.tif") #saving raster
+# r3_latlong <- raster("datasets/berner_data/r3_latlong.tif") # loading raster
 
-# plotting cropped shrub map to visualise extent
-(cropped_vis <- gplot(r3_latlong_agg) +
+# resolution of cropped map
+res(r3_latlong)
+# 0.000726 m x 0.000270 m
+
+# plotting cropped shrub map with viridis palette
+(r3_cropped_viridis <- gplot(r3_latlong_agg) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
-    scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
-      ifelse(x<500, 
-             scales::rescale(x,to = to, from = c(min(x, na.rm = TRUE), 500)), 1)}) +
+    scale_fill_viridis_c(rescaler = function(x, to = c(0, 1), from = NULL) {
+      ifelse(x<500, scales::rescale(x, to = to, from = c(min(x, na.rm = TRUE), 500)),1)}, na.value="white") +
     coord_quickmap()+
-    ylim(68.2,70.5)+
-    theme_classic() +  # Remove ugly grey background
-    xlab("Longitude") +
-    ylab("Latitude") +
-    ggtitle("Shrub biomass cover (g/m2) of the PCH alaskan range") +
+    theme_shrub() +  # Remove ugly grey background
+    xlab("\nLongitude") +
+    ylab("Latitude\n") +
+    ggtitle("Shrub biomass cover (kg/m2) of the PCH alaskan range\n") +
     theme(plot.title = element_text(hjust = 0.5),             # centres plot title
           text = element_text(size=15),		       	    # font size
-          axis.text.x = element_text(angle = 45, hjust = 1)))  # rotates x axis text
+          axis.text.x = element_text(angle = 30, hjust = 1)))  # rotates x axis text
 
 ## AGGREGATION ----
+# aggregate shrub data to coarser resolution before extraction using aggregate function()
+# factor chosen dividing climate cell resolution 0.008333333 x 0.008333333 by the resolution of the cropped shrub map (latlong)
 r3_latlong_agg <- aggregate(r3_latlong, fact=c(11.47842,30.8642), fun=mean, expand = TRUE) 
 # writeRaster(r3_latlong_agg, "datasets/berner_data/r3_latlong_agg.tif")
+# r3_latlong_agg <- raster("datasets/berner_data/r3_latlong_agg.tif") # loading raster
+
+# checking new resolution
+res(r3_latlong_agg)
+# 0.007986 x 0.008370 m
+# not EXACTLY the same as climate resolution but close enough? 
 
 # RANDOM SAMPLE WHOLE MAP ----
 
-# measuring area of raster
-
+# Measuring area of raster
 # get sizes of all cells in raster [km2]
 cell_size <-area(r3_latlong_agg, na.rm=TRUE, weights=FALSE)
 #delete NAs from vector of all raster cells
-##NAs lie outside of the rastered region, can thus be omitted
+# NAs lie outside of the rastered region, can thus be omitted
 cell_size<-cell_size[!is.na(cell_size)]
 #compute area [km2] of all cells in geo_raster
 raster_area<-length(cell_size)*median(cell_size)
@@ -88,8 +102,7 @@ print(paste("Area of PCH Alaskan range (raster)", round(raster_area, digits=1),"
 # [1] "Area of PCH Alaskan range (raster) is 9583.6 km2"
 
 # I think this means there are 9583.6 cells of ~1km x 1km 
-# sampling 2 pixels per raster cell :9583.6 cells  *2 = 19167.2 --> I sample 20000 pixels
-
+# sampling 2 pixels per raster cell: 9583.6 cells  *2 = 19167.2 --> I sample 20000 pixels
 
 # deciding on buffer distance
 res(r3_latlong_agg)
@@ -101,25 +114,27 @@ res(r3_latlong_agg)
 # buffered random sampling
 r3_rsample_0 <- as.data.frame(sampleRandom(r3_latlong_agg, 20000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy = TRUE)) 
+hist(r3_rsample_0$shrub_agb_p50) # checking distribution
 
+# trying to sample 30000 pixels to see if the distribution is different 
 r3_rsample_0_try <- as.data.frame(sampleRandom(r3_latlong_agg, 30000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
                                            cells=TRUE, rowcol=FALSE, xy = TRUE)) # 30000 pixels 
-hist(r3_rsample_0_try$shrub_agb_p50)
+hist(r3_rsample_0_try$shrub_agb_p50) # checking distribution - looks similar to the other histogram
 
 # checking buffer works
+# calculating distance between points (x and y coordinates)
 r3_rsample_01 <- r3_rsample_0  %>% 
   mutate(r3_rsample_0 , Distance = distHaversine(cbind(x, y),
                                                    cbind(lag(x), lag(y))))
 
+# If istance between points > buffer distance, buffer works
 r3_rsample_01 <- r3_rsample_01 %>% 
   mutate(buff = case_when(Distance >= 1414.2 ~ "T", Distance < 1414.2 ~ "F"))
 
-r3_rsample_01 <- r3_rsample_01 %>%  filter(buff %in% c("T"))
-# only keeping obseervations where buff worked
-
+r3_rsample_01 <- r3_rsample_01 %>%  filter(buff %in% c("T")) # only keeping obseervations where buff worked
 unique(r3_rsample_01$buff) # T
 
-# Cleaning and making a gridcell column the new dataframe
+# Cleaning radnom sample dataframe and making a gridcell column the new dataframe
 r3_rsample_00 <- r3_rsample_01 %>%
   rename (cell_ID = "cell", 
           lat = "y", long = "x", 
@@ -157,14 +172,18 @@ summary(model_1)
 # estimate for latitude (exp variable =   ) 
 # not significant effect of long on biomass
 
-# Checking model 1 assumptions ----
+# Quick scatter
+(scatter_1 <- ggplot(r3_rsample_00, aes(x = lat, y = biomass)) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_shrub())
+
+# Checking model 1 assumptions 
 plot(model_1)
 qqnorm(resid(model_1))
 qqline(resid(model_1))  # points fall nicely onto the line - good!
 
-# Output table model 1----
-library(stargazer)
-
+# Output table model 1
 stargazer(model_1, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -175,16 +194,18 @@ pred_model_1 <- ggpredict(model_a, terms = c("lat"))  # this gives overall predi
 # write.csv(pred_model_1, file = "datasets/pred_model_1.csv")
 
 # Plot the predictions 
-(plot_model_1 <- (ggplot(pred_model_a) + 
+(biomass_vs_lat <- (ggplot(pred_model_a) + 
                    geom_line(aes(x = x, y = predicted)) +          # slope
                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                fill = "lightgrey", alpha = 0.5) +  # error band
                    geom_point(data = r3_rsample_00,                      # adding the raw data 
                               aes(x = lat, y = biomass), size = 0.5) + 
-                   labs(x = "Latitude", y = "Shrub biomass (g/m2)", 
-                        title = "Shrub biomass decreases with latitude") + 
+                   labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n", 
+                        title = "Shrub biomass decreases with latitude\n") + 
                    theme_shrub())
 )
+
+# ggsave(file = "output/figures/biomass_vs_lat.png")
 
 dev.off()
 
@@ -199,43 +220,46 @@ summary(model_2)
 # estimate for latitude (exp variable =   ) 
 # not significant effect of long on biomass
 
+# Quick scatter
+(scatter_2 <- ggplot(r3_rsample_00, aes(x = long, y = biomass)) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_shrub())
 
-# Checking model 2 assumptions ----
+# Checking model 2 assumptions 
 plot(model_2)
 qqnorm(resid(model_2))
 qqline(resid(model_2))  # points fall nicely onto the line - good!
 
-# Output table model 2 ----
+# Output table model 2 
 stargazer(model_2, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
-
-(scatter_model_2 <- ggplot(shrub_rsample_00, aes(x = long, y = biomass)) +
-    geom_point(size = 0.1) +
-    geom_smooth(method = "lm") +
-    theme_shrub())
 
 # Extracting model predictions 
 pred_model_2 <- ggpredict(model_2, terms = c("long"))  # this gives overall predictions for the model
 # write.csv(pred_model_2, file = "datasets/pred_model_2.csv")
 
 # Plot the predictions 
-(plot_model_2 <- (ggplot(pred_model_2) + 
+(biomass_vs_long <- (ggplot(pred_model_2) + 
                    geom_line(aes(x = x, y = predicted)) +          # slope
                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                fill = "lightgrey", alpha = 0.5) +  # error band
                    geom_point(data = r3_rsample_00,                      # adding the raw data 
                               aes(x = long, y = biomass), size = 0.5) + 
-                   labs(x = "Longitude", y = "Shrub biomass (g/m2)", 
-                        title = "Shrub biomass does not vary with longitude") + 
+                   labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n", 
+                        title = "Shrub biomass does not vary with longitude\n") + 
                    theme_shrub())
 )
+
+# ggsave(file = "output/figures/biomass_vs_long.png")
+
 
 # Hih-medium-low biomass----
 ### CATEGORISE into HIGH/MEDIUM/LOW biomass 
 mean(r3_rsample_00$biomass)
-# 267.1607 mean biomass
+# 267.1607 kg/m2 mean biomass
 range(r3_rsample_00$biomass)
 # 4.709974 1144.706055
 
@@ -251,26 +275,27 @@ r3_rsample_categ$biomass_level <- as.factor(as.character(r3_rsample_categ$biomas
 
 
 # Histogram of biomass level
-(hist_random <- r3_rsample_categ %>%
-    ggplot(aes(x = biomass, fill = biomass_level_0)) +
+(hist_high_medium_low <- r3_rsample_categ %>%
+    ggplot(aes(x = biomass, fill = biomass_level)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
     geom_vline(aes(xintercept = mean(biomass)),            
                colour = "red", linetype = "dashed", size = 1) +
+    labs(x = "\nShrub biomass (kg/m2)", y = "Frequency\n") +
     scale_fill_manual(values=c( "green4", "tan", "yellow")) +
     theme_shrub())
 
+# ggsave(file = "output/figures/hist_high_medium_low.png")
 
+#  ***Model *** ----
+# Biomass level ~ lat
+model_level <- lmer(biomass_level_0~lat + (1|gridcell), data = r3_rsample_categ)
+summary(model_level)
+# latitude has a negative effect on biomass level ?
+# I need Categorical logistic regression ?
 (scatter_high_medium_low <- ggplot(r3_rsample_categ, aes(x = lat, y = biomass, colour = biomass_level)) +
     geom_point(size = 0.1) +
     geom_smooth(method = "lm") +
     theme_shrub())
-
-# Biomass level ~ lat
-model_level <- lmer(biomass_level_0~lat + (1|gridcell), data = r3_rsample_categ)
-summary(model_level)
-# latitude has a negative effect on biomass level 
-
-# I need Categorical logistic regression ?
 
 
 
