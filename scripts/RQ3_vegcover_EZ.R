@@ -503,7 +503,6 @@ str(ITEX_all_veg)
 
 # ggsave(file = "output/figures/hist_all_veg.png")
 
-
 ITEX_all_veg$FuncGroup <- as.factor(as.character(ITEX_all_veg$FuncGroup))
 
 # Model ----
@@ -522,7 +521,7 @@ stargazer(lmer_all, type = "text",
 
 # F.group random ----
 # mixed model with functional group as random effect
-lmer_all_rand <- lmer(Mean_cover~YEAR+(1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
+lmer_all_rand <- lmer(Mean_cover~YEAR  +(1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
 summary(lmer_all_rand)
 
 # Output table model 7 
@@ -546,7 +545,7 @@ pred_model_all_rand <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup")) 
                       labs(x = "Year", y = "Vegetation cover (%)", 
                            title = "") + 
                       # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
-                      theme_minimal()))
+                      theme_shrub()))
 
 # trying diff graph
 ITEX_all_veg$Predicted <- predict(lmer_all_rand, ITEX_all_veg)
@@ -560,7 +559,6 @@ ggplot(ITEX_all_veg, aes(YEAR, Predicted)) +
    guides(color=guide_legend(override.aes=list(fill=NA))) +  
    theme_shrub() + 
    xlab("Year")
-
 
 
 # extracting model predictions
@@ -582,11 +580,6 @@ predict <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"), type = "re")
       labs(x = "\nYear", y = "Predicted mean % cover\n"))
 # all increasing? probably wrong
 
-
-#mixed model with interaction term
-lmer_all_int <- lmer(Mean_cover~YEAR*FuncGroup + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
-summary(lmer_all_int)
-
 # simple lm
 lm_all <- lm(Mean_cover ~ YEAR + FuncGroup, data = ITEX_all_veg)
 summary(lm_all)
@@ -595,13 +588,15 @@ summary(lm_all)
                        geom_point(size = 2) +
                        geom_smooth(method = "lm") + 
                        labs(y = "Mean vegetation cover\n", x = "\nYear") +
-                       theme_shrub))
+                       theme_shrub()))
 
-(scatter_all_by_group <- (ggplot(ITEX_all_veg, aes(x = YEAR, y = Mean_cover, colour = FuncGroup))+
+(cover_all_fgroup <- (ggplot(ITEX_all_veg, aes(x = YEAR, y = Mean_cover, colour = FuncGroup))+
                     geom_point(size = 0.5) +
                     geom_smooth(method = "lm") + 
                     labs(y = "Mean percentage cover\n", x = "\nYear") +
-                    theme_shrub))
+                    theme_shrub()))
+
+# ggsave(file = "output/figures/cover_all_fgroup.png")
 
 ### SHRUB SPECIES -----
 #shrub species
