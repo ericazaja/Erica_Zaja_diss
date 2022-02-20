@@ -41,10 +41,16 @@ unique(ANWR_veg$YEAR) # Unique years
 unique(ANWR_veg$PLOT) # Unique plot names (1 to 10)
 length(unique(ANWR_veg$PLOT)) # 10 plots 
 
-# Group the dataframe by YEAR to see the number of plots per year
+# Group the dataframe by YEAR to see the number of  plots per year
 ANWR_veg %>% group_by(YEAR) %>%
-   summarise(plot.n = length(unique(PLOT)))
-# There are 10 plots per year
+   summarise(plot.n = length(PLOT))
+# YEAR      plot.n
+# 1  1996    379
+# 2  1997    401
+# 3  2000    388
+# 4  2002    394
+# 5  2005    378
+# 6  2007    375
 
 unique(ANWR_veg$FuncGroup) # Unique functional groups names
 # [1] "Shrub"     "Lichen"    "Moss"      "Forb"      "Graminoid"
@@ -89,7 +95,7 @@ theme_shrub <- function(){ theme(legend.position = "right",
                    plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
 # ****MODELLING***** ----
-# 1.SHRUB COVER ------
+# 1. SHRUB COVER ------
 
 # Mean shrub cover per plot per year
 ITEX_shrubs <- ITEX_shrubs %>%
@@ -206,8 +212,9 @@ gram_summary$PLOT <- as.factor(as.character(gram_summary$PLOT))
 
 dev.off()
 str(ITEX_gram)
+
 # Model 7 ----
-# Graminoid cover over time 
+# Graminoid cover over time 
 # mixed effect model with plot and year as random effects
 model_7 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_gram)
 summary(model_7)
@@ -219,12 +226,12 @@ summary(model_7)
 # estimate for precip (exp variable = 0.0867)
 # not significant effect of year on gram cover 
 
-# Checking model 7 assumptions ----
+# Checking model 7 assumptions 
 plot(model_7)
 qqnorm(resid(model_7))
 qqline(resid(model_7))  # points fall nicely onto the line - good!
 
-# Output table model 7 ----
+# Output table model 7 
 stargazer(model_7, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -249,7 +256,7 @@ pred_model_7 <- ggpredict(model_7, terms = c("YEAR"))  # this gives overall pred
 # ggsave( file = "output/figures/gram_cover_ANWR.png")
 
 
-### FORB COVER ----
+# 3. FORB COVER ----
 
 # Mean forb cover per plot per year
 ITEX_forbs <- ITEX_forbs %>%
@@ -257,14 +264,28 @@ ITEX_forbs <- ITEX_forbs %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
-(forb_scatter <- (ggplot(ITEX_forbs, aes(x = YEAR, y = Mean_cover))+
-   geom_point(size = 2) +
-   geom_smooth(method = "lm") + 
-      labs(y = "Mean forb cover\n", x = "\nYear") +
-      theme_shrub))
-## Forb cover decreasing
+ITEX_forbs$PLOT <- as.factor(as.character(ITEX_forbs$PLOT))
 
-# Model 8: Forb cover over time ----
+# or this way? 
+forb_summary <- ITEX_forbs %>%
+   group_by(YEAR, PLOT) %>%
+   summarise(n = n(),  # Calculating sample size n
+             avg_forb_cover = mean(FuncPlotCover),  
+             # Calculating mean hatching time
+             SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
+   mutate(SE = SD / sqrt(n))  # Calculating standard error
+
+forb_summary$PLOT <- as.factor(as.character(forb_summary$PLOT))
+
+(forb_scatter <- (ggplot(ITEX_forbs)+
+   geom_point(aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 2) +
+   geom_smooth(aes(x = YEAR, y = Mean_cover), method = "lm") + 
+      labs(y = "Mean forb cover\n", x = "\nYear") +
+      theme_shrub()))
+# Forb cover decreasing
+
+# Model 8 ----
+# Forb cover over time 
 
 # mixed effect model with plot and year as random effects
 model_8 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_forbs)
@@ -277,50 +298,66 @@ summary(model_8)
 # estimate for year (exp variable = -0.201*** ) i.e. year negatively impats forb cover
 # significant effect of year on forb cover  = -0.201***        
 
-# Checking model 8 assumptions ----
+# Checking model 8 assumptions 
 plot(model_8)
 qqnorm(resid(model_8))
 qqline(resid(model_8))  # points fall nicely onto the line - good!
 
-# Output table model 8 ----
-library(stargazer)
-
+# Output table model 8 
 stargazer(model_8, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
+# significant effect of year
 
 # Extracting model predictions 
 pred_model_8 <- ggpredict(model_8, terms = c("YEAR"))  # this gives overall predictions for the model
 # write.csv(pred_model_8, file = "datasets/pred_model_8.csv")
 
 # Plot the predictions 
-(plot_model_8 <- (ggplot(pred_model_8) + 
+(forb_cover_ANWR <- (ggplot(pred_model_8) + 
                      geom_line(aes(x = x, y = predicted)) +          # slope
                      geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                  fill = "lightgrey", alpha = 0.5) +  # error band
                      geom_point(data = ITEX_forbs,                      # adding the raw data 
-                                aes(x = YEAR, y = Mean_cover), size = 0.5) + 
-                     labs(x = "Year", y = "Forb cover (%)", 
-                          title = "Forb cover (%) decrease in the ANWR") + 
+                                aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 0.5) + 
+                     labs(x = "\nYear", y = "Forb cover (%)\n", 
+                          title = "Forb cover (%) decrease in the ANWR\n") + 
                      theme_shrub()
 ))
 
-### MOSS COVER  ----
+ggsave( file = "output/figures/forb_cover_ANWR.png")
+
+# 4. MOSS COVER  ----
 # Mean moss cover per plot per year
 ITEX_moss <- ITEX_moss %>%
    group_by(YEAR, PLOT) %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
-(moss_scatter <- (ggplot(ITEX_moss, aes(x = YEAR, y = Mean_cover))+
-    geom_point(size = 2) +
-    geom_smooth(method = "lm") + 
-       labs(y = "Mean moss cover\n", x = "\nYear") +
-      theme_shrub))
-## Moss cover increasing 
+ITEX_moss$PLOT <- as.factor(as.character(ITEX_moss$PLOT))
 
-# Model 9: Moss cover over time----
+# or this way? 
+moss_summary <- ITEX_moss %>%
+   group_by(YEAR, PLOT) %>%
+   summarise(n = n(),  # Calculating sample size n
+             avg_moss_cover = mean(FuncPlotCover),  
+             # Calculating mean hatching time
+             SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
+   mutate(SE = SD / sqrt(n))  # Calculating standard error
+
+moss_summary$PLOT <- as.factor(as.character(moss_summary$PLOT))
+
+
+(moss_scatter <- (ggplot(ITEX_moss)+
+    geom_point(aes(x = YEAR, y = Mean_cover, colour = PLOT),size = 2) +
+    geom_smooth(aes(x = YEAR, y = Mean_cover), method = "lm") + 
+       labs(y = "Mean moss cover\n", x = "\nYear") +
+      theme_shrub()))
+# Moss cover increasing 
+
+# Model 9 ----
+# Moss cover over time
 # mixed effect model with plot and year as random effects
 model_9 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_moss)
 summary(model_9)
@@ -332,36 +369,38 @@ summary(model_9)
 # estimate for year (exp variable = 6.353e-01***  ) year positively impacts moss cover 
 # significant effect of year on moss cover  = 0.635***        
 
-# Checking model 9 assumptions ----
+# Checking model 9 assumptions 
 plot(model_9)
 qqnorm(resid(model_9))
 qqline(resid(model_9))  # points fall nicely onto the line - good!
 
-# Output table model 9 ----
-library(stargazer)
-
+# Output table model 9
 stargazer(model_9, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
+# year significant
 
 # Extracting model predictions 
 pred_model_9 <- ggpredict(model_9, terms = c("YEAR"))  # this gives overall predictions for the model
-write.csv(pred_model_9, file = "datasets/pred_model_9.csv")
+#write.csv(pred_model_9, file = "datasets/pred_model_9.csv")
 
 # Plot the predictions 
-(plot_model_9 <- (ggplot(pred_model_9) + 
+(moss_cover_ANWR <- (ggplot(pred_model_9) + 
                      geom_line(aes(x = x, y = predicted)) +          # slope
                      geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                  fill = "lightgrey", alpha = 0.5) +  # error band
                      geom_point(data = ITEX_moss,                      # adding the raw data 
-                                aes(x = YEAR, y = Mean_cover), size = 0.5) + 
-                     labs(x = "Year", y = "Moss cover (%)", 
-                          title = "Moss cover (%) increase in the ANWR") + 
+                                aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 0.5) + 
+                     labs(x = "\nYear", y = "Moss cover (%)\n", 
+                          title = "Moss cover (%) increase in the ANWR\n") + 
                      theme_shrub()
 ))
 
-### LICHEN COVER OVER TIME  ----
+# ggsave( file = "output/figures/moss_cover_ANWR.png")
+
+
+# 5. LICHEN COVER  ----
 # Mean moss cover per plot per year
 ITEX_lich <- ITEX_lich %>%
    group_by(YEAR, PLOT) %>%
@@ -369,14 +408,28 @@ ITEX_lich <- ITEX_lich %>%
    ungroup()
 str(ITEX_lich)
 
-(lichen_scatter <- (ggplot(ITEX_lich, aes(x = YEAR, y = Mean_cover))+
-    geom_point(size = 2) +
-    geom_smooth(method = "lm") + 
+ITEX_lich$PLOT <- as.factor(as.character(ITEX_lich$PLOT))
+
+# or this way? 
+lich_summary <- ITEX_lich %>%
+   group_by(YEAR, PLOT) %>%
+   summarise(n = n(),  # Calculating sample size n
+             avg_lich_cover = mean(FuncPlotCover),  
+             # Calculating mean hatching time
+             SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
+   mutate(SE = SD / sqrt(n))  # Calculating standard error
+
+lich_summary$PLOT <- as.factor(as.character(lich_summary$PLOT))
+
+(lichen_scatter <- (ggplot(ITEX_lich))+
+    geom_point(aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 2) +
+    geom_smooth(aes(x = YEAR, y = Mean_cover), method = "lm") + 
        labs(y = "Mean lichen cover\n", x = "\nYear") +
-      theme_shrub))
+      theme_shrub())
 ## Lichen cover increasing
 
-# Model 10: Lichen cover over time -----
+# Model 10 ----
+# Lichen cover over time 
 # mixed effect model with plot and year as random effects
 model_10 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_lich)
 summary(model_10)
@@ -388,65 +441,96 @@ summary(model_10)
 # estimate for year (exp variable =  0.445** ) year positively impacts moss cover 
 # significant effect of year on lichen cover  = 0.445**         
 
-# Checking model 9 assumptions ----
+# Checking model 9 assumptions 
 plot(model_10)
 qqnorm(resid(model_10))
 qqline(resid(model_10))  # points fall nicely onto the line - good!
 
-# Output table model 9 ----
-library(stargazer)
-
+# Output table model 9 
 stargazer(model_10, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
+# year significant
 
 # Extracting model predictions 
 pred_model_10 <- ggpredict(model_10, terms = c("YEAR"))  # this gives overall predictions for the model
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
 # Plot the predictions 
-(plot_model_10 <- (ggplot(pred_model_10) + 
+(lichen_cover_ANWR <- (ggplot(pred_model_10) + 
                      geom_line(aes(x = x, y = predicted)) +          # slope
                      geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                  fill = "lightgrey", alpha = 0.5) +  # error band
                      geom_point(data = ITEX_lich,                      # adding the raw data 
-                                aes(x = YEAR, y = Mean_cover), size = 0.5) + 
-                     labs(x = "Year", y = "Lichen cover (%)", 
-                          title = "Lichen cover (%) increase in the ANWR") + 
+                                aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 0.5) + 
+                     labs(x = "\nYear", y = "\nLichen cover (%)", 
+                          title = "Lichen cover (%) increase in the ANWR\n") + 
                       # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
                      theme_shrub()))
-   
 
-## Panel
+# ggsave(file = "output/figures/lichen_cover_ANWR.png")
+   
+## Panel 
 library(gridExtra)  # For making panels
 library(ggpubr)  # For data visualisation formatting
-(veg_panel <- grid.arrange(arrangeGrob(shrub_scatter, forb_scatter, 
-                                       moss_scatter, lichen_scatter, 
-                                       graminoid_scatter,nrow = 2)))
+(veg_panel <- grid.arrange(arrangeGrob(shrub_cover_ANWR, forb_cover_ANWR, 
+                                       moss_cover_ANWR, lichen_cover_ANWR, 
+                                       gram_cover_ANWR,nrow = 2)))
 
-# MERGING DATASETS -----
+dev.off()
+
+# ****MERGING DATASETS**** -----
 # NB here you might have 10 plots for each func group - you only want 10 in tot for each year
 ITEX_all_veg <- rbind(ITEX_forbs,ITEX_gram, ITEX_lich, ITEX_shrubs, ITEX_moss)
 length(unique(ITEX_all_veg$PLOT)) 
 
 ITEX_all_veg %>% group_by(YEAR) %>%
-   summarise(plot.n = length(unique(PLOT)))
-## There are 10 plots per year
+   summarise(plot.n = length(PLOT)) # same as for the dataset at the beginnign
 
-       
 unique(ITEX_all_veg$FuncGroup)  # checking I have all functional groups
 hist(ITEX_all_veg$Mean_cover)
 str(ITEX_all_veg)
 
+(hist_all_veg <- ITEX_all_veg %>%
+      ggplot(aes(x = Mean_cover, fill = FuncGroup)) +
+      geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 30) +
+      geom_vline(aes(xintercept = mean(Mean_cover)),            
+                 colour = "red", linetype = "dashed", size = 1) +
+      labs(x = "\nPercentage cover", y = "Frequency\n") +
+      scale_fill_manual(values=c( "green4", "blue", "yellow", "purple", "red")) +
+      theme_shrub())
+
+# ggsave(file = "output/figures/hist_all_veg.png")
+
+
+ITEX_all_veg$FuncGroup <- as.factor(as.character(ITEX_all_veg$FuncGroup))
+
 # Model ----
+
+# F.group fixed ----
 # mixed model with functional group as fixed effect
 lmer_all <- lmer(Mean_cover~YEAR+FuncGroup + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
 summary(lmer_all)
 
+# Output table model 7 
+stargazer(lmer_all, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+# func group significant 
+
+# F.group random ----
 # mixed model with functional group as random effect
 lmer_all_rand <- lmer(Mean_cover~YEAR+(1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
 summary(lmer_all_rand)
+
+# Output table model 7 
+stargazer(lmer_all_rand, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+# year not significant
 
 # Extracting model predictions 
 pred_model_all_rand <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"))  # this gives overall predictions for the model
