@@ -5,8 +5,9 @@
 #                                                         ##
 ##%######################################################%##
 
+# ****Problems****
+
 # RQ3: How has vegetation cover changed in the Arctic National Wildlife Refuge between 1996-2007? 
-# probably just focusing on shrub species 
 
 # LOADING LIBRARIES  ----
 library(tidyverse)
@@ -18,12 +19,10 @@ library(ggtern)
 library(lme4)
 library(ggeffects)
 library(sjPlot)  # to visualise model outputs
+library(stargazer)
 
-
-# ITEX data 
-# Loading data ----
+# LOADING DATA ----
 load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_EZ_diss.RData")
-
 
 # DATA WRANGLING ----
 
@@ -36,55 +35,49 @@ unique(ITEX_EZ_diss$SITE) # Unique site names
 ANWR_veg <- ITEX_EZ_diss %>%
   filter(SITE=="ANWR") %>% na.omit()
 
-# Range of years of monitored data
-range(ANWR_veg$YEAR) # 1996-2007
-
+range(ANWR_veg$YEAR) # # Range of years of data: 1996-2007
+length(unique(ANWR_veg$YEAR)) # 6 years
+unique(ANWR_veg$YEAR) # Unique years
 unique(ANWR_veg$PLOT) # Unique plot names (1 to 10)
 length(unique(ANWR_veg$PLOT)) # 10 plots 
 
 # Group the dataframe by YEAR to see the number of plots per year
 ANWR_veg %>% group_by(YEAR) %>%
    summarise(plot.n = length(unique(PLOT)))
-## There are 10 plots per year
+# There are 10 plots per year
 
 unique(ANWR_veg$FuncGroup) # Unique functional groups names
 # [1] "Shrub"     "Lichen"    "Moss"      "Forb"      "Graminoid"
 unique(ANWR_veg$GENUS) # Unique genus names
-unique(ANWR_veg$YEAR) # Unique species names
 
+# Making Genus, Site, Plot as factors (categorical)
 ANWR_veg$GENUS <- as.factor(as.character(ANWR_veg$GENUS))
 ANWR_veg$SITE <- as.factor(as.character(ANWR_veg$SITE))
 ANWR_veg$PLOT <- as.factor(as.character(ANWR_veg$PLOT))
-ANWR_veg$YEAR <- as.numeric(ANWR_veg$YEAR)
 
 str(ANWR_veg)
 
-# Just shrub data
+# Separate datasets per functional group ----
+# Filtering shrub only data
 ITEX_shrubs <-  ANWR_veg %>% filter (FuncGroup == "Shrub") # no alnus???
 unique(ITEX_shrubs$GENUS) # Unique genus names 
 # [1] "Dryas"          "Salix"          "Vaccinium"      "Arctostaphylos" "Betula"         "Cassiope"       "Ledum"         
 str(ITEX_shrubs)
 
-# Just graminoid data 
+# Filtering graminoid only data 
 ITEX_gram <-  ANWR_veg %>% filter (FuncGroup == "Graminoid") 
 
-# Just forbs data 
+# Filtering forb only data
 ITEX_forbs <-  ANWR_veg %>% filter (FuncGroup == "Forb")
 
-# Just moss data 
+# Filtering moss only data
 ITEX_moss <-  ANWR_veg %>% filter (FuncGroup == "Moss")
 
-# Just lichen data
+# Filtering lichens only data
 ITEX_lich <-  ANWR_veg %>% filter (FuncGroup == "Lichen")
 
-
-# Calculate tot shrub cover each plot per year 
-# so that plot is basic replication unit
-# then find mean shrub cover per year (mean of plots)
-
-
-### Setting theme
-theme_shrub <- theme(legend.position = "right",
+# THEME ----
+theme_shrub <- function(){ theme(legend.position = "right",
                    axis.title.x = element_text(face="bold", size=20),
                    axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
                    axis.title.y = element_text(face="bold", size=20),
@@ -93,14 +86,10 @@ theme_shrub <- theme(legend.position = "right",
                    panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
                    panel.background = element_blank(), axis.line = element_line(colour = "black"), 
                    plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
-                   plot.margin = unit(c(1,1,1,1), units = , "cm"))
+                   plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
-
-# Mariana: mean cover of diff functional groups (FG) 
-## per plot over time (more representative of FG cover over time)
-### Q: is plotting mean cover right? 
-
-### SHRUB COVER ------
+### ****MODELLING***** ----
+### 1.SHRUB COVER ------
 
 # Mean shrub cover per plot per year
 ITEX_shrubs <- ITEX_shrubs %>%
@@ -108,25 +97,40 @@ ITEX_shrubs <- ITEX_shrubs %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
-str(ITEX_shrubs)
-### Mean shrub cover over time  
+# this way? 
+shrub_summary <- ITEX_shrubs  %>%
+   group_by(YEAR, PLOT) %>%
+   summarise(n = n(),  # Calculating sample size n
+            avg_shrub_cover = mean(FuncPlotCover),  
+             # Calculating mean hatching time
+             SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
+   mutate(SE = SD / sqrt(n))  # Calculating standard error
+
+
+str(shrub_summary)
+shrub_summary$PLOT <- as.factor(as.character(shrub_summary$PLOT))
+
+# Mean shrub cover over time  
 (shrub_scatter <- (ggplot(ITEX_shrubs, aes(x = YEAR, y = Mean_cover))+
   geom_point(size = 2) +
   geom_smooth(method = "lm") + 
-     labs(y = "Mean shrub cover\n", x = "\nYear") + 
-    theme_shrub))
+     labs(y = "Mean shrub % cover\n", x = "\nYear") + 
+    theme_shrub()))
+# NB scatters look the same for both methods BUT error ribbon larger for second method (summary)
 
-## Shrub cover increasing 
-
-# Model 6: Shrub cover over time ----
+# Model 6----
+# Shrub cover over time
 lm_shrub <- lm(Mean_cover~YEAR, data = ITEX_shrubs)
 summary(lm_shrub) # significant
 # F-statistic:  5.54 on 1 and 517 DF,  p-value: 0.01896
 
+lm_shrub_2 <- lm(avg_shrub_cover~YEAR, data = shrub_summary) ## Different!!!
+summary(lm_shrub_2) # not significant
+# F-statistic: 0.673 on 1 and 58 DF,  p-value: 0.4154
+
 # mixed effect model with plot and year as random effects
 model_6 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_shrubs)
 summary(model_6)
-
 # total variance: 17.20 + 13.67   =30.87
 # variance for plot =   17.20
 # amount of variance explained by random effect:  17.20 /30.87 = 0.5571753= ~56%
@@ -135,35 +139,34 @@ summary(model_6)
 # estimate for precip (exp variable =   0.154***    ) i.e. year positively impacts shrub cover
 # significant effect of year on shrub cover  = 0.154***    
 
-# Checking model 6 assumptions ----
+# Checking model 6 assumptions 
 plot(model_6)
 qqnorm(resid(model_6))
 qqline(resid(model_6))  # points fall nicely onto the line - good!
 
-# Output table model 6 ----
-library(stargazer)
-
+# Output table model 6 
 stargazer(model_6, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
-
 # Extracting model predictions 
 pred_model_6 <- ggpredict(model_6, terms = c("YEAR"))  # this gives overall predictions for the model
-write.csv(pred_model_6, file = "datasets/pred_model_6.csv")
+# write.csv(pred_model_6, file = "datasets/pred_model_6.csv")
 
 # Plot the predictions 
-(plot_model_6 <- (ggplot(pred_model_6) + 
+(shrub_cover_ANWR <- (ggplot(pred_model_6) + 
                     geom_line(aes(x = x, y = predicted)) +          # slope
                     geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                 fill = "lightgrey", alpha = 0.5) +  # error band
                     geom_point(data = ITEX_shrubs,                      # adding the raw data 
                                aes(x = YEAR, y = Mean_cover), size = 0.5) + 
-                    labs(x = "Year", y = "Shrub cover (%)", 
-                         title = "Shrub % cover increase in the ANWR") + 
+                    labs(x = "\nYear", y = "Shrub cover (%)\n", 
+                         title = "Shrub % cover increase in the ANWR\n") + 
                     theme_shrub()
 ))
+
+# ggsave(file = "output/figures/shrub_cover_ANWR.png")
 
 ### GRAMINOID COVER ----
 # Mean graminoid cover per plot per year
