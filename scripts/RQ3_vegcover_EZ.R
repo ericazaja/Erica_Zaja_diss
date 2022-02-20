@@ -524,7 +524,7 @@ stargazer(lmer_all, type = "text",
 lmer_all_rand <- lmer(Mean_cover~YEAR  +(1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
 summary(lmer_all_rand)
 
-# Output table model 7 
+# Output table 
 stargazer(lmer_all_rand, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -598,8 +598,8 @@ summary(lm_all)
 
 # ggsave(file = "output/figures/cover_all_fgroup.png")
 
-### SHRUB SPECIES -----
-#shrub species
+### ****SHRUB GENUS****-----
+# shrub species
 unique(ITEX_shrubs$GENUS)
 
 # Mean shrub cover per plot per year
@@ -608,12 +608,24 @@ ITEX_shrub_sp <- ITEX_shrubs %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
-(facet_scatter_shrub_by_sp <- (ggplot(ITEX_shrub_sp, aes(x = YEAR, y = Mean_cover, colour = GENUS))+
+# or this way? 
+shrub_sp_summary <- ITEX_shrubs %>%
+   group_by(YEAR, PLOT, GENUS) %>%
+   summarise(n = n(),  # Calculating sample size n
+             avg_shrub_sp_cover = mean(FuncPlotCover),  
+             # Calculating mean hatching time
+             SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
+   mutate(SE = SD / sqrt(n))  # Calculating standard error
+
+
+(facet_scatter_shrub_genus <- (ggplot(shrub_sp_summary, aes(x = YEAR, y = avg_shrub_sp_cover, colour = GENUS))+
                              geom_point(size = 2) +
                              geom_smooth(method = "lm") + 
                              facet_wrap(~ GENUS, scales = "free_y") +
-                             labs(y = "Mean shrub cover\n", x = "\nYear") +
-                             theme_shrub))
+                             labs(y = "Mean cover (%) \n", x = "\nYear") +
+                             theme_shrub()))
+dev.off()
+# ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 
 # Model ----
 
@@ -621,14 +633,18 @@ ITEX_shrub_sp <- ITEX_shrubs %>%
 lmer_shrub_sp <- lmer(Mean_cover~YEAR + GENUS + (1|PLOT) + (1+YEAR), data = ITEX_shrub_sp)
 summary(lmer_shrub_sp)
 
+stargazer(lmer_shrub_sp, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
 # Extracting model predictions 
 pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"))  # this gives overall predictions for the model
 # write.csv(pred_model_9, file = "datasets/pred_model_9.csv")
 
-
 # Plot the predictions 
 (plot_model_shrub_sp <- (ggplot(pred_model_shrub_sp) + 
-                     geom_line(aes(x = x, y = predicted, colour= group) )+          # slope
+                     geom_line(aes(x = x, y = predicted)+          # slope
                      geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                  fill = "lightgrey", alpha = 0.5) +  # error band
                      geom_point(data = ITEX_shrub_sp,                      # adding the raw data 
@@ -636,8 +652,8 @@ pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"))  # t
                         facet_wrap(~GENUS) +
                      labs(x = "Year", y = "Shrub species cover (%)", 
                           title = "Shrub species cover (%) in the ANWR") + 
-                     theme_shrub()
-)) # wrong
+                     theme_shrub())))
+                     # wrong
 
 # trying diff graph
 ITEX_shrub_sp$Predicted <- predict(lmer_shrub_sp, ITEX_shrub_sp)
