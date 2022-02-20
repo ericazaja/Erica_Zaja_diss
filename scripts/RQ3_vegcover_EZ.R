@@ -26,7 +26,7 @@ load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_EZ_diss.RDat
 
 # DATA WRANGLING ----
 
-## Exploration 
+# Exploration 
 max(ITEX_EZ_diss$YEAR) # latest year: 2020
 min(ITEX_EZ_diss$YEAR) # earliest year: 1981
 unique(ITEX_EZ_diss$SITE) # Unique site names
@@ -88,8 +88,8 @@ theme_shrub <- function(){ theme(legend.position = "right",
                    plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                    plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
-### ****MODELLING***** ----
-### 1.SHRUB COVER ------
+# ****MODELLING***** ----
+# 1.SHRUB COVER ------
 
 # Mean shrub cover per plot per year
 ITEX_shrubs <- ITEX_shrubs %>%
@@ -97,7 +97,10 @@ ITEX_shrubs <- ITEX_shrubs %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
-# this way? 
+str(ITEX_shrubs)
+ITEX_shrubs$PLOT <- as.factor(as.character(ITEX_shrubs$PLOT))
+
+# or this way? 
 shrub_summary <- ITEX_shrubs  %>%
    group_by(YEAR, PLOT) %>%
    summarise(n = n(),  # Calculating sample size n
@@ -111,11 +114,12 @@ str(shrub_summary)
 shrub_summary$PLOT <- as.factor(as.character(shrub_summary$PLOT))
 
 # Mean shrub cover over time  
-(shrub_scatter <- (ggplot(ITEX_shrubs, aes(x = YEAR, y = Mean_cover))+
-  geom_point(size = 2) +
-  geom_smooth(method = "lm") + 
+(shrub_scatter <- (ggplot(ITEX_shrubs)+
+  geom_point(aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 2) +
+  geom_smooth(aes(x = YEAR, y = Mean_cover), method = "lm") + 
      labs(y = "Mean shrub % cover\n", x = "\nYear") + 
     theme_shrub()))
+
 # NB scatters look the same for both methods BUT error ribbon larger for second method (summary)
 
 # Model 6----
@@ -160,7 +164,7 @@ pred_model_6 <- ggpredict(model_6, terms = c("YEAR"))  # this gives overall pred
                     geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                 fill = "lightgrey", alpha = 0.5) +  # error band
                     geom_point(data = ITEX_shrubs,                      # adding the raw data 
-                               aes(x = YEAR, y = Mean_cover), size = 0.5) + 
+                               aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 0.5) + 
                     labs(x = "\nYear", y = "Shrub cover (%)\n", 
                          title = "Shrub % cover increase in the ANWR\n") + 
                     theme_shrub()
@@ -168,21 +172,42 @@ pred_model_6 <- ggpredict(model_6, terms = c("YEAR"))  # this gives overall pred
 
 # ggsave(file = "output/figures/shrub_cover_ANWR.png")
 
-### GRAMINOID COVER ----
+# 2. GRAMINOID COVER ----
 # Mean graminoid cover per plot per year
 ITEX_gram <- ITEX_gram %>%
    group_by(YEAR, PLOT) %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
-(graminoid_scatter <- (ggplot(ITEX_gram, aes(x = YEAR, y = Mean_cover))+
-   geom_point(size = 2) +
-   geom_smooth(method = "lm") + 
-      labs(y = "Mean graminoid cover\n", x = "\nYear") +
-       theme_shrub))
-## Graminoid cover incrasing
+ITEX_gram$PLOT <- as.factor(as.character(ITEX_gram$PLOT))
 
-# Model 7: Graminoid cover over time -----
+# or this way? 
+gram_summary <- ITEX_gram %>%
+   group_by(YEAR, PLOT) %>%
+   summarise(n = n(),  # Calculating sample size n
+             avg_gram_cover = mean(FuncPlotCover),  
+             # Calculating mean hatching time
+             SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
+   mutate(SE = SD / sqrt(n))  # Calculating standard error
+
+gram_summary$PLOT <- as.factor(as.character(gram_summary$PLOT))
+
+(graminoid_scatter <- (ggplot(gram_summary)+
+   geom_point(aes(x = YEAR, y = avg_gram_cover, colour = PLOT), size = 2) +
+   geom_smooth(aes(x = YEAR, y = avg_gram_cover), method = "lm") + 
+      labs(y = "Mean graminoid cover\n", x = "\nYear") +
+      theme_shrub())) 
+   
+(graminoid_scatter <- (ggplot(ITEX_gram)+
+                          geom_point(aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 2) +
+                          geom_smooth(aes(x = YEAR, y = Mean_cover), method = "lm") + 
+                          labs(y = "Mean graminoid cover\n", x = "\nYear") +
+                          theme_shrub())) # same as above but diff error ribbon
+
+dev.off()
+str(ITEX_gram)
+# Model 7 ----
+# Graminoid cover over time 
 # mixed effect model with plot and year as random effects
 model_7 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_gram)
 summary(model_7)
@@ -200,8 +225,6 @@ qqnorm(resid(model_7))
 qqline(resid(model_7))  # points fall nicely onto the line - good!
 
 # Output table model 7 ----
-library(stargazer)
-
 stargazer(model_7, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -209,19 +232,21 @@ stargazer(model_7, type = "text",
 
 # Extracting model predictions 
 pred_model_7 <- ggpredict(model_7, terms = c("YEAR"))  # this gives overall predictions for the model
-write.csv(pred_model_7, file = "datasets/pred_model_7.csv")
+# write.csv(pred_model_7, file = "datasets/pred_model_7.csv")
 
 # Plot the predictions 
-(plot_model_7 <- (ggplot(pred_model_7) + 
+(gram_cover_ANWR <- (ggplot(pred_model_7) + 
                      geom_line(aes(x = x, y = predicted)) +          # slope
                      geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                  fill = "lightgrey", alpha = 0.5) +  # error band
                      geom_point(data = ITEX_gram,                      # adding the raw data 
-                                aes(x = YEAR, y = Mean_cover), size = 0.5) + 
-                     labs(x = "Year", y = "Graminoid cover (%)", 
-                          title = "Graminoid cover (%) constant in the ANWR") + 
+                                aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 0.5) + 
+                     labs(x = "\nYear", y = "Graminoid cover (%)\n", 
+                          title = "Graminoid cover (%) constant in the ANWR\n") + 
                      theme_shrub()
 ))
+
+# ggsave( file = "output/figures/gram_cover_ANWR.png")
 
 
 ### FORB COVER ----
