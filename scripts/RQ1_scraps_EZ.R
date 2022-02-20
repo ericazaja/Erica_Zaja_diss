@@ -703,4 +703,61 @@ b <- buffer(points, 1414.2 )
 plot(shrub_crop_latlong_agg)
 lines(b)
 
+# subdividing cropped map into smaller chunks (strips) and extracting biomass 
+# 1. 
+range_extent_1 <- extent(165454.7, 175454.7, 1933928.1, 2270618.1) # class: extent
+shrub_crop_1 <- crop(x = shrub_agb_p50, y = range_extent_1) # raster layer
+poly_1 <- as(range_extent_1, 'SpatialPolygons') # making extent into polygon
+class(poly_1) # checking it's a polygon
+extracted_shrub_1 <- raster::extract(x = shrub_crop_1, y = poly_1, df = TRUE) # extracting pixels
+glimpse(extracted_shrub_1)
+extracted_shrub_1 <- na.omit(extracted_shrub_1)
+
+# 2. 
+range_extent_2 <- extent(175454.7, 185454.7,  1933928.1, 2270618.1)
+shrub_crop_2 <- crop(x = shrub_agb_p50, y = range_extent_2)
+poly_2 <- as(range_extent_2, 'SpatialPolygons') # making extent into polygon
+class(poly_2) # checking it's a polygon
+extracted_shrub_2 <- raster::extract(x = shrub_crop_2, y = poly_2, df = TRUE) # extracting pixels
+glimpse(extracted_shrub_2)
+extracted_shrub_2 <- na.omit(extracted_shrub_2)
+
+# 3. 
+range_extent_3 <- extent(185454.7, 195454.7,  1933928.1, 2270618.1)
+shrub_crop_3 <- crop(x = shrub_agb_p50, y = range_extent_3)
+poly_3 <- as(range_extent_3, 'SpatialPolygons') # making extent into polygon
+class(poly_3) # checking it's a polygon
+extracted_shrub_3 <- raster::extract(x = shrub_crop_3, y = poly_3, df = TRUE) # extracting pixels
+glimpse(extracted_shrub_3)
+extracted_shrub_3 <- na.omit(extracted_shrub_3)
+
+# 4. 
+range_extent_4 <- extent(195454.7, 205454.7,  1933928.1, 2270618.1)
+shrub_crop_4 <- crop(x = shrub_agb_p50, y = range_extent_4)
+poly_4 <- as(range_extent_4, 'SpatialPolygons') # making extent into polygon
+class(poly_4) # checking it's a polygon
+extracted_shrub_4 <- raster::extract(x = shrub_crop_4, y = poly_4, df = TRUE) # extracting pixels
+glimpse(extracted_shrub_4)
+extracted_shrub_4 <- na.omit(extracted_shrub_4)
+
+
+# 5. 
+range_extent_5 <- extent(205454.7, 215454.7,  1933928.1, 2270618.1)
+shrub_crop_5 <- crop(x = shrub_agb_p50, y = range_extent_5)
+poly_5 <- as(range_extent_5, 'SpatialPolygons') # making extent into polygon
+class(poly_5) # checking it's a polygon
+extracted_shrub_5 <- raster::extract(x = shrub_crop_5, y = poly_5, df = TRUE) # extracting pixels
+glimpse(extracted_shrub_5)
+extracted_shrub_5 <- na.omit(extracted_shrub_5)
+
+
+# 6. 
+range_extent_6 <- extent(215454.7, 225454.7,  1933928.1, 2270618.1)
+shrub_crop_6 <- crop(x = shrub_agb_p50, y = range_extent_6)
+poly_6 <- as(range_extent_6, 'SpatialPolygons') # making extent into polygon
+class(poly_6) # checking it's a polygon
+extracted_shrub_6 <- raster::extract(x = shrub_crop_6, y = poly_6, df = TRUE) # extracting pixels
+glimpse(extracted_shrub_6)
+extracted_shrub_6 <- na.omit(extracted_shrub_6)
+
 
