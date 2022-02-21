@@ -668,6 +668,7 @@ ggplot(ITEX_shrub_sp, aes(YEAR, Predicted)) +
    theme_shrub() + 
    xlab("Year")
 
+
 # Plotting fixed effects
 (fe.effects <- plot_model(lmer_shrub_sp , show.values = TRUE))
 
