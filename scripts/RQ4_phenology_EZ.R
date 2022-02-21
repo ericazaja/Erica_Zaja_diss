@@ -114,7 +114,6 @@ threshold <- phenology_green %>% group_by(year)%>% summarise(min_DOY=min(DOY), m
   
 mean(threshold$mid_point) # 172.0385 threshold of early VS late greening
                                                     
-
 # Classifying early vs late greening years -----
 # Need to calculate proportion of plots greening early 
 range(phenology_green$DOY) # range of DOY of onset of greening

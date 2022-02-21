@@ -239,6 +239,7 @@ model_5a <- lmer(biomass ~ CH_TempMeanSummer*moisture + (1|gridcell), data = coo
 summary(model_5a)
 # NOT significant interaction effect 
 
+
 # model 5a output table 
 stargazer(model_5a, type = "text",
           digits = 3,
@@ -251,6 +252,20 @@ pred_model_5a <- ggpredict(model_5a, terms = c("CH_TempMeanSummer", "moisture"))
 
 plot_model(model_5a, type = "pred", terms = c("CH_TempMeanSummer", "moisture"))
 
+# Plot the predictions 
+(biomass_vs_moist_temp<- (ggplot(pred_model_5a) + 
+                         geom_line(aes(x = x, y = predicted, group = group, colour = group)) +          # slope
+                         geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error, 
+                                     fill = group), alpha = 0.5) +  # error band
+                         geom_point(data = coord.chelsa.combo.d,                      # adding the raw data 
+                                    aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size = 0.5) + 
+                         labs(x = "\nMean summer temperature (degC)", y = "Shrub biomass (kg/m2)\n", 
+                              title = "") + 
+                         theme_shrub()))
+
+# ggsave(file = "output/figures/biomass_vs_moist_temp.png")
+
+
 # Model 5b: biomass Vs temp*precip
 # Plot the predictions 
 model_5b <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer+ (1|gridcell), data = coord.chelsa.combo.d)
@@ -261,6 +276,7 @@ stargazer(model_5b, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
+
 
 # Extracting model predictions 
 pred_model_5b <- ggpredict(model_5b, terms = c("CH_TempMeanSummer", "CH_PrecipMeanSummer"))  # this gives overall predictions for the model
