@@ -5,6 +5,8 @@
 #                                                         #
 ##%######################################################%##
 
+# RQ: How has shrub phenology (greening) changed over time near the PCH range?
+
 # LOADING LIBRARIES -----
 library(readr)
 
@@ -90,6 +92,18 @@ unique(phenology_green$phenophase) # only greening
 unique(phenology_green$year)
 phenology_green$plot <- as.factor(as.character(phenology_green$plot))
 
+# Classifying early vs late greening years -----
+# Need to calculate proportion of plots greening early 
+range(phenology_green$DOY) # range of DOY of onset of greening
+# 135 (earliest greening DOY) 211 (latest greening DOY)
+# # 211-135 = 76 days difference
+# 76/2= 38
+# 135+38 = 173 midpoint
+
+# greening < 173 DOY --> early greening year
+# greening > 173 DOY --> late greening year
+
+# BUT checking the number of plots per year 
 # Group the dataframe by year to see the number of plots per year
 phenology_plots <- phenology_green %>% group_by(year) %>%
 summarise(plot.n = length(unique(plot))) 
@@ -114,26 +128,15 @@ threshold <- phenology_green %>% group_by(year)%>% summarise(min_DOY=min(DOY), m
   
 mean(threshold$mid_point) # 172.0385 threshold of early VS late greening
                                                     
-# Classifying early vs late greening years -----
-# Need to calculate proportion of plots greening early 
-range(phenology_green$DOY) # range of DOY of onset of greening
-# 135 (earliest greening DOY) 211 (latest greening DOY)
-# # 211-135 = 76 days difference
-# 76/2= 38
-# 135+38 = 173 midpoint
-
-# greening < 173 DOY --> early greening year
-# greening > 173 DOY --> late greening year
-
+# classifyin each plot in early VS late
 phenology_green <- phenology_green %>%
-  group_by(year) %>%
-  mutate(plot.n = length(unique(plot))) %>% 
-  mutate(year_type = case_when(DOY >= 172 ~ 'late' , # late year
-                                DOY < 172 ~ 'early')) # early year
+  group_by(year, plot) %>%
+  mutate(greening_type = case_when(DOY >= 172 ~ 'late' , # late greening
+                                DOY < 172 ~ 'early')) # early greening
 
-prop_green_early <- phenology_green %>% group_by(year) %>% summarise(n = count(year_type)/plot.n)
+# calculate proportion of ealry greening plots each year
+prop_green_early <- phenology_green %>% count(year_type == "early")
   
-phenology_green %>% group_by(year) %>% summarise(plot.n = length(unique(plot))) %>% mean(DOY/plot.n)
 
 # write.csv(phenology_green, file = "datasets/phenology_data/phenology_green.csv")
 # phenology_green <- read.csv("datasets/phenology_data/phenology_green.csv")
@@ -143,8 +146,16 @@ phenology_green$year_type <- as.factor(as.character(phenology_green$year_type))
 
 
 # EARLY vs LATE YEARS -----
-count_years <- phenology_green %>% group_by(year) %>% count(year_type)
+count_years <- phenology_green %>% group_by(year) %>% count(greening_type) #right!
+count_years_new <- left_join(count_years, phenology_plots) # join with phenology_plots
+prop_greening_plots <- count_years_new %>% mutate(prop = n/plot.n)
+str(prop_greening_plots)
+prop_greening_plots$greening_type <- as.factor(as.character(prop_greening_plots$greening_type))
 
+(years_count <- ggplot(count_years) +
+    geom_bar(aes(x = year_type, y = n), stat = "identity") +
+    labs(x = "year type (count)", y = "year") +
+    theme_shrub())
 str(phenology_green)
 
 (years_count <- ggplot(count_years) +
@@ -152,7 +163,7 @@ str(phenology_green)
     labs(x = "year type (count)", y = "year") +
     theme_shrub())
 
-count_years_early <- count_years %>% group_by(year) %>% filter(year_type=="early")
+count_years_early <- count_years %>% group_by(year) %>% filter(greening_type=="early")
 
 (early_years_count <- ggplot(count_years_early, aes(x = year, y = n)) +
     geom_point(size = 0.1) +
