@@ -101,6 +101,12 @@ phenology_green_99 <- phenology_green %>% filter(year == "1999") # 431
 phenology_green_00<- phenology_green %>% filter(year == "2000") # 450
 # NOT Same number of observations eachn year
 
+range(phenology_green_98$DOY)
+range(phenology_green_99$DOY)
+range(phenology_green_00$DOY)
+# different ranges every year
+
+# defining a threshold based on mean of all ranges 
 threshold <- phenology_green %>% group_by(year)%>% summarise(min_DOY=min(DOY), max_DOY=(max(DOY)), 
                                                              diff = max_DOY - min_DOY, 
                                                              divide = diff/2, mid_point = min_DOY+divide)
@@ -108,14 +114,6 @@ threshold <- phenology_green %>% group_by(year)%>% summarise(min_DOY=min(DOY), m
   
 mean(threshold$mid_point) # 172.0385 threshold of early VS late greening
                                                     
-
-
-
-%>% summarise(mean_DOY = mean(range))
-
-range(phenology_green_98$DOY)
-range(phenology_green_99$DOY)
-range(phenology_green_00$DOY)
 
 # Classifying early vs late greening years -----
 # Need to calculate proportion of plots greening early 
@@ -132,9 +130,10 @@ phenology_green <- phenology_green %>%
   group_by(year) %>%
   mutate(plot.n = length(unique(plot))) %>% 
   mutate(year_type = case_when(DOY >= 172 ~ 'late' , # late year
-                                DOY < 172 ~ 'early')) %>% # early year
-  mutate(proportion = count('late')/plot.n 
+                                DOY < 172 ~ 'early')) # early year
 
+prop_green_early <- phenology_green %>% group_by(year) %>% summarise(n = count(year_type)/plot.n)
+  
 phenology_green %>% group_by(year) %>% summarise(plot.n = length(unique(plot))) %>% mean(DOY/plot.n)
 
 # write.csv(phenology_green, file = "datasets/phenology_data/phenology_green.csv")
