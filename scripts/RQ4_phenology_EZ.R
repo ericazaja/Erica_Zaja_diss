@@ -65,7 +65,6 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
-# DATA VISUALISATION -----
 # Plot DOY on x and phenophase on y
 (phenophases <- (ggplot(phenology_new, aes(x = DOY, y = phenophase))+
                      geom_boxplot(size = 0.5) +
@@ -92,6 +91,7 @@ unique(phenology_green$phenophase) # only greening
 unique(phenology_green$year)
 phenology_green$plot <- as.factor(as.character(phenology_green$plot))
 
+# EARLY VS LATE GREENING -----
 # Classifying early vs late greening years -----
 # Need to calculate proportion of plots greening early 
 range(phenology_green$DOY) # range of DOY of onset of greening
@@ -134,63 +134,54 @@ phenology_green <- phenology_green %>%
   mutate(greening_type = case_when(DOY >= 172 ~ 'late' , # late greening
                                 DOY < 172 ~ 'early')) # early greening
 
-# calculate proportion of ealry greening plots each year
-prop_green_early <- phenology_green %>% count(year_type == "early")
-  
 
 # write.csv(phenology_green, file = "datasets/phenology_data/phenology_green.csv")
 # phenology_green <- read.csv("datasets/phenology_data/phenology_green.csv")
 
 # late vs early phenology year as factor
-phenology_green$year_type <- as.factor(as.character(phenology_green$year_type))
-
+phenology_green$greening_type <- as.factor(as.character(phenology_green$greening_type))
 
 # EARLY vs LATE YEARS -----
 count_years <- phenology_green %>% group_by(year) %>% count(greening_type) #right!
 count_years_new <- left_join(count_years, phenology_plots) # join with phenology_plots
 prop_greening_plots <- count_years_new %>% mutate(prop = n/plot.n)
+
 str(prop_greening_plots)
 prop_greening_plots$greening_type <- as.factor(as.character(prop_greening_plots$greening_type))
 
-(years_count <- ggplot(count_years) +
-    geom_bar(aes(x = year_type, y = n), stat = "identity") +
-    labs(x = "year type (count)", y = "year") +
-    theme_shrub())
-str(phenology_green)
+# DATA VISUALISATION ----
+# 1. EARLY GREENING  -----
+prop_years_early <- prop_greening_plots %>% group_by(year) %>% filter(greening_type=="early")
 
-(years_count <- ggplot(count_years) +
-    geom_bar(aes(x = year_type, y = n), stat = "identity") +
-    labs(x = "year type (count)", y = "year") +
-    theme_shrub())
-
-count_years_early <- count_years %>% group_by(year) %>% filter(greening_type=="early")
-
-(early_years_count <- ggplot(count_years_early, aes(x = year, y = n)) +
+(early_greening_plots <- ggplot(prop_years_early, aes(x = year, y = prop)) +
     geom_point(size = 0.1) +
     geom_smooth(method = "lm")+
-    labs(x = "Year", y = "Early greening years (n)") +
+    labs(x = "Year\n", y = "Early greening plots (prop)\n",
+         title = "Proportion of early greening plots increasing\n") +
     theme_shrub())
 
-# decrease in number (count) of early greening years 
+#ggsave(file = "output/figures/early_greening_plots.png")
+
 # need to add subsite?
-lm_early <- lm(n ~ year, data =count_years_early) 
-summary(lm_early) # sig
-# F-statistic: 6.113 on 1 and 23 DF,  p-value: 0.02125
+lm_early <- lm(prop ~ year, data = prop_years_early) 
+summary(lm_early) # not sig
+# F-statistic: 3.375 on 1 and 23 DF,  p-value: 0.07916
 
-# LATE YEARS ----
-count_years_late <- count_years %>% group_by(year) %>% filter(year_type=="late")
+# 2. LATE GREENING -----
+prop_years_late <- prop_greening_plots %>% group_by(year) %>% filter(greening_type=="late")
 
-(late_years_count <- ggplot(count_years_late, aes(x = year, y = n)) +
+(late_greening_plots <- ggplot(prop_years_late, aes(x = year, y = prop)) +
     geom_point(size = 0.1) +
     geom_smooth(method = "lm")+
-    labs(x = "Year", y = "Late greening years (n)") +
+    labs(x = "Year\n", y = "Late greening plots (prop)\n",
+               title = "Proportion of late greening plots decreasing\n") +
     theme_shrub())
 
-# INCREASE in number (count) of late greening years 
+# ggsave(file = "output/figures/late_greening_plots.png")
 
-lm_late <- lm(n ~ year, data = count_years_late) 
+lm_late <- lm(prop ~ year, data = prop_years_late ) 
 summary(lm_late) # not sig
-# F-statistic: 3.151 on 1 and 22 DF,  p-value: 0.08971
+# F-statistic: 0.09805 on 1 and 22 DF,  p-value: 0.7571
 
 
 (boxplot_green <- ggplot(phenology_green, aes(x = year, y = mean_onset_greening, fill = late_early)) +
@@ -199,6 +190,11 @@ summary(lm_late) # not sig
 
 str(phenology_green)
 
+(years_count <- ggplot(prop_greening_plots) +
+    geom_bar(aes(x = year, y = prop, colour = greening_type, fill= greening_type),
+             stat = "identity", binwidth = 3) +
+    labs(x = "greening type (count)", y = "proportion") +
+    theme_shrub())
 
 # TO DO -----
 # NB check I have same number of points per year? —> if not proportion of plots greening early. 
@@ -207,13 +203,5 @@ str(phenology_green)
 # lmer(count_no_early_years ~ years + (1 | SUBSITE))
 ## Year (x) VS DOY of greening (y) —> negative trned 
 # lmer(DOY ~ YEAR  + (1|subsite)) 
-
-##################################
-# Other ignore 
-# calculating mean onset of greening day per year
-phenology_green <- phenology_green %>%
-  group_by(year) %>%
-  mutate(mean_onset_greening = mean(DOY)) %>%
-  ungroup()
 
 
