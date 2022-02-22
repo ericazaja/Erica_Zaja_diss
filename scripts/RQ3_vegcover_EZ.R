@@ -41,16 +41,14 @@ unique(ANWR_veg$YEAR) # Unique years
 unique(ANWR_veg$PLOT) # Unique plot names (1 to 10)
 length(unique(ANWR_veg$PLOT)) # 10 plots 
 
-# Group the dataframe by YEAR to see the number of  plots per year
-ANWR_veg %>% group_by(YEAR) %>%
-   summarise(plot.n = length(PLOT))
-# YEAR      plot.n
-# 1  1996    379
-# 2  1997    401
-# 3  2000    388
-# 4  2002    394
-# 5  2005    378
-# 6  2007    375
+# How may unique plot and year combos
+unique <- unique(ANWR_veg$SiteSubsitePlotYear) # 145
+
+# Group the dataframe by year to see the number of plots per year
+ANWR_plots <- ANWR_veg %>%
+   group_by(YEAR) %>%
+   summarise(plot.n = length(unique(SiteSubsitePlot))) %>% 
+   ungroup() # different amount of plots each year
 
 unique(ANWR_veg$FuncGroup) # Unique functional groups names
 # [1] "Shrub"     "Lichen"    "Moss"      "Forb"      "Graminoid"
@@ -60,12 +58,13 @@ unique(ANWR_veg$GENUS) # Unique genus names
 ANWR_veg$GENUS <- as.factor(as.character(ANWR_veg$GENUS))
 ANWR_veg$SITE <- as.factor(as.character(ANWR_veg$SITE))
 ANWR_veg$PLOT <- as.factor(as.character(ANWR_veg$PLOT))
+ANWR_veg$FuncGroup<- as.factor(as.character(ANWR_veg$FuncGroup))
 
 str(ANWR_veg)
 
 # Separate datasets per functional group ----
 # Filtering shrub only data
-ITEX_shrubs <-  ANWR_veg %>% filter (FuncGroup == "Shrub") # no alnus???
+ITEX_shrubs <-  ANWR_veg %>% filter (FuncGroup == "Shrub") 
 unique(ITEX_shrubs$GENUS) # Unique genus names 
 # [1] "Dryas"          "Salix"          "Vaccinium"      "Arctostaphylos" "Betula"         "Cassiope"       "Ledum"         
 str(ITEX_shrubs)
@@ -95,12 +94,19 @@ theme_shrub <- function(){ theme(legend.position = "right",
                    plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
 # ****MODELLING***** ----
+
 # 1. SHRUB COVER ------
 
 # Mean shrub cover per plot per year
 ITEX_shrubs <- ITEX_shrubs %>%
    group_by(YEAR, PLOT) %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
+   ungroup()
+
+# OR ?
+ITEX_shrubs_mean <- ITEX_shrubs %>%
+   group_by(SiteSubsitePlotYear) %>%
+   mutate(mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
 str(ITEX_shrubs)
@@ -138,9 +144,13 @@ lm_shrub_2 <- lm(avg_shrub_cover~YEAR, data = shrub_summary) ## Different!!!
 summary(lm_shrub_2) # not significant
 # F-statistic: 0.673 on 1 and 58 DF,  p-value: 0.4154
 
+lm_shrub_3 <- lm(mean_cover~YEAR, data = ITEX_shrubs_mean )
+summary(lm_shrub_3)
+
 # mixed effect model with plot and year as random effects
-model_6 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_shrubs)
+model_6 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_shrubs)
 summary(model_6)
+
 # total variance: 17.20 + 13.67   =30.87
 # variance for plot =   17.20
 # amount of variance explained by random effect:  17.20 /30.87 = 0.5571753= ~56%
@@ -161,7 +171,10 @@ stargazer(model_6, type = "text",
           digit.separator = "")
 
 # Extracting model predictions 
-pred_model_6 <- ggpredict(model_6, terms = c("YEAR"))  # this gives overall predictions for the model
+pred_model_6 <- ggpredict(model_6, terms = c("YEAR", "PLOT"))
+# this gives overall predictions for the model
+pred_model_6a <- ggpredict(model_6, terms = c("YEAR"))
+
 # write.csv(pred_model_6, file = "datasets/pred_model_6.csv")
 
 # Plot the predictions 
@@ -684,6 +697,35 @@ predict_sp <- ggpredict(lmer_shrub_sp , terms = c("YEAR", "GENUS"), type = "re")
       theme(legend.position = "bottom") +
       labs(x = "\nYear", y = "Predicted mean % cover\n"))
 # all increasing?
+
+
+# SHRUB cover VS LAT ----
+shrub_lat <- lmer(Mean_cover ~ LAT + (1|SiteSubsitePlotYear), data = ITEX_shrubs)
+summary(shrub_lat)
+
+ITEX_shrubs$lat_grid<- scale(ITEX_shrubs$lat_grid, center = TRUE, scale = TRUE)
+ITEX_shrubs$LAT<- scale(ITEX_shrubs$LAT, center = TRUE, scale = TRUE)
+
+stargazer(shrub_lat, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
+# Extracting model predictions 
+pred_shrub_lat <- ggpredict(shrub_lat, terms = c("LAT"))  # this gives overall predictions for the model
+# write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
+
+# Plot the predictions 
+(plot_model_shrub_lat <- (ggplot(pred_shrub_lat ) + 
+                            geom_line(aes(x = x, y = predicted)) +          # slope
+                            geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                            fill = "lightgrey", alpha = 0.5) +  # error band
+                            geom_point(data = ITEX_shrubs,                      # adding the raw data 
+                                       aes(x = LAT, y = Mean_cover), size = 0.5) + 
+                            labs(x = "Year", y = "Vegetation cover (%)", 
+                                 title = "") + 
+                            # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
+                            theme_shrub()))
 
 #####################################################################################
 
