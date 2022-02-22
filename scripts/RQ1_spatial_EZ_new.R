@@ -309,13 +309,15 @@ r3_rsample_categ_clust <- r3_rsample_categ %>%
   add_column(cluster = clusters$cluster )
 
 # adding cluster column to dataframe
-r3_sample_categ_clust <- rbind(r3_sample_categ, cluster.df)
-r3_sample_categ_clust$cluster <- as.factor(as.character(r3_sample_categ_clust$cluster ))
-str(r3_sample_categ_clust$cluster)
+
+r3_rsample_categ_clust$cluster <- as.factor(as.character(r3_rsample_categ_clust$cluster ))
+str(r3_rsample_categ_clust$cluster)
 
 (scatter_high_medium_low <- ggplot(r3_rsample_categ_clust) +
     geom_point(aes(x = lat, y = biomass, colour = cluster), size = 0.5) +
-    geom_smooth(aes(x = lat, y = biomass), method = "lm") +
+    scale_colour_manual(values = c("1"= "tan", "2" = "green", "3"= "green4"))+
+     geom_smooth(aes(x = lat, y = biomass, colour = cluster), method = "lm") +
+    labs(x= "Latitude\n", y = "\nShrub biomass (kg/m2)") +
     theme_shrub())
 
 # ggsave(file = "output/figures/scatter_high_medium_low.png")
