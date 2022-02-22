@@ -71,6 +71,7 @@ theme_shrub <- function(){ theme(legend.position = "right",
                     geom_boxplot(size = 0.5) +
                     labs(y = "Phenophase\n", x = "\nDay of Year") +                    
                    theme_shrub()))
+# reorder levels
 
 # ggsave(file = "output/figures/phenophases.png")
 
@@ -135,6 +136,8 @@ phenology_mean_doy <- phenology_green_id %>%
   mutate(mean.doy = mean(DOY)) %>% 
   ungroup()
 
+hist(phenology_mean_doy$mean.doy) # looks normal 
+
 # Shrinking the dataframe to retain one row per plot etc.
 phenology_green_trim <- phenology_mean_doy %>% 
   dplyr::select(study_area, subsite, plot, year, SiteSubsitePlotYear, SiteSubsitePlot,
@@ -186,6 +189,8 @@ prop_greening_plots <- count_years_wide %>%
          prop_late = late / total_plots) %>% 
   mutate(prop_total = prop_early + prop_late) # Just checking = 1
 
+hist(prop_greening_plots$prop_early)# not normal
+hist(prop_greening_plots$prop_late)# not normal 
 
 
 # DATA VISUALISATION ----
@@ -205,6 +210,10 @@ lm_early <- lm(prop_early~ year, data = prop_greening_plots)
 summary(lm_early) # not sig
 # F-statistic: 1.064 on 1 and 24 DF,  p-value: 0.3126
 
+# Generalised linear model family binomial 
+glm_early <- glm(prop_early ~ year, family = binomial, data = prop_greening_plots)
+summary(glm_early)
+
 
 # 2. LATE GREENING -----
 (late_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_late)) +
@@ -222,6 +231,10 @@ lm_late <- lm(prop_late~ year, data = prop_greening_plots)
 summary(lm_late) # not sig
 # F-statistic: 1.064 on 1 and 24 DF,  p-value: 0.3126
 
+# Generalised linear model family binomial 
+glm_late <- glm(prop_late ~ year, family = binomial, data = prop_greening_plots)
+summary(glm_late)
+
 phenology_green_trim$study_area<- as.factor(as.character(phenology_green_trim$study_area))
 phenology_green_trim$SiteSubsitePlotYear<- as.factor(as.character(phenology_green_trim$SiteSubsitePlotYear))
 str(phenology_green_trim)
@@ -238,7 +251,8 @@ stargazer(lmer_green, type = "text",
 # Extract
 
 # Extracting model predictions 
-pred_lmer_green <- ggpredict(lmer_green, terms = c("year"))  # this gives overall predictions for the model
+pred_lmer_green <- ggpredict(lmer_green, terms = c("year", "study_area"), type = "re")  # this gives overall predictions for the model
+
 write.csv(pred_lmer_green, file = "datasets/pred_model_10.csv")
 
 # Plot the predictions 
@@ -255,7 +269,11 @@ write.csv(pred_lmer_green, file = "datasets/pred_model_10.csv")
 # ggsave(file = "output/figures/greening_model.png")
 
 # I might want random slopes/intercepts?
-
+(slopes_pred_lmer_green <- ggplot(pred_lmer_green, aes(x = x, y = predicted, colour = group)) +
+    stat_smooth(method = "lm", se = FALSE)  +
+    theme(legend.position = "bottom")+
+    labs( x= "Year", y = "mean DOY"))
+ggsave(file = "outputs/figures/slopes_pred_lmer_green.png")
 
 (years_count <- ggplot(prop_greening_plots) +
     geom_bar(aes(x = year, y = prop, colour = greening_type, fill= greening_type),

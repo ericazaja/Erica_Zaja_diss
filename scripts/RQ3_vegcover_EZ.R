@@ -171,7 +171,7 @@ stargazer(model_6, type = "text",
           digit.separator = "")
 
 # Extracting model predictions 
-pred_model_6 <- ggpredict(model_6, terms = c("YEAR", "PLOT"))
+pred_model_6 <- ggpredict(model_6, terms = c("YEAR"))
 # this gives overall predictions for the model
 pred_model_6a <- ggpredict(model_6, terms = c("YEAR"))
 
@@ -188,6 +188,7 @@ pred_model_6a <- ggpredict(model_6, terms = c("YEAR"))
                          title = "Shrub % cover increase in the ANWR\n") + 
                     theme_shrub()
 ))
+
 
 # ggsave(file = "output/figures/shrub_cover_ANWR.png")
 
@@ -531,37 +532,19 @@ stargazer(lmer_all, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 # func group significant 
-
-# F.group random ----
-# mixed model with functional group as random effect
-lmer_all_rand <- lmer(Mean_cover~YEAR  +(1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
-summary(lmer_all_rand)
-
-# Output table 
-stargazer(lmer_all_rand, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-# year not significant
-
 # Extracting model predictions 
-pred_model_all_rand <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"))  # this gives overall predictions for the model
+pred_lmer_all <- ggpredict(lmer_all, terms = c("YEAR", "FuncGroup"))  # this gives overall predictions for the model
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
-# Plot the predictions 
-(plot_model_all_rand <- (ggplot(pred_model_all_rand) + 
-                      geom_line(aes(x = x, y = predicted, fill = group)) +          # slope
-                      # geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                                  #fill = "lightgrey", alpha = 0.5) +  # error band
-                      geom_point(data = ITEX_all_veg,                      # adding the raw data 
-                                 aes(x = YEAR, y = Mean_cover, colour= FuncGroup), size = 0.5) + 
-                      labs(x = "Year", y = "Vegetation cover (%)", 
-                           title = "") + 
-                      # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
-                      theme_shrub()))
+predics <- ggpredict(lmer_all, terms = c("YEAR", "FuncGroup"), type = "re")
+(pred_plot2 <- ggplot(predics, aes(x = x, y = predicted, colour = group)) +
+      stat_smooth(method = "lm", se = FALSE)  +
+      scale_y_continuous(limits = c(0, 35)) +
+      theme(legend.position = "bottom") +
+      labs(x = "\nYear", y = "Cover\n"))
 
 # trying diff graph
-ITEX_all_veg$Predicted <- predict(lmer_all_rand, ITEX_all_veg)
+ITEX_all_veg$Predicted <- predict(lmer_all, ITEX_all_veg)
 
 # plot predicted values
 ggplot(ITEX_all_veg, aes(YEAR, Predicted)) +
@@ -727,6 +710,36 @@ pred_shrub_lat <- ggpredict(shrub_lat, terms = c("lat_grid"))  # this gives over
                             theme_shrub()))
 
 ggsave(file = "output/figures/plot_model_shrub_lat.png")
+
+# SHRUB cover VS LONG ----
+shrub_long<- lmer(Mean_cover ~ lon_grid + (1|SiteSubsitePlotYear), data = ITEX_shrubs)
+summary(shrub_long)
+
+ITEX_shrubs$lat_grid<- scale(ITEX_shrubs$lon_grid, center = TRUE, scale = TRUE)
+
+stargazer(shrub_long, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
+# Extracting model predictions 
+pred_shrub_lon <- ggpredict(shrub_long, terms = c("lon_grid"))  # this gives overall predictions for the model
+# write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
+
+# Plot the predictions 
+(plot_model_shrub_lon <- (ggplot(pred_shrub_lon) + 
+                             geom_line(aes(x = x, y = predicted)) +          # slope
+                             geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                                         fill = "lightgrey", alpha = 0.5) +  # error band
+                             geom_point(data = ITEX_shrubs,                      # adding the raw data 
+                                        aes(x = lon_grid, y = Mean_cover), size = 0.5) + 
+                             labs(x = "Longitude", y = "Shrub cover (%)", 
+                                  title = "") + 
+                             # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
+                             theme_shrub()))
+
+ggsave(file = "output/figures/plot_model_shrub_lon.png")
+
 
 #####################################################################################
 

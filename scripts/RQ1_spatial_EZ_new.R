@@ -288,13 +288,8 @@ r3_rsample_categ$biomass_level <- as.factor(as.character(r3_rsample_categ$biomas
 
 # ggsave(file = "output/figures/hist_high_medium_low.png")
 
-#  Model ----
+# KMEANS ----
 # Kmeans clustering: Biomass level ~ lat 
-model_level <- lmer(biomass_level_0~lat + (1|gridcell), data = r3_rsample_categ)
-summary(model_level)
-# latitude has a negative effect on biomass level ?
-# I need Categorical logistic regression ?
-
 
 clusters <- kmeans(r3_rsample_categ, centers = 3, nstart = 25)
 cluster.df <- as.data.frame(clusters$cluster)
@@ -321,7 +316,7 @@ str(r3_rsample_categ_clust$cluster)
     theme_shrub())
 
 # ggsave(file = "output/figures/scatter_high_medium_low.png")
-
+dev.off()
 # END -----
 
 
