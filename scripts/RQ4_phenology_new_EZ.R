@@ -66,46 +66,54 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
-# # Plot DOY on x and phenophase on y
-# (phenophases <- (ggplot(phenology_new, aes(x = DOY, y = phenophase))+
-#                    geom_boxplot(size = 0.5) +
-#                    labs(y = "Phenophase\n", x = "\nDay of Year") + 
-#                    theme_shrub()))
-# 
-# # ggsave(file = "output/figures/phenophases.png")
+# Plot DOY on x and phenophase on y
+(phenophases <- (ggplot(phenology_new, aes(x = DOY, y = phenophase))+
+                    geom_boxplot(size = 0.5) +
+                    labs(y = "Phenophase\n", x = "\nDay of Year") +                    
+                   theme_shrub()))
 
-# I want to compare onset of greening (DOY) over the years
+# ggsave(file = "output/figures/phenophases.png")
+
 # filter for greening only
 phenology_green <- phenology_new %>%
   filter(phenophase == "green")
 
-# unique(phenology_green$phenophase) # only greening
-# 
-# (greening <- (ggplot(phenology_green, aes(x = phenophase, y = DOY))+
-#                 geom_boxplot(size = 0.5) +
-#                 labs(x = "\nOnset of shrub greening", y = "Day of Year\n") + 
-#                 theme_shrub()))
-# 
-# # ggsave(file = "output/figures/greening.png")
-# 
-# unique(phenology_green$year)
+unique(phenology_green$phenophase) # only greening
+
+(greening <- (ggplot(phenology_green, aes(x = phenophase, y = DOY))+
+                 geom_boxplot(size = 0.5) +
+                 labs(x = "\nOnset of shrub greening", y = "Day of Year\n") +                  theme_shrub()))
+ 
+# ggsave(file = "output/figures/greening.png")
+unique(phenology_green$year)
 
 phenology_green$plot <- as.factor(as.character(phenology_green$plot))
 
 # EARLY VS LATE GREENING -----
 
-# Classifying early vs late greening years -----
-
-# Need to calculate proportion of plots greening early 
+# Classifying early vs late greening plots
 range(phenology_green$DOY) # range of DOY of onset of greening
 
 # 135 (earliest greening DOY) 211 (latest greening DOY)
-# # 211-135 = 76 days difference
+# 211-135 = 76 days difference
 # 76/2= 38
 # 135+38 = 173 midpoint
 # greening < 173 DOY --> early greening year
 # greening > 173 DOY --> late greening year
+
 # BUT checking the number of plots per year 
+phenology_green_98 <- phenology_green %>% filter(year == "1998") # 451 obs
+phenology_green_99 <- phenology_green %>% filter(year == "1999") # 431
+phenology_green_00<- phenology_green %>% filter(year == "2000") # 450
+# NOT Same number of observations eachn year
+# There are different numeber of total plots every year
+# SO need to calculate proportion of plots greening early each year
+
+# checking range of DOY each year
+range(phenology_green_98$DOY)
+range(phenology_green_99$DOY)
+range(phenology_green_00$DOY)
+# different ranges every year so need to find mean DOY 
 
 # Create a new version of phenology_green with unique plot identifiers
 phenology_green_id <- phenology_green %>% 
@@ -133,37 +141,22 @@ phenology_green_trim <- phenology_mean_doy %>%
                 lat, long, elevation, ecosystem, exstart, soil_moisture, treatment, mean.doy) %>% 
   distinct(SiteSubsitePlotYear, mean.doy, .keep_all = TRUE) # 2980 rows, perfect!
 
-# # There are different numeber of total plots every year
-# str(phenology_green)
-# phenology_green_98 <- phenology_green %>% filter(year == "1998") # 451 obs
-# phenology_green_99 <- phenology_green %>% filter(year == "1999") # 431
-# phenology_green_00<- phenology_green %>% filter(year == "2000") # 450
-# # NOT Same number of observations eachn year
-# range(phenology_green_98$DOY)
-# range(phenology_green_99$DOY)
-# range(phenology_green_00$DOY)
-# # different ranges every year
-# # defining a threshold based on mean of all ranges 
-# threshold <- phenology_green %>%
-#   group_by(year) %>%
-#   summarise(min_DOY = min(DOY),
-#             max_DOY = (max(DOY)),
-#             diff = max_DOY - min_DOY,
-#             divide = diff / 2, mid_point = min_DOY + divide) %>% 
-#   ungroup()
-# 
-# 
-# mean(threshold$mid_point) # 172.0385 threshold of early VS late greening
+
+# defining a threshold based on mean of all ranges 
+threshold <- phenology_green_trim %>% group_by(SiteSubsitePlotYear) %>% 
+  summarise(mean = mean(mean.doy))
+
+mean(threshold$mean) # 168.2861 threshold of early VS late greening
 
 # Classify as early or late plots
 phenology_green_class <- phenology_green_trim %>% 
-  mutate(greening_type = ifelse(mean.doy >= 172, "late", "early"))
+  mutate(greening_type = ifelse(mean.doy >= 168, "late", "early"))
 
 # late vs early phenology year as factor
 phenology_green_class$greening_type <- as.factor(phenology_green_class$greening_type)
 
 
-# EARLY vs LATE YEARS -----
+# COUNT -----
 
 # Count the number of plots of early and late type per year
 count_years <- phenology_green_class %>% 
@@ -197,8 +190,6 @@ prop_greening_plots <- count_years_wide %>%
 
 # DATA VISUALISATION ----
 # 1. EARLY GREENING  -----
-prop_years_early <- prop_greening_plots %>% group_by(year) %>% filter(greening_type=="early")
-
 (early_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_early)) +
     geom_point(size = 0.1) +
     geom_smooth(method = "lm")+
@@ -208,12 +199,14 @@ prop_years_early <- prop_greening_plots %>% group_by(year) %>% filter(greening_t
 
 ggsave(file = "output/figures/early_greening_plots.png")
 # need to add subsite?
+
+# Model ----
 lm_early <- lm(prop_early~ year, data = prop_greening_plots) 
 summary(lm_early) # not sig
-# F-statistic: 1.081 on 1 and 24 DF,  p-value: 0.3089
+# F-statistic: 1.064 on 1 and 24 DF,  p-value: 0.3126
+
 
 # 2. LATE GREENING -----
-prop_years_late <- prop_greening_plots %>% group_by(year) %>% filter(greening_type=="late")
 (late_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_late)) +
     geom_point(size = 0.1) +
     geom_smooth(method = "lm")+
@@ -223,23 +216,54 @@ prop_years_late <- prop_greening_plots %>% group_by(year) %>% filter(greening_ty
 
 ggsave(file = "output/figures/late_greening_plots.png")
 
-lm_late <- lm(prop_late ~ year, data = prop_greening_plots ) 
+# Model ----
+# simple lm
+lm_late <- lm(prop_late~ year, data = prop_greening_plots) 
 summary(lm_late) # not sig
-# F-statistic: 1.081 on 1 and 24 DF,  p-value: 0.3089
+# F-statistic: 1.064 on 1 and 24 DF,  p-value: 0.3126
 
-(boxplot_green <- ggplot(phenology_green, aes(x = year, y = mean_onset_greening, fill = late_early)) +
-    geom_boxplot() +
-    theme_minimal()) # more early greening in later years!
-str(phenology_green)
+phenology_green_trim$study_area<- as.factor(as.character(phenology_green_trim$study_area))
+phenology_green_trim$SiteSubsitePlotYear<- as.factor(as.character(phenology_green_trim$SiteSubsitePlotYear))
+str(phenology_green_trim)
+
+# Linear mixed model ----
+# lmer with study_area as random effect 
+lmer_green <- lmer(mean.doy ~ year + (1|study_area), data = phenology_green_trim ) 
+summary(lmer_green)
+stargazer(lmer_green, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
+# Extract
+
+# Extracting model predictions 
+pred_lmer_green <- ggpredict(lmer_green, terms = c("year"))  # this gives overall predictions for the model
+write.csv(pred_lmer_green, file = "datasets/pred_model_10.csv")
+
+# Plot the predictions 
+(greening_model <- (ggplot(pred_lmer_green) + 
+                         geom_line(aes(x = x, y = predicted)) +          # slope
+                         geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                                     fill = "lightgrey", alpha = 0.5) +  # error band
+                         geom_point(data = phenology_green_trim,                      # adding the raw data 
+                                    aes(x = year, y = mean.doy, colour = study_area), size = 0.5) + 
+                         labs(x = "\nYear", y = "\nMean greening DOY", 
+                              title = "Mean greening DOY not changing\n") + 
+                         theme_shrub()))
+
+# ggsave(file = "output/figures/greening_model.png")
+
+# I might want random slopes/intercepts?
+
+
 (years_count <- ggplot(prop_greening_plots) +
     geom_bar(aes(x = year, y = prop, colour = greening_type, fill= greening_type),
              stat = "identity", binwidth = 3) +
     labs(x = "greening type (count)", y = "proportion") +
     theme_shrub())
+
 # TO DO 
-# NB check I have same number of points per year? —> if not proportion of plots greening early. 
-# Count of number of early years
-# Barplot of count of number of early years (x = year [1998-2020], y = count of number of early years)
 # lmer(count_no_early_years ~ years + (1 | SUBSITE))
 ## Year (x) VS DOY of greening (y) —> negative trned 
 # lmer(DOY ~ YEAR  + (1|subsite)) 
