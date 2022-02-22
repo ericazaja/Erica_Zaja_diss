@@ -294,14 +294,31 @@ model_level <- lmer(biomass_level_0~lat + (1|gridcell), data = r3_rsample_categ)
 summary(model_level)
 # latitude has a negative effect on biomass level ?
 # I need Categorical logistic regression ?
-(scatter_high_medium_low <- ggplot(r3_rsample_categ, aes(x = lat, y = biomass, colour = biomass_level)) +
-    geom_point(size = 0.1) +
-    geom_smooth(method = "lm") +
-    theme_shrub())
+
 
 clusters <- kmeans(r3_rsample_categ, centers = 3, nstart = 25)
-
+cluster.df <- as.data.frame(clusters$cluster)
 cluster_plot <- fviz_cluster(clusters, data = r3_rsample_categ)
+
+r3_rsample_categ <- r3_rsample_00 %>%
+  mutate(biomass_level = case_when (biomass < 267.1607 ~ 'Low', # lower than mean biomass
+                                    biomass >= 267.1607 & biomass < 400 ~ 'Medium', 
+                                    biomass >= 400 ~ 'High'))
+
+r3_rsample_categ_clust <- r3_rsample_categ %>%
+  add_column(cluster = clusters$cluster )
+
+# adding cluster column to dataframe
+r3_sample_categ_clust <- rbind(r3_sample_categ, cluster.df)
+r3_sample_categ_clust$cluster <- as.factor(as.character(r3_sample_categ_clust$cluster ))
+str(r3_sample_categ_clust$cluster)
+
+(scatter_high_medium_low <- ggplot(r3_rsample_categ_clust) +
+    geom_point(aes(x = lat, y = biomass, colour = cluster), size = 0.5) +
+    geom_smooth(aes(x = lat, y = biomass), method = "lm") +
+    theme_shrub())
+
+# ggsave(file = "output/figures/scatter_high_medium_low.png")
 
 # END -----
 
