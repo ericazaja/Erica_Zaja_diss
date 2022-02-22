@@ -31,6 +31,7 @@ library(geosphere)
 library(dplyr)
 library(ggeffects)
 library(stargazer)
+library(factoextra)
 
 
 ##  LOADING DATA -----
@@ -266,10 +267,11 @@ range(r3_rsample_00$biomass)
 r3_rsample_categ <- r3_rsample_00 %>%
   mutate(biomass_level = case_when (biomass < 267.1607 ~ 'Low', # lower than mean biomass
                                     biomass >= 267.1607 & biomass < 400 ~ 'Medium', 
-                                    biomass >= 400 ~ 'High')) %>%
-  mutate(biomass_level_0 = case_when (biomass_level == 'Low' ~ 0, # 0 = low level
-                                    biomass_level == 'Medium' ~ 1, # 1 = medium level
-                                    biomass_level == 'High'~ 2)) # 2 = high level
+                                    biomass >= 400 ~ 'High')) %>% 
+  mutate(biomass_level_0 = case_when (biomass_level == 'Low' ~ 1, # 1 = low level
+                                    biomass_level == 'Medium' ~ 2, # 2 = medium level
+                                    biomass_level == 'High'~ 3)) %>% # 3 = high level
+ dplyr::select(lat, biomass, biomass_level_0)
 
 r3_rsample_categ$biomass_level <- as.factor(as.character(r3_rsample_categ$biomass_level))
 
@@ -286,8 +288,8 @@ r3_rsample_categ$biomass_level <- as.factor(as.character(r3_rsample_categ$biomas
 
 # ggsave(file = "output/figures/hist_high_medium_low.png")
 
-#  ***Model *** ----
-# Biomass level ~ lat
+#  Model ----
+# Kmeans clustering: Biomass level ~ lat 
 model_level <- lmer(biomass_level_0~lat + (1|gridcell), data = r3_rsample_categ)
 summary(model_level)
 # latitude has a negative effect on biomass level ?
@@ -296,6 +298,10 @@ summary(model_level)
     geom_point(size = 0.1) +
     geom_smooth(method = "lm") +
     theme_shrub())
+
+clusters <- kmeans(r3_rsample_categ, centers = 3, nstart = 25)
+
+cluster_plot <- fviz_cluster(clusters, data = r3_rsample_categ)
 
 # END -----
 

@@ -700,11 +700,10 @@ predict_sp <- ggpredict(lmer_shrub_sp , terms = c("YEAR", "GENUS"), type = "re")
 
 
 # SHRUB cover VS LAT ----
-shrub_lat <- lmer(Mean_cover ~ LAT + (1|SiteSubsitePlotYear), data = ITEX_shrubs)
+shrub_lat <- lmer(Mean_cover ~ lat_grid + (1|SiteSubsitePlotYear), data = ITEX_shrubs)
 summary(shrub_lat)
 
 ITEX_shrubs$lat_grid<- scale(ITEX_shrubs$lat_grid, center = TRUE, scale = TRUE)
-ITEX_shrubs$LAT<- scale(ITEX_shrubs$LAT, center = TRUE, scale = TRUE)
 
 stargazer(shrub_lat, type = "text",
           digits = 3,
@@ -712,20 +711,22 @@ stargazer(shrub_lat, type = "text",
           digit.separator = "")
 
 # Extracting model predictions 
-pred_shrub_lat <- ggpredict(shrub_lat, terms = c("LAT"))  # this gives overall predictions for the model
+pred_shrub_lat <- ggpredict(shrub_lat, terms = c("lat_grid"))  # this gives overall predictions for the model
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
 # Plot the predictions 
-(plot_model_shrub_lat <- (ggplot(pred_shrub_lat ) + 
+(plot_model_shrub_lat <- (ggplot(pred_shrub_lat) + 
                             geom_line(aes(x = x, y = predicted)) +          # slope
                             geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                             fill = "lightgrey", alpha = 0.5) +  # error band
                             geom_point(data = ITEX_shrubs,                      # adding the raw data 
-                                       aes(x = LAT, y = Mean_cover), size = 0.5) + 
-                            labs(x = "Year", y = "Vegetation cover (%)", 
+                                       aes(x = lat_grid, y = Mean_cover), size = 0.5) + 
+                            labs(x = "Latitude", y = "Shrub cover (%)", 
                                  title = "") + 
                             # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
                             theme_shrub()))
+
+ggsave(file = "output/figures/plot_model_shrub_lat.png")
 
 #####################################################################################
 
