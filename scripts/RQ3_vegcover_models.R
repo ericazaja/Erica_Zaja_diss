@@ -91,7 +91,7 @@ dev.off()
 # Model ----
 
 # mixed effect model with plot and year as random effects
-lmer_shrub_sp <- lmer(Mean_cover~YEAR + GENUS + (1|YEAR), data = ITEX_shrub_sp)
+lmer_shrub_sp <- lmer(genus_cover~YEAR + GENUS + (1|YEAR), data = ITEX_shrub_sp_trim)
 summary(lmer_shrub_sp)
 
 str(ITEX_shrub_sp)
@@ -99,7 +99,7 @@ str(ITEX_shrub_sp)
 stargazer(lmer_shrub_sp, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
+          digit.separator = "") # some sig
 
 newdat.lme = data.frame(GENUS = ITEX_shrub_sp$GENUS, 
                         YEAR = ITEX_shrub_sp$YEAR) 

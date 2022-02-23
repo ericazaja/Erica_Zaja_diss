@@ -100,13 +100,13 @@ theme_shrub <- function(){ theme(legend.position = "right",
 # Mean shrub cover per plot per year
 ITEX_shrubs <- ITEX_shrubs %>%
    group_by(YEAR, PLOT) %>%
-   mutate(Mean_cover = mean(FuncPlotCover)) %>%
+   mutate(mean_cover = mean(RelCover)) %>%
    ungroup()
 
 # OR ? I THINK THIS IS THE RIGHT METHOD:
 ITEX_shrubs_mean <- ITEX_shrubs %>%
    group_by(SiteSubsitePlotYear) %>%
-   mutate(mean_cover = mean(FuncPlotCover)) %>%
+   mutate(mean_cover = mean(RelCover)) %>%
    ungroup()
 
 # Shrinking the dataframe to retain one row per plot etc.
@@ -114,33 +114,8 @@ ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>%
    dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover) %>% 
    distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
   
-ITEX_shrubs_mean_per_year <- ITEX_shrubs_mean_trim %>% group_by(YEAR) %>%
-   mutate(mean_cover_2 = mean(mean_cover))
-
-ITEX_shrubs_mean_trim_2 <- ITEX_shrubs_mean_per_year %>% 
-   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, mean_cover_2) %>% 
-   distinct(YEAR, mean_cover_2, .keep_all = TRUE)
-
-ggplot()
-
-
-
-
-str(ITEX_shrubs)
+str(ITEX_shrubs_mean_trim)
 ITEX_shrubs$PLOT <- as.factor(as.character(ITEX_shrubs$PLOT))
-
-# or this way?  not this way
-shrub_summary <- ITEX_shrubs  %>%
-   group_by(YEAR, PLOT) %>%
-   summarise(n = n(),  # Calculating sample size n
-            avg_shrub_cover = mean(FuncPlotCover),  
-             # Calculating mean hatching time
-             SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
-   mutate(SE = SD / sqrt(n))  # Calculating standard error
-
-
-str(shrub_summary)
-shrub_summary$PLOT <- as.factor(as.character(shrub_summary$PLOT))
 
 # Mean shrub cover over time  
 (shrub_scatter <- (ggplot(ITEX_shrubs_mean_trim)+
@@ -149,7 +124,6 @@ shrub_summary$PLOT <- as.factor(as.character(shrub_summary$PLOT))
      labs(y = "Mean shrub % cover\n", x = "\nYear") + 
     theme_shrub()))
 
-# NB scatters look the same for both methods BUT error ribbon larger for second method (summary)
 
 # Model 6----
 # Shrub cover over time
@@ -157,15 +131,8 @@ lm_shrub <- lm(Mean_cover~YEAR, data = ITEX_shrubs)
 summary(lm_shrub) # significant
 # F-statistic:  5.54 on 1 and 517 DF,  p-value: 0.01896
 
-lm_shrub_2 <- lm(avg_shrub_cover~YEAR, data = shrub_summary) ## Different!!!
-summary(lm_shrub_2) # not significant
-# F-statistic: 0.673 on 1 and 58 DF,  p-value: 0.4154
-
-lm_shrub_3 <- lm(mean_cover~YEAR, data = ITEX_shrubs_mean )
-summary(lm_shrub_3)
-
 # mixed effect model with plot and year as random effects
-model_6 <- lmer(mean_cover_2~YEAR + (1|YEAR), data = ITEX_shrubs_mean_trim)
+model_6 <- lmer(mean_cover~YEAR + (1|PLOT)+ (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6)
 
 # total variance: 17.20 + 13.67   =30.87
@@ -196,7 +163,7 @@ pred_model_6a <- ggpredict(model_6, terms = c("YEAR"))
 
 # Plot the predictions 
 (shrub_cover_ANWR <- (ggplot(pred_model_6) + 
-                    geom_line(aes(x = x, y = predicted)) +          # slope
+                    geom_line(aes(x = x, y = predicted, group=group)) +          # slope
                     # geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                 # fill = "lightgrey", alpha = 0.5) +  # error band
                     geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data 
