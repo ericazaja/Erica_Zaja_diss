@@ -86,7 +86,7 @@ ITEX_shrub_sp$GENUS <- as.factor(as.character(ITEX_shrub_sp$GENUS ))
 
 
 dev.off()
-# ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
+ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 
 # Model ----
 
