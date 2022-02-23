@@ -112,7 +112,18 @@ ITEX_shrubs_mean <- ITEX_shrubs %>%
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>% 
    dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover) %>% 
-   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE) # 2980 rows, perfect!
+   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
+  
+ITEX_shrubs_mean_per_year <- ITEX_shrubs_mean_trim %>% group_by(YEAR) %>%
+   mutate(mean_cover_2 = mean(mean_cover))
+
+ITEX_shrubs_mean_trim_2 <- ITEX_shrubs_mean_per_year %>% 
+   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, mean_cover_2) %>% 
+   distinct(YEAR, mean_cover_2, .keep_all = TRUE)
+
+ggplot()
+
+
 
 
 str(ITEX_shrubs)
@@ -154,7 +165,7 @@ lm_shrub_3 <- lm(mean_cover~YEAR, data = ITEX_shrubs_mean )
 summary(lm_shrub_3)
 
 # mixed effect model with plot and year as random effects
-model_6 <- lmer(mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
+model_6 <- lmer(mean_cover_2~YEAR + (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6)
 
 # total variance: 17.20 + 13.67   =30.87
