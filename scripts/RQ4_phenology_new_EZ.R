@@ -150,6 +150,7 @@ threshold <- phenology_green_trim %>% group_by(SiteSubsitePlotYear) %>%
   summarise(mean = mean(mean.doy))
 
 mean(threshold$mean) # 168.2861 threshold of early VS late greening
+median(threshold$mean)
 
 # Classify as early or late plots
 phenology_green_class <- phenology_green_trim %>% 
@@ -273,6 +274,7 @@ write.csv(pred_lmer_green, file = "datasets/pred_model_10.csv")
     stat_smooth(method = "lm", se = FALSE)  +
     theme(legend.position = "bottom")+
     labs( x= "Year", y = "mean DOY"))
+
 ggsave(file = "outputs/figures/slopes_pred_lmer_green.png")
 
 (years_count <- ggplot(prop_greening_plots) +

@@ -103,16 +103,22 @@ ITEX_shrubs <- ITEX_shrubs %>%
    mutate(Mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
-# OR ?
+# OR ? I THINK THIS IS THE RIGHT METHOD:
 ITEX_shrubs_mean <- ITEX_shrubs %>%
    group_by(SiteSubsitePlotYear) %>%
    mutate(mean_cover = mean(FuncPlotCover)) %>%
    ungroup()
 
+# Shrinking the dataframe to retain one row per plot etc.
+ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>% 
+   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover) %>% 
+   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE) # 2980 rows, perfect!
+
+
 str(ITEX_shrubs)
 ITEX_shrubs$PLOT <- as.factor(as.character(ITEX_shrubs$PLOT))
 
-# or this way? 
+# or this way?  not this way
 shrub_summary <- ITEX_shrubs  %>%
    group_by(YEAR, PLOT) %>%
    summarise(n = n(),  # Calculating sample size n
@@ -126,9 +132,9 @@ str(shrub_summary)
 shrub_summary$PLOT <- as.factor(as.character(shrub_summary$PLOT))
 
 # Mean shrub cover over time  
-(shrub_scatter <- (ggplot(ITEX_shrubs)+
-  geom_point(aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 2) +
-  geom_smooth(aes(x = YEAR, y = Mean_cover), method = "lm") + 
+(shrub_scatter <- (ggplot(ITEX_shrubs_mean_trim)+
+  geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
+  geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
      labs(y = "Mean shrub % cover\n", x = "\nYear") + 
     theme_shrub()))
 
@@ -148,7 +154,7 @@ lm_shrub_3 <- lm(mean_cover~YEAR, data = ITEX_shrubs_mean )
 summary(lm_shrub_3)
 
 # mixed effect model with plot and year as random effects
-model_6 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_shrubs)
+model_6 <- lmer(mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6)
 
 # total variance: 17.20 + 13.67   =30.87
@@ -171,7 +177,7 @@ stargazer(model_6, type = "text",
           digit.separator = "")
 
 # Extracting model predictions 
-pred_model_6 <- ggpredict(model_6, terms = c("YEAR"))
+pred_model_6 <- ggpredict(model_6, terms = c("YEAR", "PLOT"))
 # this gives overall predictions for the model
 pred_model_6a <- ggpredict(model_6, terms = c("YEAR"))
 
@@ -180,17 +186,17 @@ pred_model_6a <- ggpredict(model_6, terms = c("YEAR"))
 # Plot the predictions 
 (shrub_cover_ANWR <- (ggplot(pred_model_6) + 
                     geom_line(aes(x = x, y = predicted)) +          # slope
-                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                                fill = "lightgrey", alpha = 0.5) +  # error band
-                    geom_point(data = ITEX_shrubs,                      # adding the raw data 
-                               aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 0.5) + 
+                    # geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                                # fill = "lightgrey", alpha = 0.5) +  # error band
+                    geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data 
+                               aes(x = YEAR, y = mean_cover, colour = PLOT), size = 0.5) + 
                     labs(x = "\nYear", y = "Shrub cover (%)\n", 
                          title = "Shrub % cover increase in the ANWR\n") + 
                     theme_shrub()
 ))
 
 
-# ggsave(file = "output/figures/shrub_cover_ANWR.png")
+ggsave(file = "output/figures/shrub_cover_ANWR.png")
 
 # 2. GRAMINOID COVER ----
 # Mean graminoid cover per plot per year
@@ -533,7 +539,8 @@ stargazer(lmer_all, type = "text",
           digit.separator = "")
 # func group significant 
 # Extracting model predictions 
-pred_lmer_all <- ggpredict(lmer_all, terms = c("YEAR", "FuncGroup"))  # this gives overall predictions for the model
+pred_lmer_all_1 <- ggpredict(lmer_all, terms = c("YEAR"))
+pred_lmer_all_2 <- ggpredict(lmer_all, terms = c("FuncGroup"))  # this gives overall predictions for the model
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
 predics <- ggpredict(lmer_all, terms = c("YEAR", "FuncGroup"), type = "re")
@@ -613,6 +620,7 @@ shrub_sp_summary <- ITEX_shrubs %>%
              SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
    mutate(SE = SD / sqrt(n))  # Calculating standard error
 
+ITEX_shrub_sp$GENUS <- as.factor(as.character(ITEX_shrub_sp$GENUS ))
 
 (facet_scatter_shrub_genus <- (ggplot(shrub_sp_summary, aes(x = YEAR, y = avg_shrub_sp_cover, colour = GENUS))+
                              geom_point(size = 2) +
@@ -626,7 +634,7 @@ dev.off()
 # Model ----
 
 # mixed effect model with plot and year as random effects
-lmer_shrub_sp <- lmer(Mean_cover~YEAR + GENUS + (1|PLOT) + (1+YEAR), data = ITEX_shrub_sp)
+lmer_shrub_sp <- lmer(Mean_cover~YEAR + GENUS + (1|PLOT) + (1|YEAR), data = ITEX_shrub_sp)
 summary(lmer_shrub_sp)
 
 stargazer(lmer_shrub_sp, type = "text",
@@ -637,15 +645,17 @@ stargazer(lmer_shrub_sp, type = "text",
 # Extracting model predictions 
 pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"))  # this gives overall predictions for the model
 # write.csv(pred_model_9, file = "datasets/pred_model_9.csv")
+pred_model_shrub_sp_1 <- ggpredict(lmer_shrub_sp, terms = c("YEAR")) 
+pred_model_shrub_sp_2 <- ggpredict(lmer_shrub_sp, terms = c("GENUS")) 
+str(ITEX_shrub_sp)
 
 # Plot the predictions 
 (plot_model_shrub_sp <- (ggplot(pred_model_shrub_sp) + 
-                     geom_line(aes(x = x, y = predicted)+          # slope
-                     geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                                 fill = "lightgrey", alpha = 0.5) +  # error band
-                     geom_point(data = ITEX_shrub_sp,                      # adding the raw data 
-                                aes(x = YEAR, y = Mean_cover, colour = GENUS),size = 0.5) + 
-                        facet_wrap(~GENUS) +
+                     geom_line(aes(x = x, y = predicted, colour = group) +          # slope
+                     # geom_ribbon(aes(ymin = predicted - std.error, ymax = predicted + std.error), 
+                                 # fill = "lightgrey", alpha = 0.5) +  # error band
+                     geom_point(data = ITEX_shrub_sp, aes(x = YEAR, y = Mean_cover), size = 0.5) + 
+                        # facet_wrap(~GENUS) +
                      labs(x = "Year", y = "Shrub species cover (%)", 
                           title = "Shrub species cover (%) in the ANWR") + 
                      theme_shrub())))

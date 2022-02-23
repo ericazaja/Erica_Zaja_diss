@@ -72,6 +72,8 @@ biomass.df <- read.csv("datasets/berner_data/r3_rsample_00.csv") %>%
   rename(ID = X) %>%
   dplyr::select(ID, biomass, gridcell)
 
+hist(biomass.df$biomass)
+
 # Merging biomass df with climate df
 coord.chelsa.combo.a <- left_join(coord.chelsa.combo, biomass.df, by = c("ID" = "ID"))
 
@@ -83,6 +85,8 @@ coord.chelsa.combo.b <- coord.chelsa.combo.a %>%
 coord.chelsa.combo.c <- coord.chelsa.combo.b %>% 
   rename(CH_TempMeanSummer = CHELSA_bio10_10,
          CH_PrecipMeanSummer = CHELSA_bio10_18) %>% na.omit()
+
+unique(coord.chelsa.combo.c$CH_TempMeanSummer)
 
 # Exporting the dataframe to csv
 # write.csv(coord.chelsa.combo.c, "datasets/climate_data/coord_chelsa_combo_new.csv")
