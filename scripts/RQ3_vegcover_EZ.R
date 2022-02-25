@@ -111,11 +111,12 @@ ITEX_shrubs_mean <- ITEX_shrubs %>%
 
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>% 
-   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover) %>% 
+   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
    distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
   
 str(ITEX_shrubs_mean_trim)
 ITEX_shrubs$PLOT <- as.factor(as.character(ITEX_shrubs$PLOT))
+hist(ITEX_shrubs_mean_trim$mean_cover)
 
 # Mean shrub cover over time  
 (shrub_scatter <- (ggplot(ITEX_shrubs_mean_trim)+
@@ -671,7 +672,7 @@ predict_sp <- ggpredict(lmer_shrub_sp , terms = c("YEAR", "GENUS"), type = "re")
 
 
 # SHRUB cover VS LAT ----
-shrub_lat <- lmer(Mean_cover ~ lat_grid + (1|SiteSubsitePlotYear), data = ITEX_shrubs)
+shrub_lat <- lmer(mean_cover ~ lat_grid + (1|gridcell), data = ITEX_shrubs_mean_trim)
 summary(shrub_lat)
 
 ITEX_shrubs$lat_grid<- scale(ITEX_shrubs$lat_grid, center = TRUE, scale = TRUE)
@@ -690,8 +691,8 @@ pred_shrub_lat <- ggpredict(shrub_lat, terms = c("lat_grid"))  # this gives over
                             geom_line(aes(x = x, y = predicted)) +          # slope
                             geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                             fill = "lightgrey", alpha = 0.5) +  # error band
-                            geom_point(data = ITEX_shrubs,                      # adding the raw data 
-                                       aes(x = lat_grid, y = Mean_cover), size = 0.5) + 
+                            geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data 
+                                       aes(x = lat_grid, y = mean_cover), size = 0.5) + 
                             labs(x = "Latitude", y = "Shrub cover (%)", 
                                  title = "") + 
                             # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
@@ -700,7 +701,7 @@ pred_shrub_lat <- ggpredict(shrub_lat, terms = c("lat_grid"))  # this gives over
 ggsave(file = "output/figures/plot_model_shrub_lat.png")
 
 # SHRUB cover VS LONG ----
-shrub_long<- lmer(Mean_cover ~ lon_grid + (1|SiteSubsitePlotYear), data = ITEX_shrubs)
+shrub_long<- lmer(mean_cover ~ lon_grid + (1|gridcell), data = ITEX_shrubs_mean_trim)
 summary(shrub_long)
 
 ITEX_shrubs$lat_grid<- scale(ITEX_shrubs$lon_grid, center = TRUE, scale = TRUE)
@@ -714,13 +715,13 @@ stargazer(shrub_long, type = "text",
 pred_shrub_lon <- ggpredict(shrub_long, terms = c("lon_grid"))  # this gives overall predictions for the model
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
-# Plot the predictions 
+=# Plot the predictions 
 (plot_model_shrub_lon <- (ggplot(pred_shrub_lon) + 
                              geom_line(aes(x = x, y = predicted)) +          # slope
                              geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                          fill = "lightgrey", alpha = 0.5) +  # error band
-                             geom_point(data = ITEX_shrubs,                      # adding the raw data 
-                                        aes(x = lon_grid, y = Mean_cover), size = 0.5) + 
+                             geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data 
+                                        aes(x = lon_grid, y = mean_cover), size = 0.5) + 
                              labs(x = "Longitude", y = "Shrub cover (%)", 
                                   title = "") + 
                              # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 

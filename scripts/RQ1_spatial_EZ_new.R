@@ -163,8 +163,11 @@ theme_shrub <- function(){ theme(legend.position = "right",
 hist(r3_rsample_00$biomass) # distribution 
 
 # Model 1. biomass vs lat ----
-model_1 <- lmer(biomass~lat + (1|gridcell), data = r3_rsample_00)
+model_1 <- lmer(biomass~lat + (1|gridcell), data = r3_rsample_00) #I dont think I need gridcell as random 
 summary(model_1)
+
+model_1_lm <- lm(biomass~lat, data = r3_rsample_00)
+summary(model_1_lm )
 # total variance: 
 # variance for gridcell =  
 # amount of variance explained by random effect: 
@@ -172,11 +175,12 @@ summary(model_1)
 # that’s “left over” after the variance explained by our fixed effect (long).
 # estimate for latitude (exp variable =   ) 
 # not significant effect of long on biomass
-
+str(r3_rsample_00)
 # Quick scatter
-(scatter_1 <- ggplot(r3_rsample_00, aes(x = lat, y = biomass)) +
-    geom_point(size = 0.1) +
-    geom_smooth(method = "lm") +
+(scatter_1 <- ggplot(r3_rsample_00)+
+    geom_point(aes(x = lat, y = biomass), size = 0.1) +
+    geom_smooth(method = "lm", aes(x = lat, y = biomass), 
+                colour =  "#EE9A49", fill = "#EE9A49") +
     theme_shrub())
 
 # Checking model 1 assumptions 
@@ -185,17 +189,17 @@ qqnorm(resid(model_1))
 qqline(resid(model_1))  # points fall nicely onto the line - good!
 
 # Output table model 1
-stargazer(model_1, type = "text",
+stargazer(model_1_lm, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
 # Extracting model predictions 
-pred_model_1 <- ggpredict(model_a, terms = c("lat"))  # this gives overall predictions for the model
+pred_model_1_lm <- ggpredict(model_1_lm, terms = c("lat"))  # this gives overall predictions for the model
 # write.csv(pred_model_1, file = "datasets/pred_model_1.csv")
 
 # Plot the predictions 
-(biomass_vs_lat <- (ggplot(pred_model_a) + 
+(biomass_vs_lat <- (ggplot(pred_model_1_lm) + 
                    geom_line(aes(x = x, y = predicted)) +          # slope
                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                fill = "lightgrey", alpha = 0.5) +  # error band
@@ -221,6 +225,9 @@ summary(model_2)
 # estimate for latitude (exp variable =   ) 
 # not significant effect of long on biomass
 
+model_2_lm <- lm(biomass~long, data = r3_rsample_00)
+summary(model_2_lm)
+
 # Quick scatter
 (scatter_2 <- ggplot(r3_rsample_00, aes(x = long, y = biomass)) +
     geom_point(size = 0.1) +
@@ -233,24 +240,24 @@ qqnorm(resid(model_2))
 qqline(resid(model_2))  # points fall nicely onto the line - good!
 
 # Output table model 2 
-stargazer(model_2, type = "text",
+stargazer(model_2_lm, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
 # Extracting model predictions 
-pred_model_2 <- ggpredict(model_2, terms = c("long"))  # this gives overall predictions for the model
+pred_model_2_lm <- ggpredict(model_2_lm, terms = c("long"))  # this gives overall predictions for the model
 # write.csv(pred_model_2, file = "datasets/pred_model_2.csv")
 
 # Plot the predictions 
-(biomass_vs_long <- (ggplot(pred_model_2) + 
+(biomass_vs_long <- (ggplot(pred_model_2_lm) + 
                    geom_line(aes(x = x, y = predicted)) +          # slope
                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                fill = "lightgrey", alpha = 0.5) +  # error band
                    geom_point(data = r3_rsample_00,                      # adding the raw data 
                               aes(x = long, y = biomass), size = 0.5) + 
                    labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n", 
-                        title = "Shrub biomass does not vary with longitude\n") + 
+                        title = "Shrub biomass decreases with longitude\n") + 
                    theme_shrub())
 )
 
@@ -310,12 +317,12 @@ str(r3_rsample_categ_clust$cluster)
 
 (scatter_high_medium_low <- ggplot(r3_rsample_categ_clust) +
     geom_point(aes(x = lat, y = biomass, colour = cluster), size = 0.5) +
-    scale_colour_manual(values = c("1"= "tan", "2" = "green", "3"= "green4"))+
+    scale_colour_manual(values = c("1"= "tan", "2" = "yellow", "3"= "green4"))+
      geom_smooth(aes(x = lat, y = biomass, colour = cluster), method = "lm") +
     labs(x= "Latitude\n", y = "\nShrub biomass (kg/m2)") +
     theme_shrub())
 
-# ggsave(file = "output/figures/scatter_high_medium_low.png")
+ggsave(file = "output/figures/scatter_high_medium_low.png")
 dev.off()
 # END -----
 

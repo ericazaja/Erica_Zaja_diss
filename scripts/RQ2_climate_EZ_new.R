@@ -39,8 +39,9 @@ res(precip)
 
 # Visualising climate rasters
 plot(temp, main = "Mean daily mean air temperatures of the warmest quarter (°C)")
-plot(precip, main = "Mean monthly precipitation of the warmest quarter ((kg m-2)")
-levelplot(precip)
+plot(precip, main = "Mean monthly precipitation of the warmest quarter (kg m-2)")
+precip_raster <- levelplot(precip)
+temp_raster <- levelplot(temp)
 
 # EXTRACTION ------
 # Loading the coordinates of the cropped shrub map
@@ -122,9 +123,12 @@ summary(model_3)
 # that’s “left over” after the variance explained by our fixed effect (mean summer temperature).
 # estimate for temperature (exp variable =   ) i.e. temperature negatively impacts biomass
 # significant effect of temp on biomass 
+model_3_a <- lm(biomass ~ CH_TempMeanSummer, data = coord.chelsa.combo.c)
+summary(model_3_a)
 
+dev.off()
 # Checking model 3 assumptions
-plot(model_3)
+plot(model_3_a)
 qqnorm(resid(model_3))
 qqline(resid(model_3))  # points fall nicely onto the line - good!
 

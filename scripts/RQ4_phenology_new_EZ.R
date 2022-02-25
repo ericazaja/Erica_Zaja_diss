@@ -215,6 +215,12 @@ summary(lm_early) # not sig
 glm_early <- glm(prop_early ~ year, family = binomial, data = prop_greening_plots)
 summary(glm_early)
 
+stargazer(glm_early, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
+
 
 # 2. LATE GREENING -----
 (late_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_late)) +
@@ -235,6 +241,11 @@ summary(lm_late) # not sig
 # Generalised linear model family binomial 
 glm_late <- glm(prop_late ~ year, family = binomial, data = prop_greening_plots)
 summary(glm_late)
+
+stargazer(glm_late, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
 
 phenology_green_trim$study_area<- as.factor(as.character(phenology_green_trim$study_area))
 phenology_green_trim$SiteSubsitePlotYear<- as.factor(as.character(phenology_green_trim$SiteSubsitePlotYear))

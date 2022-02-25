@@ -63,7 +63,8 @@ ITEX_shrub_sp <- ITEX_shrubs %>%
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>% 
   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, GENUS, genus_cover) %>% 
-  distinct(SiteSubsitePlotYear, genus_cover, .keep_all = TRUE) # 2980 rows, perfect!
+  distinct(SiteSubsitePlotYear, genus_cover, .keep_all = TRUE) 
+hist(ITEX_shrubs_sp_trim$genus_cover)
 
 
 # or this way? 
