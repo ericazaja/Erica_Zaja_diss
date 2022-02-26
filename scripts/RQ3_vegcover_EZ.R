@@ -443,36 +443,46 @@ library(ggpubr)  # For data visualisation formatting
 
 dev.off()
 
-# ****MERGING DATASETS**** -----
+# Functional group analyses----
 # NB here you might have 10 plots for each func group - you only want 10 in tot for each year
-ITEX_all_veg <- rbind(ITEX_forbs,ITEX_gram, ITEX_lich, ITEX_shrubs, ITEX_moss)
+
 length(unique(ITEX_all_veg$PLOT)) 
 
-ITEX_all_veg %>% group_by(YEAR) %>%
+ANWR_veg %>% group_by(YEAR) %>%
    summarise(plot.n = length(PLOT)) # same as for the dataset at the beginnign
 
-unique(ITEX_all_veg$FuncGroup)  # checking I have all functional groups
-hist(ITEX_all_veg$Mean_cover)
-str(ITEX_all_veg)
+unique(ANWR_veg$FuncGroup)  # checking I have all functional groups
 
-(hist_all_veg <- ITEX_all_veg %>%
-      ggplot(aes(x = Mean_cover, fill = FuncGroup)) +
+(hist_all_veg <- ANWR_veg %>%
+      ggplot(aes(x = RelCover, fill = FuncGroup)) +
       geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 30) +
-      geom_vline(aes(xintercept = mean(Mean_cover)),            
+      geom_vline(aes(xintercept = mean(RelCover)),            
                  colour = "red", linetype = "dashed", size = 1) +
       labs(x = "\nPercentage cover", y = "Frequency\n") +
       scale_fill_manual(values=c( "green4", "blue", "yellow", "purple", "red")) +
       theme_shrub())
 
-# ggsave(file = "output/figures/hist_all_veg.png")
+ggsave(file = "output/figures/hist_all_veg.png")
 
-ITEX_all_veg$FuncGroup <- as.factor(as.character(ITEX_all_veg$FuncGroup))
+ANWR_veg$FuncGroup <- as.factor(as.character(ITEX_all_veg$FuncGroup))
+
+ANWR_veg_fg <- ANWR_veg %>%
+   group_by(SiteSubsitePlotYear, FuncGroup) %>%
+   mutate(mean_cover = mean(RelCover)) %>%
+   ungroup()
+
+# Shrinking the dataframe to retain one row per plot etc.
+ANWR_veg_fg_trim <- ANWR_veg_fg %>% 
+   dplyr::select(PLOT, YEAR, FuncGroup, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
+   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
+
+ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup))
 
 # Model ----
 
 # F.group fixed ----
 # mixed model with functional group as fixed effect
-lmer_all <- lmer(Mean_cover~YEAR+FuncGroup + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
+lmer_all <- lmer(mean_cover~YEAR*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all)
 
 # Output table model 7 
@@ -544,40 +554,37 @@ summary(lm_all)
 
 # ggsave(file = "output/figures/cover_all_fgroup.png")
 
-### ****SHRUB GENUS****-----
+### SHRUB GENUS -----
 # shrub species
 unique(ITEX_shrubs$GENUS)
 
 # Mean shrub cover per plot per year
 ITEX_shrub_sp <- ITEX_shrubs %>%
-   group_by(YEAR, PLOT, GENUS) %>%
-   mutate(Mean_cover = mean(FuncPlotCover)) %>%
+   group_by(SiteSubsitePlotYear, GENUS) %>%
+   mutate(genus_cover = sum(RelCover)) %>%
    ungroup()
 
-# or this way? 
-shrub_sp_summary <- ITEX_shrubs %>%
-   group_by(YEAR, PLOT, GENUS) %>%
-   summarise(n = n(),  # Calculating sample size n
-             avg_shrub_sp_cover = mean(FuncPlotCover),  
-             # Calculating mean hatching time
-             SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
-   mutate(SE = SD / sqrt(n))  # Calculating standard error
+# Shrinking the dataframe to retain one row per plot etc.
+ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>% 
+   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, GENUS, genus_cover) %>% 
+   distinct(SiteSubsitePlotYear, genus_cover, .keep_all = TRUE) 
 
-ITEX_shrub_sp$GENUS <- as.factor(as.character(ITEX_shrub_sp$GENUS ))
+ITEX_shrubs_sp_trim$GENUS <- as.factor(as.character(ITEX_shrubs_sp_trim$GENUS ))
+hist(ITEX_shrubs_sp_trim$genus_cover)
 
-(facet_scatter_shrub_genus <- (ggplot(shrub_sp_summary, aes(x = YEAR, y = avg_shrub_sp_cover, colour = GENUS))+
+(facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover, colour = GENUS))+
                              geom_point(size = 2) +
                              geom_smooth(method = "lm") + 
                              facet_wrap(~ GENUS, scales = "free_y") +
                              labs(y = "Mean cover (%) \n", x = "\nYear") +
                              theme_shrub()))
 dev.off()
-# ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
+ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 
 # Model ----
 
 # mixed effect model with plot and year as random effects
-lmer_shrub_sp <- lmer(Mean_cover~YEAR + GENUS + (1|PLOT) + (1|YEAR), data = ITEX_shrub_sp)
+lmer_shrub_sp <- lmer(genus_cover~YEAR*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp)
 
 stargazer(lmer_shrub_sp, type = "text",

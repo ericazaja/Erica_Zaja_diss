@@ -6,28 +6,6 @@
 ##%######################################################%##
 
 
-# NB here you might have 10 plots for each func group - you only want 10 in tot for each year
-ITEX_all_veg <- rbind(ITEX_forbs,ITEX_gram, ITEX_lich, ITEX_shrubs, ITEX_moss)
-length(unique(ITEX_all_veg$PLOT)) 
-
-ITEX_all_veg %>% group_by(YEAR) %>%
-  summarise(plot.n = length(PLOT)) # same as for the dataset at the beginnign
-
-unique(ITEX_all_veg$FuncGroup)  # checking I have all functional groups
-hist(ITEX_all_veg$Mean_cover)
-str(ITEX_all_veg)
-
-(hist_all_veg <- ITEX_all_veg %>%
-    ggplot(aes(x = Mean_cover, fill = FuncGroup)) +
-    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 30) +
-    geom_vline(aes(xintercept = mean(Mean_cover)),            
-               colour = "red", linetype = "dashed", size = 1) +
-    labs(x = "\nPercentage cover", y = "Frequency\n") +
-    scale_fill_manual(values=c( "green4", "blue", "yellow", "purple", "red")) +
-    theme_shrub())
-
-# ggsave(file = "output/figures/hist_all_veg.png")
-
 ITEX_all_veg$FuncGroup <- as.factor(as.character(ITEX_all_veg$FuncGroup))
 
 # Model ----
