@@ -46,7 +46,7 @@ temp_raster <- levelplot(temp)
 # EXTRACTION ------
 # Loading the coordinates of the cropped shrub map
 coords <- read.csv("datasets/berner_data/r3_rsample_00.csv") %>% 
-  dplyr::select(long, lat) # keeping lat and long
+  dplyr::select(longitude, latitude) # keeping lat and long
 
 # Creating SpatialPoints (sp) object of unique coordinates
 coords_sp <- SpatialPoints(coords)
@@ -93,11 +93,12 @@ unique(coord.chelsa.combo.c$CH_TempMeanSummer)
 # write.csv(coord.chelsa.combo.c, "datasets/climate_data/coord_chelsa_combo_new.csv")
 
 # THEME ----
+
 theme_shrub <- function(){ theme(legend.position = "right",
-                                 axis.title.x = element_text(face="bold", size=20),
-                                 axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
-                                 axis.title.y = element_text(face="bold", size=20),
-                                 axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
+                                 axis.title.x = element_text(face="bold", size=18),
+                                 axis.text.x  = element_text(vjust=0.5, size=15, colour = "black"), 
+                                 axis.title.y = element_text(face="bold", size=18),
+                                 axis.text.y  = element_text(vjust=0.5, size=15, colour = "black"),
                                  panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
                                  panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
                                  panel.background = element_blank(), axis.line = element_line(colour = "black"), 
@@ -113,22 +114,13 @@ coord.chelsa.combo.c$gridcell <- as.factor(as.character(coord.chelsa.combo.c$gri
 # MODELLING ----
 
 # Model 3 ----
-# biomass ~ temp + random effect gridcell
-model_3 <- lmer(biomass ~ CH_TempMeanSummer + (1|gridcell), data = coord.chelsa.combo.c)
-summary(model_3)
-# total variance: 
-# variance for gridcell =  
-# amount of variance explained by random effect: 
-# I.e. differences between grid cells explain of the variance 
-# that’s “left over” after the variance explained by our fixed effect (mean summer temperature).
-# estimate for temperature (exp variable =   ) i.e. temperature negatively impacts biomass
-# significant effect of temp on biomass 
-model_3_a <- lm(biomass ~ CH_TempMeanSummer, data = coord.chelsa.combo.c)
+# biomass ~ temp 
+model_3 <- lm(biomass ~ CH_TempMeanSummer, data = coord.chelsa.combo.c)
 summary(model_3_a)
+# F-statistic:  2093 on 1 and 19990 DF,  p-value: < 2.2e-16*** 
 
-dev.off()
 # Checking model 3 assumptions
-plot(model_3_a)
+plot(model_3)
 qqnorm(resid(model_3))
 qqline(resid(model_3))  # points fall nicely onto the line - good!
 
@@ -138,8 +130,7 @@ stargazer(model_3, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "") 
 # temperature significant
-# shrub biomass decreases with mean summer temp
-
+# shrub biomass increases with mean summer temp
 
 # Extracting model predictions 
 pred_model_3 <- ggpredict(model_3, terms = c("CH_TempMeanSummer"))  # this gives overall predictions for the model
@@ -153,29 +144,27 @@ pred_model_3 <- ggpredict(model_3, terms = c("CH_TempMeanSummer"))  # this gives
                    geom_point(data = coord.chelsa.combo.c,                      # adding the raw data 
                               aes(x = CH_TempMeanSummer, y = biomass), size = 0.5) + 
                    labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n", 
-                        title = "Shrub biomass decreases with temperature\n") + 
+                        title = "Shrub biomass increases with temperature\n") + 
                    theme_shrub()))
 
-# ggsave(file = "output/figures/biomass_vs_temp.png")
+ggsave(file = "output/figures/biomass_vs_temp.png")
 
 # Quick scatter: biomass ~ temp
-(scatter_temp <- ggplot(coord.chelsa.combo.3, aes(x = CH_TempMeanSummer, y = biomass)) +
-    geom_point(size = 0.1) +
-    geom_smooth(method = "lm") +
+(scatter_temp <- ggplot(coord.chelsa.combo.c, aes(x = CH_TempMeanSummer, y = biomass)) +
+    geom_point(color='#2980B9', size = 0.1) +
+    geom_smooth(method = "lm", color = "black") +
+    labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n", 
+         title = "Shrub biomass increases with temperature\n") + 
     theme_shrub())
 
+# ggsave(file = "output/figures/scatter_temp.png")
 
 # Model 4  -----
-# biomass ~ precip +  random effect gridcell
-model_4 <- lmer(biomass ~ CH_PrecipMeanSummer + (1|gridcell), data = coord.chelsa.combo.c)
+# biomass ~ precip 
+model_4 <- lm(biomass ~ CH_PrecipMeanSummer, data = coord.chelsa.combo.c)
 summary(model_4)
-# total variance: 4202 + 10485  =14687
-# variance for gridcell =   4202 
-# amount of variance explained by random effect:  4202 /14687 = 0.2861034= ~29%
-# I.e. differences between grid cells explain ~29% of the variance 
-# that’s “left over” after the variance explained by our fixed effect (mean precip).
-# estimate for precip (exp variable =  2.860*** ) i.e. precip positively impacts biomass
-# significant effect of precip on biomass  = 2.860*** 
+#F-statistic:  3659 on 1 and 19990 DF,  p-value: < 2.2e-16***
+
 
 # Checking model 4 assumptions 
 plot(model_4)
@@ -205,14 +194,17 @@ pred_model_4 <- ggpredict(model_4, terms = c("CH_PrecipMeanSummer"))  # this giv
                         title = "Shrub biomass increases with precipiation\n") + 
                    theme_shrub()))
 
-# ggsave(file = "output/figures/biomass_vs_precip.png")
+ggsave(file = "output/figures/biomass_vs_precip.png")
 
 # Quick scatter: biomass ~precip
 (scatter_precip <- ggplot(coord.chelsa.combo.c, aes(x = CH_PrecipMeanSummer, y = biomass)) +
-    geom_point(size = 0.1) +
-    geom_smooth(method = "lm") +
-    theme_classic())
+    geom_point(color='#2980B9', size = 0.1) +
+    geom_smooth(method = "lm", color = "black") +
+    labs(x = "\nMean summer precipitation (kg/m2)", y = "Shrub biomass (kg/m2)\n", 
+         title = "Shrub biomass increases with precipiation\n") + 
+    theme_shrub())
 
+ggsave(file = "output/figures/scatter_precip.png")
 
 # Model 5 ----
 # biomass ~ temp*precip + random effect gridcell
