@@ -23,6 +23,8 @@ library(viridis)
 library(rasterVis)
 library(lme4)
 library(sjPlot)
+library(gridExtra)
+library(ggpubr)
 
 # LOADING DATA ------
 temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
@@ -138,13 +140,14 @@ pred_model_3 <- ggpredict(model_3, terms = c("CH_TempMeanSummer"))  # this gives
 
 # Plot the predictions 
 (biomass_vs_temp <- (ggplot(pred_model_3) + 
+                    geom_point(data = coord.chelsa.combo.c,                      # adding the raw data 
+                                  aes(x = CH_TempMeanSummer, y = biomass), color = '#2980B9', size = 0.5) + 
                    geom_line(aes(x = x, y = predicted)) +          # slope
                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                fill = "lightgrey", alpha = 0.5) +  # error band
-                   geom_point(data = coord.chelsa.combo.c,                      # adding the raw data 
-                              aes(x = CH_TempMeanSummer, y = biomass), size = 0.5) + 
-                   labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n", 
-                        title = "Shrub biomass increases with temperature\n") + 
+                  
+                   labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n") +  
+                        # title = "Shrub biomass increases with temperature\n") + 
                    theme_shrub()))
 
 ggsave(file = "output/figures/biomass_vs_temp.png")
@@ -153,8 +156,8 @@ ggsave(file = "output/figures/biomass_vs_temp.png")
 (scatter_temp <- ggplot(coord.chelsa.combo.c, aes(x = CH_TempMeanSummer, y = biomass)) +
     geom_point(color='#2980B9', size = 0.1) +
     geom_smooth(method = "lm", color = "black") +
-    labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n", 
-         title = "Shrub biomass increases with temperature\n") + 
+    labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n") + 
+         # title = "Shrub biomass increases with temperature\n") + 
     theme_shrub())
 
 # ggsave(file = "output/figures/scatter_temp.png")
@@ -185,13 +188,13 @@ pred_model_4 <- ggpredict(model_4, terms = c("CH_PrecipMeanSummer"))  # this giv
 
 # Plot the predictions 
 (biomass_vs_precip <- (ggplot(pred_model_4) + 
+              geom_point(data = coord.chelsa.combo.c,                      # adding the raw data 
+              aes(x = CH_PrecipMeanSummer, y = biomass), color = '#2980B9',  size = 0.5) + 
                    geom_line(aes(x = x, y = predicted)) +          # slope
                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                fill = "lightgrey", alpha = 0.5) +  # error band
-                   geom_point(data = coord.chelsa.combo.c,                      # adding the raw data 
-                              aes(x = CH_PrecipMeanSummer, y = biomass), size = 0.5) + 
-                   labs(x = "\nMean summer precipitation (kg/m2)", y = "Shrub biomass (kg/m2)\n", 
-                        title = "Shrub biomass increases with precipiation\n") + 
+                   labs(x = "\nMean summer precipitation (kg/m2)", y = "Shrub biomass (kg/m2)\n")+ 
+                        # title = "Shrub biomass increases with precipiation\n") + 
                    theme_shrub()))
 
 ggsave(file = "output/figures/biomass_vs_precip.png")
@@ -200,14 +203,34 @@ ggsave(file = "output/figures/biomass_vs_precip.png")
 (scatter_precip <- ggplot(coord.chelsa.combo.c, aes(x = CH_PrecipMeanSummer, y = biomass)) +
     geom_point(color='#2980B9', size = 0.1) +
     geom_smooth(method = "lm", color = "black") +
-    labs(x = "\nMean summer precipitation (kg/m2)", y = "Shrub biomass (kg/m2)\n", 
-         title = "Shrub biomass increases with precipiation\n") + 
+    labs(x = "\nMean summer precipitation (kg/m2)", y = "Shrub biomass (kg/m2)\n") +
+         # title = "Shrub biomass increases with precipiation\n") + 
     theme_shrub())
 
 ggsave(file = "output/figures/scatter_precip.png")
 
+# Panel of scatters 
+panel_title <- text_grob("Shrub biomass increases with mean summer temperature and precipitation",
+                         size = 18, face = "bold")
+
+(panel_scatter <- grid.arrange(arrangeGrob(scatter_temp, scatter_precip,
+                                 ncol = 2),  # Sets number of panel columns
+                            top = panel_title  # Adding panel title
+                            )) 
+
+# Panel of model predictions
+(panel_model_pred<- grid.arrange(arrangeGrob(biomass_vs_temp, biomass_vs_precip,
+                                          ncol = 2),  # Sets number of panel columns
+                              top = panel_title  # Adding panel title
+)) 
+
+# ggsave(panel_scatter, file = "output/figures/panel_scatter.png", width = 18, height = 9)
+# ggsave(panel_model_pred, file = "output/figures/panel_model_pred.png", width = 18, height = 9)
+
+
+
 # Model 5 ----
-# biomass ~ temp*precip + random effect gridcell
+# biomass ~ temp*precip
 
 # To display interaction: categorise precipitation 'dry', 'moist', 'wet': 
 # Plot 3 lines in plot with temp on the x and biomass on y and points coloured by moisture level
