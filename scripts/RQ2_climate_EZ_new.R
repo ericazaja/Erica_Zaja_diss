@@ -235,6 +235,9 @@ panel_title <- text_grob("Shrub biomass increases with mean summer temperature a
 # To display interaction: categorise precipitation 'dry', 'moist', 'wet': 
 # Plot 3 lines in plot with temp on the x and biomass on y and points coloured by moisture level
 range(coord.chelsa.combo.c$CH_PrecipMeanSummer)
+quantile(coord.chelsa.combo.c$CH_PrecipMeanSummer)
+# 0%  25%  50%  75% 100% 
+# 60   78   86   93  136 
 # 55 (min) 174 (max precip (kg m-2))
 # 174-55 = 119
 # 119/3 = 39.66667

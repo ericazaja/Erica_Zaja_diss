@@ -265,12 +265,15 @@ pred_model_2 <- ggpredict(model_2, terms = c("longitude"))  # this gives overall
 mean(r3_rsample_00$biomass)
 # 267.1607 kg/m2 mean biomass
 range(r3_rsample_00$biomass)
-# 4.709974 1144.706055
+#  2.571958 1221.628784
+quantile(r3_rsample_00$biomass)
+#   0%         25%         50%         75%        100% 
+# 2.571958  170.177444  258.294220  346.248993 1221.628784 
 
 r3_rsample_categ <- r3_rsample_00 %>%
-  mutate(biomass_level = case_when (biomass < 267.1607 ~ 'Low', # lower than mean biomass
-                                    biomass >= 267.1607 & biomass < 400 ~ 'Medium', 
-                                    biomass >= 400 ~ 'High')) %>% 
+  mutate(biomass_level = case_when (biomass < 258.294220   ~ 'Low', # lower than mean biomass
+                                    biomass >= 258.294220  & biomass < 346.248993~ 'Medium', 
+                                    biomass >= 346.248993 ~ 'High')) %>% 
   mutate(biomass_level_0 = case_when (biomass_level == 'Low' ~ 1, # 1 = low level
                                     biomass_level == 'Medium' ~ 2, # 2 = medium level
                                     biomass_level == 'High'~ 3)) %>% # 3 = high level
@@ -289,7 +292,7 @@ r3_rsample_categ$biomass_level <- as.factor(as.character(r3_rsample_categ$biomas
     scale_fill_manual(values=c( "green4", "tan", "yellow")) +
     theme_shrub())
 
-# ggsave(file = "output/figures/hist_high_medium_low.png")
+ggsave(file = "output/figures/hist_high_medium_low.png")
 
 # Filter for high/medium/low biomass separately
 # 1. HIGH 
@@ -330,8 +333,8 @@ summary(model_long_low)
 
 # Binomial model ----
 r3_rsample_categ_bi <- r3_rsample_00 %>%
-  mutate(biomass_level = case_when (biomass < 267.1607 ~ 'Low', # lower than mean biomass
-                                    biomass >= 267.1607 ~ 'High' ))
+  mutate(biomass_level = case_when (biomass < 258.294220 ~ 'Low', # lower than mean biomass
+                                    biomass >= 258.294220 ~ 'High' ))
 
 r3_rsample_categ_bi$biomass_level <- as.factor(as.character(r3_rsample_categ_bi$biomass_level))
 biomass_glm <- glm(biomass_level ~latitude, data =r3_rsample_categ_bi, family = binomial())
@@ -350,7 +353,7 @@ box_high_med_low <- ggplot(r3_rsample_categ_bi, aes(x = latitude, y = biomass_le
 ggsave(file = "output/figures/box_high_med_low.png")
 
 
-# KMEANS ----
+# Kmeans ----
 # Kmeans clustering: Biomass level ~ lat 
 
 clusters <- kmeans(r3_rsample_categ, centers = 3, nstart = 25)
