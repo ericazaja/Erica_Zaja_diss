@@ -326,4 +326,31 @@ ggsave(file = "output/figures/biomass_vs_temp.png")
     geom_smooth(method = "lm") +
     theme_classic())
 
+
+# Checking temp ~ lat -----
+temp_lat_model <- lm(CH_TempMeanSummer~ latitude, data=coord.chelsa.combo.c)
+summary(temp_lat_model) 
+#F-statistic:  2621 on 1 and 19990 DF,  p-value: < 2.2e-16***
+# temp decreases with latitude. I.e. northern latitudes colder
+
+(scatter_lat_temp <- ggplot(coord.chelsa.combo.c, aes(x =latitude , y = CH_TempMeanSummer )) +
+   geom_point(size = 0.1) +
+   geom_smooth(method = "lm") +
+   theme_classic())
+
+ggsave(file = "output/figures/scatter_lat_temp.png")
+
+# Checking precip ~ lat -----
+precip_lat_model <- lm(CH_PrecipMeanSummer~ latitude, data=coord.chelsa.combo.c)
+summary(precip_lat_model) 
+#F-statistic: 6.886e+04 on 1 and 19990 DF,  p-value: < 2.2e-16***
+# precip decreases with latitude too
+
+(scatter_lat_precip<- ggplot(coord.chelsa.combo.c, aes(x =latitude , y = CH_PrecipMeanSummer )) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_classic())
+
+#ggsave(file = "output/figures/scatter_lat_precip.png")
+
 # END -----
