@@ -249,22 +249,20 @@ mean(coord.chelsa.combo.c$CH_PrecipMeanSummer)
 # 101.8274
 
 coord.chelsa.combo.d <- coord.chelsa.combo.c %>% 
-  mutate(moisture = case_when(CH_PrecipMeanSummer >= 55 & CH_PrecipMeanSummer < 95 ~ "dry",
-                              CH_PrecipMeanSummer >= 95 & CH_PrecipMeanSummer < 135  ~ "moist",
-                              CH_PrecipMeanSummer >= 135 & CH_PrecipMeanSummer <= 174  ~ "wet"))
+  mutate(moisture = case_when(CH_PrecipMeanSummer >= 60 & CH_PrecipMeanSummer < 78 ~ "dry",
+                              CH_PrecipMeanSummer >= 78 & CH_PrecipMeanSummer < 86 ~ "moist",
+                              CH_PrecipMeanSummer >= 86 & CH_PrecipMeanSummer <= 136  ~ "wet"))
 
 
 unique(coord.chelsa.combo.d$moisture)
 coord.chelsa.combo.d$moisture <- as.factor(as.character(coord.chelsa.combo.d$moisture)) # moisture as factor
 str(coord.chelsa.combo.d)
 
-# write.csv(coord.chelsa.combo.d, file = "datasets/climate_data/coord.chelsa.combo.d.csv")
+write.csv(coord.chelsa.combo.d, file = "datasets/climate_data/coord.chelsa.combo.d.csv")
 
 # Model 5a: biomass Vs temp*moisture
-model_5a <- lmer(biomass ~ CH_TempMeanSummer*moisture + (1|gridcell), data = coord.chelsa.combo.d)
+model_5a <- lm(biomass ~ CH_TempMeanSummer*moisture , data = coord.chelsa.combo.d)
 summary(model_5a)
-# NOT significant interaction effect 
-
 
 # model 5a output table 
 stargazer(model_5a, type = "text",
@@ -284,17 +282,17 @@ plot_model(model_5a, type = "pred", terms = c("CH_TempMeanSummer", "moisture"))
                          geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error, 
                                      fill = group), alpha = 0.5) +  # error band
                          geom_point(data = coord.chelsa.combo.d,                      # adding the raw data 
-                                    aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size = 0.5) + 
+                                    aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size = 0.3) + 
                          labs(x = "\nMean summer temperature (degC)", y = "Shrub biomass (kg/m2)\n", 
                               title = "") + 
                          theme_shrub()))
 
-# ggsave(file = "output/figures/biomass_vs_moist_temp.png")
+ggsave(file = "output/figures/biomass_vs_moist_temp.png")
 
 
 # Model 5b: biomass Vs temp*precip
 # Plot the predictions 
-model_5b <- lmer(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer+ (1|gridcell), data = coord.chelsa.combo.d)
+model_5b <- lm(biomass ~ CH_TempMeanSummer*CH_PrecipMeanSummer, data = coord.chelsa.combo.d)
 summary(model_5b)
 # NOT significant interaction
 
@@ -309,6 +307,18 @@ pred_model_5b <- ggpredict(model_5b, terms = c("CH_TempMeanSummer", "CH_PrecipMe
 # write.csv(pred_model_5b, file = "datasets/pred_model_5b.csv")
 
 plot_model(model_5b, type = "pred", terms = c("CH_TempMeanSummer", "CH_PrecipMeanSummer"))
+
+(biomass_vs_temp<- (ggplot(pred_model_5b) + 
+                            geom_line(aes(x = x, y = predicted, group = group, colour = group)) +          # slope
+                            geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error, 
+                                            fill = group), alpha = 0.5) +  # error band
+                            geom_point(data = coord.chelsa.combo.d,                      # adding the raw data 
+                                       aes(x = CH_TempMeanSummer, y = biomass), size = 0.3) + 
+                            labs(x = "\nMean summer temperature (degC)", y = "Shrub biomass (kg/m2)\n", 
+                                 title = "") + 
+                            theme_shrub())) # makes dry moist wet categories
+
+ggsave(file = "output/figures/biomass_vs_temp.png")
 
 # scatter: biomass ~ precip*temp
 (scatter_precip <- ggplot(coord.chelsa.combo.d, aes(x = CH_TempMeanSummer, y = biomass, colour = moisture)) +
