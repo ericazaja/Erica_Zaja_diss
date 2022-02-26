@@ -22,6 +22,7 @@ library(sjPlot)  # to visualise model outputs
 library(stargazer)
 
 # LOADING DATA ----
+
 load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_EZ_diss.RData")
 
 # DATA WRANGLING ----
@@ -95,15 +96,10 @@ theme_shrub <- function(){ theme(legend.position = "right",
 
 # ****MODELLING***** ----
 
-# 1. SHRUB COVER ------
+# 1. SHRUB COVER CHANGE ------
 
 # Mean shrub cover per plot per year
-ITEX_shrubs <- ITEX_shrubs %>%
-   group_by(YEAR, PLOT) %>%
-   mutate(mean_cover = mean(RelCover)) %>%
-   ungroup()
-
-# OR ? I THINK THIS IS THE RIGHT METHOD:
+#  THIS IS THE RIGHT METHOD:
 ITEX_shrubs_mean <- ITEX_shrubs %>%
    group_by(SiteSubsitePlotYear) %>%
    mutate(mean_cover = mean(RelCover)) %>%
@@ -133,7 +129,7 @@ summary(lm_shrub) # significant
 # F-statistic:  5.54 on 1 and 517 DF,  p-value: 0.01896
 
 # mixed effect model with plot and year as random effects
-model_6 <- lmer(mean_cover~YEAR + (1|PLOT)+ (1|YEAR), data = ITEX_shrubs_mean_trim)
+model_6 <- glmer(mean_cover~YEAR + (1|PLOT)+ (1|YEAR), family = beta(), data = ITEX_shrubs_mean_trim)
 summary(model_6)
 
 # total variance: 17.20 + 13.67   =30.87
@@ -179,33 +175,21 @@ ggsave(file = "output/figures/shrub_cover_ANWR.png")
 
 # 2. GRAMINOID COVER ----
 # Mean graminoid cover per plot per year
-ITEX_gram <- ITEX_gram %>%
-   group_by(YEAR, PLOT) %>%
-   mutate(Mean_cover = mean(FuncPlotCover)) %>%
+ITEX_gram_mean <- ITEX_gram %>%
+   group_by(SiteSubsitePlotYear) %>%
+   mutate(mean_cover = mean(RelCover)) %>%
    ungroup()
 
 ITEX_gram$PLOT <- as.factor(as.character(ITEX_gram$PLOT))
 
-# or this way? 
-gram_summary <- ITEX_gram %>%
-   group_by(YEAR, PLOT) %>%
-   summarise(n = n(),  # Calculating sample size n
-             avg_gram_cover = mean(FuncPlotCover),  
-             # Calculating mean hatching time
-             SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
-   mutate(SE = SD / sqrt(n))  # Calculating standard error
-
-gram_summary$PLOT <- as.factor(as.character(gram_summary$PLOT))
-
-(graminoid_scatter <- (ggplot(gram_summary)+
-   geom_point(aes(x = YEAR, y = avg_gram_cover, colour = PLOT), size = 2) +
-   geom_smooth(aes(x = YEAR, y = avg_gram_cover), method = "lm") + 
-      labs(y = "Mean graminoid cover\n", x = "\nYear") +
-      theme_shrub())) 
+# Shrinking the dataframe to retain one row per plot etc.
+ITEX_gram_mean_trim <- ITEX_gram_mean %>% 
+   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
+   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
    
-(graminoid_scatter <- (ggplot(ITEX_gram)+
-                          geom_point(aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 2) +
-                          geom_smooth(aes(x = YEAR, y = Mean_cover), method = "lm") + 
+(graminoid_scatter <- (ggplot(ITEX_gram_mean_trim)+
+                          geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
+                          geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
                           labs(y = "Mean graminoid cover\n", x = "\nYear") +
                           theme_shrub())) # same as above but diff error ribbon
 
@@ -215,7 +199,7 @@ str(ITEX_gram)
 # Model 7 ----
 # Graminoid cover over time 
 # mixed effect model with plot and year as random effects
-model_7 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_gram)
+model_7 <- lmer(mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
 summary(model_7)
 # total variance: 19.36 + 59.00 =78.36
 # variance for plot =  19.36
@@ -258,36 +242,29 @@ pred_model_7 <- ggpredict(model_7, terms = c("YEAR"))  # this gives overall pred
 # 3. FORB COVER ----
 
 # Mean forb cover per plot per year
-ITEX_forbs <- ITEX_forbs %>%
-   group_by(YEAR, PLOT) %>%
-   mutate(Mean_cover = mean(FuncPlotCover)) %>%
+ITEX_forb_mean <- ITEX_forbs %>%
+   group_by(SiteSubsitePlotYear) %>%
+   mutate(mean_cover = mean(RelCover)) %>%
    ungroup()
 
-ITEX_forbs$PLOT <- as.factor(as.character(ITEX_forbs$PLOT))
+ITEX_forb_mean$PLOT <- as.factor(as.character(ITEX_forb_mean$PLOT))
 
-# or this way? 
-forb_summary <- ITEX_forbs %>%
-   group_by(YEAR, PLOT) %>%
-   summarise(n = n(),  # Calculating sample size n
-             avg_forb_cover = mean(FuncPlotCover),  
-             # Calculating mean hatching time
-             SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
-   mutate(SE = SD / sqrt(n))  # Calculating standard error
+# Shrinking the dataframe to retain one row per plot etc.
+ITEX_forb_mean_trim <- ITEX_forb_mean %>% 
+   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
+   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
 
-forb_summary$PLOT <- as.factor(as.character(forb_summary$PLOT))
-
-(forb_scatter <- (ggplot(ITEX_forbs)+
-   geom_point(aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 2) +
-   geom_smooth(aes(x = YEAR, y = Mean_cover), method = "lm") + 
+(forb_scatter <- (ggplot(ITEX_forb_mean_trim)+
+   geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
+   geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
       labs(y = "Mean forb cover\n", x = "\nYear") +
       theme_shrub()))
 # Forb cover decreasing
 
 # Model 8 ----
 # Forb cover over time 
-
 # mixed effect model with plot and year as random effects
-model_8 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_forbs)
+model_8 <- lmer(mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_forb_mean_trim)
 summary(model_8)
 # total variance: 5.687 + 13.076   =18.763
 # variance for plot =   5.687 
@@ -318,8 +295,8 @@ pred_model_8 <- ggpredict(model_8, terms = c("YEAR"))  # this gives overall pred
                      geom_line(aes(x = x, y = predicted)) +          # slope
                      geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                  fill = "lightgrey", alpha = 0.5) +  # error band
-                     geom_point(data = ITEX_forbs,                      # adding the raw data 
-                                aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 0.5) + 
+                     geom_point(data = ITEX_forb_mean_trim,                      # adding the raw data 
+                                aes(x = YEAR, y = mean_cover, colour = PLOT), size = 0.5) + 
                      labs(x = "\nYear", y = "Forb cover (%)\n", 
                           title = "Forb cover (%) decrease in the ANWR\n") + 
                      theme_shrub()
@@ -329,28 +306,21 @@ ggsave( file = "output/figures/forb_cover_ANWR.png")
 
 # 4. MOSS COVER  ----
 # Mean moss cover per plot per year
-ITEX_moss <- ITEX_moss %>%
-   group_by(YEAR, PLOT) %>%
-   mutate(Mean_cover = mean(FuncPlotCover)) %>%
+ITEX_moss_mean <- ITEX_moss %>%
+   group_by(SiteSubsitePlotYear) %>%
+   mutate(mean_cover = mean(RelCover)) %>%
    ungroup()
 
-ITEX_moss$PLOT <- as.factor(as.character(ITEX_moss$PLOT))
+ITEX_moss_mean$PLOT <- as.factor(as.character(ITEX_moss_mean$PLOT))
 
-# or this way? 
-moss_summary <- ITEX_moss %>%
-   group_by(YEAR, PLOT) %>%
-   summarise(n = n(),  # Calculating sample size n
-             avg_moss_cover = mean(FuncPlotCover),  
-             # Calculating mean hatching time
-             SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
-   mutate(SE = SD / sqrt(n))  # Calculating standard error
+# Shrinking the dataframe to retain one row per plot etc.
+ITEX_moss_mean_trim <- ITEX_moss_mean %>% 
+   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
+   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
 
-moss_summary$PLOT <- as.factor(as.character(moss_summary$PLOT))
-
-
-(moss_scatter <- (ggplot(ITEX_moss)+
-    geom_point(aes(x = YEAR, y = Mean_cover, colour = PLOT),size = 2) +
-    geom_smooth(aes(x = YEAR, y = Mean_cover), method = "lm") + 
+(moss_scatter <- (ggplot(ITEX_moss_mean_trim)+
+    geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT),size = 2) +
+    geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
        labs(y = "Mean moss cover\n", x = "\nYear") +
       theme_shrub()))
 # Moss cover increasing 
@@ -358,7 +328,7 @@ moss_summary$PLOT <- as.factor(as.character(moss_summary$PLOT))
 # Model 9 ----
 # Moss cover over time
 # mixed effect model with plot and year as random effects
-model_9 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_moss)
+model_9 <- lmer(mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_moss_mean_trim)
 summary(model_9)
 # total variance: 15.09    + 61.07   =76.16
 # variance for plot =   15.09
@@ -389,8 +359,8 @@ pred_model_9 <- ggpredict(model_9, terms = c("YEAR"))  # this gives overall pred
                      geom_line(aes(x = x, y = predicted)) +          # slope
                      geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                  fill = "lightgrey", alpha = 0.5) +  # error band
-                     geom_point(data = ITEX_moss,                      # adding the raw data 
-                                aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 0.5) + 
+                     geom_point(data = ITEX_moss_mean_trim,                      # adding the raw data 
+                                aes(x = YEAR, y = mean_cover, colour = PLOT), size = 0.5) + 
                      labs(x = "\nYear", y = "Moss cover (%)\n", 
                           title = "Moss cover (%) increase in the ANWR\n") + 
                      theme_shrub()
@@ -401,28 +371,22 @@ pred_model_9 <- ggpredict(model_9, terms = c("YEAR"))  # this gives overall pred
 
 # 5. LICHEN COVER  ----
 # Mean moss cover per plot per year
-ITEX_lich <- ITEX_lich %>%
-   group_by(YEAR, PLOT) %>%
-   mutate(Mean_cover = mean(FuncPlotCover)) %>%
+ITEX_lich_mean<- ITEX_lich %>%
+   group_by(SiteSubsitePlotYear) %>%
+   mutate(mean_cover = mean(RelCover)) %>%
    ungroup()
-str(ITEX_lich)
 
-ITEX_lich$PLOT <- as.factor(as.character(ITEX_lich$PLOT))
+ITEX_lich_mean$PLOT <- as.factor(as.character(ITEX_lich_mean$PLOT))
 
-# or this way? 
-lich_summary <- ITEX_lich %>%
-   group_by(YEAR, PLOT) %>%
-   summarise(n = n(),  # Calculating sample size n
-             avg_lich_cover = mean(FuncPlotCover),  
-             # Calculating mean hatching time
-             SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
-   mutate(SE = SD / sqrt(n))  # Calculating standard error
+# Shrinking the dataframe to retain one row per plot etc.
+ITEX_lich_mean_trim <- ITEX_lich_mean %>% 
+   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
+   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
 
-lich_summary$PLOT <- as.factor(as.character(lich_summary$PLOT))
 
-(lichen_scatter <- (ggplot(ITEX_lich))+
-    geom_point(aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 2) +
-    geom_smooth(aes(x = YEAR, y = Mean_cover), method = "lm") + 
+(lichen_scatter <- (ggplot(ITEX_lich_mean_trim))+
+    geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
+    geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
        labs(y = "Mean lichen cover\n", x = "\nYear") +
       theme_shrub())
 ## Lichen cover increasing
@@ -430,7 +394,7 @@ lich_summary$PLOT <- as.factor(as.character(lich_summary$PLOT))
 # Model 10 ----
 # Lichen cover over time 
 # mixed effect model with plot and year as random effects
-model_10 <- lmer(Mean_cover~YEAR + (1|PLOT) + (1+YEAR), data = ITEX_lich)
+model_10 <- lmer(mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_lich_mean_trim)
 summary(model_10)
 # total variance: 99.37     + 260.29  = 359.66
 # variance for plot =   99.37
@@ -461,8 +425,8 @@ pred_model_10 <- ggpredict(model_10, terms = c("YEAR"))  # this gives overall pr
                      geom_line(aes(x = x, y = predicted)) +          # slope
                      geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                  fill = "lightgrey", alpha = 0.5) +  # error band
-                     geom_point(data = ITEX_lich,                      # adding the raw data 
-                                aes(x = YEAR, y = Mean_cover, colour = PLOT), size = 0.5) + 
+                     geom_point(data = ITEX_lich_mean_trim,                      # adding the raw data 
+                                aes(x = YEAR, y = mean_cover, colour = PLOT), size = 0.5) + 
                      labs(x = "\nYear", y = "\nLichen cover (%)", 
                           title = "Lichen cover (%) increase in the ANWR\n") + 
                       # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
@@ -622,10 +586,10 @@ stargazer(lmer_shrub_sp, type = "text",
           digit.separator = "")
 
 # Extracting model predictions 
-pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"))  # this gives overall predictions for the model
+pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"), ci = 0.95)  # this gives overall predictions for the model
 # write.csv(pred_model_9, file = "datasets/pred_model_9.csv")
-pred_model_shrub_sp_1 <- ggpredict(lmer_shrub_sp, terms = c("YEAR")) 
-pred_model_shrub_sp_2 <- ggpredict(lmer_shrub_sp, terms = c("GENUS")) 
+pred_model_shrub_sp_1 <- ggpredict(lmer_shrub_sp, terms = "YEAR")
+pred_model_shrub_sp_2 <- ggpredict(lmer_shrub_sp, terms = "GENUS")
 str(ITEX_shrub_sp)
 
 # Plot the predictions 

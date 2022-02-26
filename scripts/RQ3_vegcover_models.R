@@ -6,7 +6,6 @@
 ##%######################################################%##
 
 
-# ****MERGING DATASETS**** -----
 # NB here you might have 10 plots for each func group - you only want 10 in tot for each year
 ITEX_all_veg <- rbind(ITEX_forbs,ITEX_gram, ITEX_lich, ITEX_shrubs, ITEX_moss)
 length(unique(ITEX_all_veg$PLOT)) 
@@ -66,16 +65,6 @@ ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>%
   distinct(SiteSubsitePlotYear, genus_cover, .keep_all = TRUE) 
 
 hist(ITEX_shrubs_sp_trim$genus_cover)
-
-
-# or this way? 
-shrub_sp_summary <- ITEX_shrubs %>%
-  group_by(YEAR, PLOT, GENUS) %>%
-  summarise(n = n(),  # Calculating sample size n
-            avg_shrub_sp_cover = mean(FuncPlotCover),  
-            # Calculating mean hatching time
-            SD = sd(FuncPlotCover))%>%  # Calculating standard deviation
-  mutate(SE = SD / sqrt(n))  # Calculating standard error
 
 ITEX_shrub_sp$GENUS <- as.factor(as.character(ITEX_shrub_sp$GENUS ))
 
