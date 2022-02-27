@@ -151,7 +151,7 @@ hist(ITEX_shrubs_tot_trim$tot_cover)
 lm_shrub_tot <- lm(tot_cover~YEAR, data = ITEX_shrubs_tot_trim)
 summary(lm_shrub_tot) # not sig: F-statistic: 0.02088 on 1 and 143 DF,  p-value: 0.8853
 
-### SHRUB GENUS -----
+### 2. SHRUB GENUS -----
 # shrub species
 unique(ITEX_shrubs$GENUS)
 
@@ -168,6 +168,8 @@ ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>%
 
 ITEX_shrubs_sp_trim$GENUS <- as.factor(as.character(ITEX_shrubs_sp_trim$GENUS ))
 hist(ITEX_shrubs_sp_trim$genus_cover)
+ITEX_shrubs_sp_trim$YEAR<- as.numeric(ITEX_shrubs_sp_trim$YEAR)
+str(ITEX_shrubs_sp_trim)
 
 (facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover, colour = GENUS))+
                                  geom_point(size = 2) +
@@ -180,17 +182,18 @@ ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 
 # Model ----
 
-# mixed effect model with plot and year as random effects
+# mixed effect model with year as random effects
 lmer_shrub_sp <- lmer(genus_cover~YEAR*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp)
 
+print(lmer_shrub_sp, correlation=TRUE)
 stargazer(lmer_shrub_sp, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
 # Extracting model predictions 
-pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"), ci = 0.95)  # this gives overall predictions for the model
+pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"))  # this gives overall predictions for the model
 # write.csv(pred_model_9, file = "datasets/pred_model_9.csv")
 pred_model_shrub_sp_1 <- ggpredict(lmer_shrub_sp, terms = "YEAR")
 pred_model_shrub_sp_2 <- ggpredict(lmer_shrub_sp, terms = "GENUS")
@@ -199,23 +202,23 @@ str(ITEX_shrub_sp)
 # Plot the predictions 
 (plot_model_shrub_sp <- (ggplot(pred_model_shrub_sp) + 
                            geom_line(aes(x = x, y = predicted, colour = group) +          # slope
-                                       # geom_ribbon(aes(ymin = predicted - std.error, ymax = predicted + std.error), 
-                                       # fill = "lightgrey", alpha = 0.5) +  # error band
-                                       geom_point(data = ITEX_shrub_sp, aes(x = YEAR, y = Mean_cover), size = 0.5) + 
-                                       # facet_wrap(~GENUS) +
+                                       #geom_ribbon(aes(ymin = predicted - std.error, ymax = predicted + std.error), 
+                                       #fill = "lightgrey", alpha = 0.5) +  # error band
+                                       geom_point(data = ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover), size = 0.5) + 
+                                       facet_wrap(~GENUS) +
                                        labs(x = "Year", y = "Shrub species cover (%)", 
                                             title = "Shrub species cover (%) in the ANWR") + 
                                        theme_shrub())))
 # wrong
 
 # trying diff graph
-ITEX_shrub_sp$Predicted <- predict(lmer_shrub_sp, ITEX_shrub_sp)
+ITEX_shrubs_sp_trim$Predicted <- predict(lmer_shrub_sp, ITEX_shrubs_sp_trim)
 
 # plot predicted values
-ggplot(ITEX_shrub_sp, aes(YEAR, Predicted)) +
+ggplot(ITEX_shrubs_sp_trim, aes(YEAR, Predicted)) +
   facet_wrap(~GENUS) +
-  geom_point(aes(x = YEAR, y = Mean_cover, colour= GENUS), size = .5) +
-  geom_smooth(aes(y = Predicted, colour= GENUS), linetype = "solid", 
+  geom_point(aes(x = YEAR, y = genus_cover, colour= GENUS), size = .5) +
+  geom_smooth(aes(y = Predicted, colour = GENUS), linetype = "solid", 
               se = T, method = "lm") +
   guides(color=guide_legend(override.aes=list(fill=NA))) +  
   theme_shrub() + 
@@ -238,6 +241,24 @@ predict_sp <- ggpredict(lmer_shrub_sp , terms = c("YEAR", "GENUS"), type = "re")
     labs(x = "\nYear", y = "Predicted mean % cover\n"))
 # all increasing?
 
+# Model with random slopes per genus
+lmer_shrub_sp_rand <- lmer(genus_cover~YEAR + (1+YEAR|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
+summary(lmer_shrub_sp_rand )
+
+predictions_rs_ri <- ggpredict(lmer_shrub_sp_rand , terms = c("YEAR", "GENUS"), type = "re")
+(genus_rand_slopes <- ggplot(predictions_rs_ri, aes(x = x, y = predicted, colour = group)) +
+    stat_smooth(method = "lm", se = FALSE)  +
+    scale_y_continuous(limits = c(0, 35)) +
+    theme(legend.position = "bottom") +
+    labs(x = "\nYear", y = "Shrub cover (%)\n")+
+    theme_shrub())
+
+stargazer(lmer_shrub_sp_rand, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
+ggsave(file = "output/figures/genus_rand_slopes.png")
 
 # SHRUB cover VS LAT ----
 shrub_lat <- lm(mean_cover ~ LAT, data = ITEX_shrubs_mean_trim)
