@@ -5,8 +5,6 @@
 #                                                         ##
 ##%######################################################%##
 
-# ****Problems****
-
 # RQ3: How has vegetation cover changed in the Arctic National Wildlife Refuge between 1996-2007? 
 
 # LOADING LIBRARIES  ----
@@ -67,6 +65,11 @@ ANWR_veg <- ANWR_veg %>% mutate(lat_grid = plyr::round_any(LAT, 0.1, f = floor))
 unique(ANWR_veg$gridcell) #_68.4_-149.3" "_69.7_-143.6"
 # still only 2 gridcells - not enough to use as random effect
 
+ANWR_grids <- ANWR_veg %>%
+   group_by(gridcell) %>%
+   summarise(plot.n = length(unique(PLOT))) %>% 
+   ungroup() # 10 plots in one gridcell and 10 in the other
+
 # Making Genus, Site, Plot as factors (categorical)
 ANWR_veg$GENUS <- as.factor(as.character(ANWR_veg$GENUS))
 ANWR_veg$SITE <- as.factor(as.character(ANWR_veg$SITE))
@@ -74,6 +77,7 @@ ANWR_veg$PLOT <- as.factor(as.character(ANWR_veg$PLOT))
 ANWR_veg$FuncGroup<- as.factor(as.character(ANWR_veg$FuncGroup))
 
 str(ANWR_veg)
+write.csv(ANWR_veg, file = "datasets/ITEX_data/ANWR_veg.csv")
 
 # Separate datasets per functional group ----
 # Filtering shrub only data
@@ -108,110 +112,7 @@ theme_shrub <- function(){ theme(legend.position = "right",
 
 # MODELLING ----
 
-# 1. SHRUB COVER CHANGE ------
-
-# Mean shrub cover per plot per year
-#  THIS IS THE RIGHT METHOD:
-ITEX_shrubs_mean <- ITEX_shrubs %>%
-   group_by(SiteSubsitePlotYear) %>%
-   mutate(mean_cover = mean(RelCover)) %>%
-   ungroup()
-
-# Shrinking the dataframe to retain one row per plot etc.
-ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>% 
-   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
-   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
-  
-str(ITEX_shrubs_mean_trim)
-ITEX_shrubs$PLOT <- as.factor(as.character(ITEX_shrubs$PLOT))
-hist(ITEX_shrubs_mean_trim$mean_cover)
-
-# Mean shrub cover change over time  
-(shrub_scatter <- (ggplot(ITEX_shrubs_mean_trim)+
-  geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
-  geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
-     labs(y = "Mean shrub % cover\n", x = "\nYear") + 
-    theme_shrub()))
-
-
-# Model 6----
-# Shrub cover over time
-lm_shrub <- lm(mean_cover~YEAR, data = ITEX_shrubs_mean_trim)
-summary(lm_shrub)
-# F-statistic:  5.54 on 1 and 517 DF,  p-value: 0.01896
-
-# mixed effect model with plot and year as random effects
-model_6 <- glmer(mean_cover~YEAR + (1|PLOT)+ (1|YEAR), family = beta(), data = ITEX_shrubs_mean_trim)
-summary(model_6)
-
-# total variance: 17.20 + 13.67   =30.87
-# variance for plot =   17.20
-# amount of variance explained by random effect:  17.20 /30.87 = 0.5571753= ~56%
-# I.e. differences between plots explain ~56% of the variance 
-# that’s “left over” after the variance explained by our fixed effect (year).
-# estimate for precip (exp variable =   0.154***    ) i.e. year positively impacts shrub cover
-# significant effect of year on shrub cover  = 0.154***    
-
-# Checking model 6 assumptions 
-plot(model_6)
-qqnorm(resid(model_6))
-qqline(resid(model_6))  # points fall nicely onto the line - good!
-
-# Output table model 6 
-stargazer(model_6, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-
-# Extracting model predictions 
-pred_model_6 <- ggpredict(model_6, terms = c("YEAR", "PLOT"))
-# this gives overall predictions for the model
-pred_model_6a <- ggpredict(model_6, terms = c("YEAR"))
-
-# write.csv(pred_model_6, file = "datasets/pred_model_6.csv")
-
-# Plot the predictions 
-(shrub_cover_ANWR <- (ggplot(pred_model_6) + 
-                    geom_line(aes(x = x, y = predicted, group=group)) +          # slope
-                    # geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                                # fill = "lightgrey", alpha = 0.5) +  # error band
-                    geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data 
-                               aes(x = YEAR, y = mean_cover, colour = PLOT), size = 0.5) + 
-                    labs(x = "\nYear", y = "Shrub cover (%)\n", 
-                         title = "Shrub % cover increase in the ANWR\n") + 
-                    theme_shrub()
-))
-
-
-ggsave(file = "output/figures/shrub_cover_ANWR.png")
-
-# Total shrub cover 
-ITEX_shrubs_tot <- ITEX_shrubs %>%
-   group_by(SiteSubsitePlotYear) %>%
-   mutate(tot_cover = sum(RelCover)) %>%
-   ungroup()
-
-# Shrinking the dataframe to retain one row per plot etc.
-ITEX_shrubs_tot_trim <- ITEX_shrubs_tot  %>% 
-   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, tot_cover, lat_grid, lon_grid, gridcell) %>% 
-   distinct(SiteSubsitePlotYear, tot_cover, .keep_all = TRUE)
-
-ITEX_shrubs_tot_trim$PLOT <- as.factor(as.character(ITEX_shrubs_tot_trim$PLOT))
-hist(ITEX_shrubs_tot_trim$tot_cover)
-
-# Tot shrub cover change over time  
-(shrub_scatter_sum <- (ggplot(ITEX_shrubs_tot_trim)+
-                      geom_point(aes(x = YEAR, y = tot_cover, colour = PLOT), size = 2) +
-                      geom_smooth(aes(x = YEAR, y = tot_cover), method = "lm") + 
-                      labs(y = "Total shrub % cover\n", x = "\nYear") + 
-                      theme_shrub()))
-
-
-lm_shrub_tot <- lm(tot_cover~YEAR, data = ITEX_shrubs_tot_trim)
-summary(lm_shrub_tot) # not sig: F-statistic: 0.02088 on 1 and 143 DF,  p-value: 0.8853
-
-
-# 2. GRAMINOID COVER ----
+# 1. GRAMINOID COVER ----
 # Mean graminoid cover per plot per year
 ITEX_gram_mean <- ITEX_gram %>%
    group_by(SiteSubsitePlotYear) %>%
@@ -277,7 +178,7 @@ pred_model_7 <- ggpredict(model_7, terms = c("YEAR"))  # this gives overall pred
 # ggsave( file = "output/figures/gram_cover_ANWR.png")
 
 
-# 3. FORB COVER ----
+# 2. FORB COVER ----
 
 # Mean forb cover per plot per year
 ITEX_forb_mean <- ITEX_forbs %>%
@@ -342,7 +243,7 @@ pred_model_8 <- ggpredict(model_8, terms = c("YEAR"))  # this gives overall pred
 
 ggsave( file = "output/figures/forb_cover_ANWR.png")
 
-# 4. MOSS COVER  ----
+# 3. MOSS COVER  ----
 # Mean moss cover per plot per year
 ITEX_moss_mean <- ITEX_moss %>%
    group_by(SiteSubsitePlotYear) %>%
@@ -407,7 +308,7 @@ pred_model_9 <- ggpredict(model_9, terms = c("YEAR"))  # this gives overall pred
 # ggsave( file = "output/figures/moss_cover_ANWR.png")
 
 
-# 5. LICHEN COVER  ----
+# 4. LICHEN COVER  ----
 # Mean moss cover per plot per year
 ITEX_lich_mean<- ITEX_lich %>%
    group_by(SiteSubsitePlotYear) %>%
@@ -481,7 +382,7 @@ library(ggpubr)  # For data visualisation formatting
 
 dev.off()
 
-# Functional group analyses----
+# 5. FUNCTIONAL GROUP ----
 # NB here you might have 10 plots for each func group - you only want 10 in tot for each year
 
 length(unique(ITEX_all_veg$PLOT)) 
@@ -592,154 +493,8 @@ summary(lm_all)
 
 # ggsave(file = "output/figures/cover_all_fgroup.png")
 
-### SHRUB GENUS -----
-# shrub species
-unique(ITEX_shrubs$GENUS)
+# END -----
 
-# Mean shrub cover per plot per year
-ITEX_shrub_sp <- ITEX_shrubs %>%
-   group_by(SiteSubsitePlotYear, GENUS) %>%
-   mutate(genus_cover = sum(RelCover)) %>%
-   ungroup()
-
-# Shrinking the dataframe to retain one row per plot etc.
-ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>% 
-   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, GENUS, genus_cover) %>% 
-   distinct(SiteSubsitePlotYear, genus_cover, .keep_all = TRUE) 
-
-ITEX_shrubs_sp_trim$GENUS <- as.factor(as.character(ITEX_shrubs_sp_trim$GENUS ))
-hist(ITEX_shrubs_sp_trim$genus_cover)
-
-(facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover, colour = GENUS))+
-                             geom_point(size = 2) +
-                             geom_smooth(method = "lm") + 
-                             facet_wrap(~ GENUS, scales = "free_y") +
-                             labs(y = "Mean cover (%) \n", x = "\nYear") +
-                             theme_shrub()))
-dev.off()
-ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
-
-# Model ----
-
-# mixed effect model with plot and year as random effects
-lmer_shrub_sp <- lmer(genus_cover~YEAR*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
-summary(lmer_shrub_sp)
-
-stargazer(lmer_shrub_sp, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-
-# Extracting model predictions 
-pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"), ci = 0.95)  # this gives overall predictions for the model
-# write.csv(pred_model_9, file = "datasets/pred_model_9.csv")
-pred_model_shrub_sp_1 <- ggpredict(lmer_shrub_sp, terms = "YEAR")
-pred_model_shrub_sp_2 <- ggpredict(lmer_shrub_sp, terms = "GENUS")
-str(ITEX_shrub_sp)
-
-# Plot the predictions 
-(plot_model_shrub_sp <- (ggplot(pred_model_shrub_sp) + 
-                     geom_line(aes(x = x, y = predicted, colour = group) +          # slope
-                     # geom_ribbon(aes(ymin = predicted - std.error, ymax = predicted + std.error), 
-                                 # fill = "lightgrey", alpha = 0.5) +  # error band
-                     geom_point(data = ITEX_shrub_sp, aes(x = YEAR, y = Mean_cover), size = 0.5) + 
-                        # facet_wrap(~GENUS) +
-                     labs(x = "Year", y = "Shrub species cover (%)", 
-                          title = "Shrub species cover (%) in the ANWR") + 
-                     theme_shrub())))
-                     # wrong
-
-# trying diff graph
-ITEX_shrub_sp$Predicted <- predict(lmer_shrub_sp, ITEX_shrub_sp)
-
-# plot predicted values
-ggplot(ITEX_shrub_sp, aes(YEAR, Predicted)) +
-   facet_wrap(~GENUS) +
-   geom_point(aes(x = YEAR, y = Mean_cover, colour= GENUS), size = .5) +
-   geom_smooth(aes(y = Predicted, colour= GENUS), linetype = "solid", 
-               se = T, method = "lm") +
-   guides(color=guide_legend(override.aes=list(fill=NA))) +  
-   theme_shrub() + 
-   xlab("Year")
-
-
-# Plotting fixed effects
-(fe.effects <- plot_model(lmer_shrub_sp , show.values = TRUE))
-
-# Plotting random effects
-(re.effects <- plot_model(lmer_shrub_sp , type = "re", show.values = TRUE))
-
-# Random slopes 
-predict_sp <- ggpredict(lmer_shrub_sp , terms = c("YEAR", "GENUS"), type = "re") 
-
-(pred_plot2 <- ggplot(predict_sp, aes(x = x, y = predicted, colour = group)) +
-      stat_smooth(method = "lm", se = FALSE)  +
-      # scale_y_continuous(limits = c(0, )) +
-      theme(legend.position = "bottom") +
-      labs(x = "\nYear", y = "Predicted mean % cover\n"))
-# all increasing?
-
-
-# SHRUB cover VS LAT ----
-shrub_lat <- lmer(mean_cover ~ lat_grid + (1|gridcell), data = ITEX_shrubs_mean_trim)
-summary(shrub_lat)
-
-ITEX_shrubs$lat_grid<- scale(ITEX_shrubs$lat_grid, center = TRUE, scale = TRUE)
-
-stargazer(shrub_lat, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-
-# Extracting model predictions 
-pred_shrub_lat <- ggpredict(shrub_lat, terms = c("lat_grid"))  # this gives overall predictions for the model
-# write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
-
-# Plot the predictions 
-(plot_model_shrub_lat <- (ggplot(pred_shrub_lat) + 
-                            geom_line(aes(x = x, y = predicted)) +          # slope
-                            geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                            fill = "lightgrey", alpha = 0.5) +  # error band
-                            geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data 
-                                       aes(x = lat_grid, y = mean_cover), size = 0.5) + 
-                            labs(x = "Latitude", y = "Shrub cover (%)", 
-                                 title = "") + 
-                            # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
-                            theme_shrub()))
-
-ggsave(file = "output/figures/plot_model_shrub_lat.png")
-
-# SHRUB cover VS LONG ----
-shrub_long<- lmer(mean_cover ~ lon_grid + (1|gridcell), data = ITEX_shrubs_mean_trim)
-summary(shrub_long)
-
-ITEX_shrubs$lat_grid<- scale(ITEX_shrubs$lon_grid, center = TRUE, scale = TRUE)
-
-stargazer(shrub_long, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-
-# Extracting model predictions 
-pred_shrub_lon <- ggpredict(shrub_long, terms = c("lon_grid"))  # this gives overall predictions for the model
-# write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
-
-=# Plot the predictions 
-(plot_model_shrub_lon <- (ggplot(pred_shrub_lon) + 
-                             geom_line(aes(x = x, y = predicted)) +          # slope
-                             geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                                         fill = "lightgrey", alpha = 0.5) +  # error band
-                             geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data 
-                                        aes(x = lon_grid, y = mean_cover), size = 0.5) + 
-                             labs(x = "Longitude", y = "Shrub cover (%)", 
-                                  title = "") + 
-                             # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
-                             theme_shrub()))
-
-ggsave(file = "output/figures/plot_model_shrub_lon.png")
-
-
-#####################################################################################
 
 ##### COPY OF MARIANA's CLEANING SCRIPT ------
 ## Biodiversity dynamics across a warming tundra
