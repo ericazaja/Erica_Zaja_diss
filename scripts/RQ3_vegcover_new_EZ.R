@@ -55,6 +55,18 @@ unique(ANWR_veg$FuncGroup) # Unique functional groups names
 # [1] "Shrub"     "Lichen"    "Moss"      "Forb"      "Graminoid"
 unique(ANWR_veg$GENUS) # Unique genus names
 
+unique(ANWR_veg$gridcell) #"_68_-149"     "_69.5_-143.5"
+# only 2 gridcells
+
+# making smaller grid cells
+ANWR_veg <- ANWR_veg %>% mutate(lat_grid = plyr::round_any(LAT, 0.1, f = floor)) %>% 
+   mutate(lon_grid = ifelse(LONG >0, plyr::round_any(LONG, 0.1, f = floor), 
+                            plyr::round_any(LONG, 0.1, f = ceiling))) %>%
+   mutate(gridcell = paste0("_", lat_grid, "_", lon_grid))
+
+unique(ANWR_veg$gridcell) #_68.4_-149.3" "_69.7_-143.6"
+# still only 2 gridcells - not enough to use as random effect
+
 # Making Genus, Site, Plot as factors (categorical)
 ANWR_veg$GENUS <- as.factor(as.character(ANWR_veg$GENUS))
 ANWR_veg$SITE <- as.factor(as.character(ANWR_veg$SITE))
@@ -94,7 +106,7 @@ theme_shrub <- function(){ theme(legend.position = "right",
                    plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                    plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
-# ****MODELLING***** ----
+# MODELLING ----
 
 # 1. SHRUB COVER CHANGE ------
 
@@ -114,7 +126,7 @@ str(ITEX_shrubs_mean_trim)
 ITEX_shrubs$PLOT <- as.factor(as.character(ITEX_shrubs$PLOT))
 hist(ITEX_shrubs_mean_trim$mean_cover)
 
-# Mean shrub cover over time  
+# Mean shrub cover change over time  
 (shrub_scatter <- (ggplot(ITEX_shrubs_mean_trim)+
   geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
   geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
@@ -124,8 +136,8 @@ hist(ITEX_shrubs_mean_trim$mean_cover)
 
 # Model 6----
 # Shrub cover over time
-lm_shrub <- lm(Mean_cover~YEAR, data = ITEX_shrubs)
-summary(lm_shrub) # significant
+lm_shrub <- lm(mean_cover~YEAR, data = ITEX_shrubs_mean_trim)
+summary(lm_shrub)
 # F-statistic:  5.54 on 1 and 517 DF,  p-value: 0.01896
 
 # mixed effect model with plot and year as random effects
@@ -172,6 +184,32 @@ pred_model_6a <- ggpredict(model_6, terms = c("YEAR"))
 
 
 ggsave(file = "output/figures/shrub_cover_ANWR.png")
+
+# Total shrub cover 
+ITEX_shrubs_tot <- ITEX_shrubs %>%
+   group_by(SiteSubsitePlotYear) %>%
+   mutate(tot_cover = sum(RelCover)) %>%
+   ungroup()
+
+# Shrinking the dataframe to retain one row per plot etc.
+ITEX_shrubs_tot_trim <- ITEX_shrubs_tot  %>% 
+   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, tot_cover, lat_grid, lon_grid, gridcell) %>% 
+   distinct(SiteSubsitePlotYear, tot_cover, .keep_all = TRUE)
+
+ITEX_shrubs_tot_trim$PLOT <- as.factor(as.character(ITEX_shrubs_tot_trim$PLOT))
+hist(ITEX_shrubs_tot_trim$tot_cover)
+
+# Tot shrub cover change over time  
+(shrub_scatter_sum <- (ggplot(ITEX_shrubs_tot_trim)+
+                      geom_point(aes(x = YEAR, y = tot_cover, colour = PLOT), size = 2) +
+                      geom_smooth(aes(x = YEAR, y = tot_cover), method = "lm") + 
+                      labs(y = "Total shrub % cover\n", x = "\nYear") + 
+                      theme_shrub()))
+
+
+lm_shrub_tot <- lm(tot_cover~YEAR, data = ITEX_shrubs_tot_trim)
+summary(lm_shrub_tot) # not sig: F-statistic: 0.02088 on 1 and 143 DF,  p-value: 0.8853
+
 
 # 2. GRAMINOID COVER ----
 # Mean graminoid cover per plot per year

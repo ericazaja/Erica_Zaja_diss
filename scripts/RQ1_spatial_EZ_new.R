@@ -174,11 +174,11 @@ summary(model_1)
 # F-statistic:  4134 on 1 and 19995 DF,  p-value: < 2.2e-16***
 
 # Quick scatter
-(scatter_1 <- ggplot(r3_rsample_00, aes(x = latitude, y = biomass))+
+(scatter_lat <- ggplot(r3_rsample_00, aes(x = latitude, y = biomass))+
     geom_point(color='#2980B9', size = 0.1) +
     geom_smooth(method = lm, color ='black', fill = "grey", se=TRUE)+
-    labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n", 
-         title = "Shrub biomass decreases with latitude\n") + 
+    labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n") +
+         # title = "Shrub biomass decreases with latitude\n") + 
     theme_shrub())
 
 #ggsave(file = "output/figures/biomass_vs_lat_scatter.png")
@@ -220,11 +220,11 @@ summary(model_2)
 # F-statistic: 552.4 on 1 and 19995 DF,  p-value: < 2.2e-16***
 
 # Quick scatter
-(scatter_2 <- ggplot(r3_rsample_00, aes(x = longitude, y = biomass)) +
-    geom_point(color='#2980B9', size = 0.1) +
+(scatter_lon <- ggplot(r3_rsample_00, aes(x = longitude, y = biomass)) +
+    geom_point(color='#2980B9', size = 0.01) +
     geom_smooth(method = "lm", colour='black') +
-    labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n", 
-         title = "Shrub biomass decreases with longitude\n") + 
+    labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n") +  
+         # title = "Shrub biomass decreases with longitude\n") + 
     theme_shrub())
 
 # ggsave(file = "output/figures/biomass_vs_long_scatter.png")
@@ -258,6 +258,23 @@ pred_model_2 <- ggpredict(model_2, terms = c("longitude"))  # this gives overall
 
 # ggsave(file = "output/figures/biomass_vs_long.png")
 
+# Panel ----
+# Panel of scatters 
+panel_title <- text_grob("Shrub biomass decreases with latitude and longitude",
+                         size = 18, face = "bold")
+
+(panel_scatter <- grid.arrange(arrangeGrob(scatter_lat, scatter_lon,
+                                           ncol = 2),  # Sets number of panel columns
+                               top = panel_title  # Adding panel title
+)) 
+
+# Panel of model predictions
+(panel_latlong <- grid.arrange(arrangeGrob(biomass_vs_temp, biomass_vs_precip,
+                                             ncol = 2),  # Sets number of panel columns
+                                 top = panel_title  # Adding panel title
+)) 
+
+ggsave(panel_latlong, file = "output/figures/panel_latlong.png", width = 18, height = 9)
 
 # BIOMASS LEVELS ----
 
