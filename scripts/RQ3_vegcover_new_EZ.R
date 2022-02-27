@@ -384,9 +384,6 @@ dev.off()
 
 # 5. FUNCTIONAL GROUP ----
 # NB here you might have 10 plots for each func group - you only want 10 in tot for each year
-
-length(unique(ITEX_all_veg$PLOT)) 
-
 ANWR_veg %>% group_by(YEAR) %>%
    summarise(plot.n = length(PLOT)) # same as for the dataset at the beginnign
 

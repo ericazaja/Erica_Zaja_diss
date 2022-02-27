@@ -322,7 +322,7 @@ ggsave(file = "output/figures/cover_long_scatter.png")
 pred_shrub_lon <- ggpredict(shrub_long, terms = c("lon_grid"))  # this gives overall predictions for the model
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
-=# Plot the predictions 
+# Plot the predictions 
   (plot_model_shrub_lon <- (ggplot(pred_shrub_lon) + 
                               geom_line(aes(x = x, y = predicted)) +          # slope
                               geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
@@ -354,57 +354,4 @@ head(predslm)
 
 datlm <- cbind(ITEX_all_veg, predslm)
 head(datlm)
-
-### ****SHRUB GENUS****-----
-# shrub species
-unique(ITEX_shrubs$GENUS)
-
-# Mean shrub cover per plot per year
-ITEX_shrub_sp <- ITEX_shrubs %>%
-  group_by(SiteSubsitePlotYear, GENUS) %>%
-  mutate(genus_cover = sum(RelCover)) %>%
-  ungroup()
-
-# Shrinking the dataframe to retain one row per plot etc.
-ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>% 
-  dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, GENUS, genus_cover) %>% 
-  distinct(SiteSubsitePlotYear, genus_cover, .keep_all = TRUE) 
-
-hist(ITEX_shrubs_sp_trim$genus_cover)
-
-ITEX_shrub_sp$GENUS <- as.factor(as.character(ITEX_shrub_sp$GENUS ))
-
-(facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim , aes(x = YEAR, y = genus_cover, colour = GENUS))+
-                                 geom_point(size = 2) +
-                                 geom_smooth(method = "lm") + 
-                                 facet_wrap(~ GENUS, scales = "free_y") +
-                                 labs(y = "Relative cover \n", x = "\nYear") +
-                                 theme_shrub()))
-
-
-dev.off()
-ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
-
-# Model ----
-
-# mixed effect model with plot and year as random effects
-lmer_shrub_sp <- lmer(genus_cover~YEAR + GENUS + (1|YEAR), data = ITEX_shrub_sp_trim)
-summary(lmer_shrub_sp)
-
-str(ITEX_shrub_sp)
-
-stargazer(lmer_shrub_sp, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "") # some sig
-
-newdat.lme = data.frame(GENUS = ITEX_shrub_sp$GENUS, 
-                        YEAR = ITEX_shrub_sp$YEAR) 
-
-newdat.lme$predlme = predict(lmer_shrub_sp, newdata = newdat.lme, level = 0)
-
-ggplot(ITEX_shrub_sp, aes(x = YEAR, y = Mean_cover, color = GENUS) ) +
-  geom_rug(sides = "b", size = 1) +
-  geom_line(data = newdat.lme, aes(x=YEAR, y = predlme, colour=GENUS), size = 1) 
-##lines squiggly???
 
