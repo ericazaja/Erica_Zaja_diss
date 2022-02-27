@@ -209,7 +209,8 @@ ggsave(file = "output/figures/biomass_vs_precip.png")
 
 ggsave(file = "output/figures/scatter_precip.png")
 
-# Panel of scatters 
+# Panel  -----
+# panel of scatters 
 panel_title <- text_grob("Shrub biomass increases with mean summer temperature and precipitation",
                          size = 18, face = "bold")
 
@@ -340,6 +341,19 @@ summary(temp_lat_model)
 
 ggsave(file = "output/figures/scatter_lat_temp.png")
 
+# Checking temp ~ long -----
+temp_long_model <- lm(CH_TempMeanSummer~ longitude, data=coord.chelsa.combo.c)
+summary(temp_long_model) 
+# longitude    0.061776   0.003212   19.23   <2e-16 ***
+# temp increases with longitude. 
+
+(scatter_long_temp <- ggplot(coord.chelsa.combo.c, aes(x =longitude , y = CH_TempMeanSummer )) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_classic())
+
+ggsave(file = "output/figures/scatter_long_temp.png")
+
 # Checking precip ~ lat -----
 precip_lat_model <- lm(CH_PrecipMeanSummer~ latitude, data=coord.chelsa.combo.c)
 summary(precip_lat_model) 
@@ -352,5 +366,17 @@ summary(precip_lat_model)
     theme_classic())
 
 #ggsave(file = "output/figures/scatter_lat_precip.png")
+
+# Checking precip ~ long -----
+precip_long_model <- lm(CH_PrecipMeanSummer~ longitude, data=coord.chelsa.combo.c)
+summary(precip_long_model) 
+# F-statistic: 452.8 on 1 and 19990 DF,  p-value: < 2.2e-16
+# precip increases wih long 
+
+(scatter_long_precip<- ggplot(coord.chelsa.combo.c, aes(x =longitude , y = CH_PrecipMeanSummer )) +
+    geom_point(size = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_classic())
+
 
 # END -----

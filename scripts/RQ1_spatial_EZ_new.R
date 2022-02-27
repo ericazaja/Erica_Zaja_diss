@@ -263,16 +263,11 @@ pred_model_2 <- ggpredict(model_2, terms = c("longitude"))  # this gives overall
 panel_title <- text_grob("Shrub biomass decreases with latitude and longitude",
                          size = 18, face = "bold")
 
-(panel_scatter <- grid.arrange(arrangeGrob(scatter_lat, scatter_lon,
+(panel_latlong <- grid.arrange(arrangeGrob(scatter_lat, scatter_lon,
                                            ncol = 2),  # Sets number of panel columns
                                top = panel_title  # Adding panel title
 )) 
 
-# Panel of model predictions
-(panel_latlong <- grid.arrange(arrangeGrob(biomass_vs_temp, biomass_vs_precip,
-                                             ncol = 2),  # Sets number of panel columns
-                                 top = panel_title  # Adding panel title
-)) 
 
 ggsave(panel_latlong, file = "output/figures/panel_latlong.png", width = 18, height = 9)
 
@@ -325,10 +320,10 @@ summary(model_long_high)
 r3_med_biomass <- r3_rsample_categ %>% filter (biomass_level == "Medium")
 model_lat_med <- lm(biomass~latitude, data = r3_med_biomass )
 summary(model_lat_med)
-# F-statistic: 157.2 on 1 and 7034 DF,  p-value: < 2.2e-16
+# F-statistic: 157.2 on 1 and 7034 DF,  p-value: < 2.2e-16***
 model_long_med <- lm(biomass~longitude, data = r3_med_biomass )
 summary(model_long_med) 
-#F-statistic: 2.245 on 1 and 7034 DF,  p-value: 0.1341
+#F-statistic: 2.245 on 1 and 7034 DF,  p-value: 0.1341 
 
 
 # 3. LOW 
@@ -340,7 +335,7 @@ model_long_low <- lm(biomass~longitude, data = r3_low_biomass )
 summary(model_long_low) 
 # F-statistic: 174.1 on 1 and 10512 DF,  p-value: < 2.2e-16***
 
-# Vary this scatterto visualise relationships
+# Vary this scatter to visualise relationships
 (scatter_high <- ggplot(r3_high_biomass, aes(x = latitude, y = biomass)) +
     geom_point(color='#2980B9', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
@@ -354,18 +349,19 @@ r3_rsample_categ_bi <- r3_rsample_00 %>%
                                     biomass >= 258.294220 ~ 'High' ))
 
 r3_rsample_categ_bi$biomass_level <- as.factor(as.character(r3_rsample_categ_bi$biomass_level))
-biomass_glm <- glm(biomass_level ~latitude, data =r3_rsample_categ_bi, family = binomial())
+biomass_glm <- glm(biomass_level ~ latitude, data = r3_rsample_categ_bi, family = binomial())
 summary(biomass_glm)
+
 stargazer(biomass_glm, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
-box_high_med_low <- ggplot(r3_rsample_categ_bi, aes(x = latitude, y = biomass_level)) +
+(box_high_med_low <- ggplot(r3_rsample_categ_bi, aes(x = latitude, y = biomass_level)) +
   geom_boxplot() +
   labs(x = "\nLatitude", y = "Shrub biomass level \n", 
        title = "More high biomass shrubs at lower latitudes \n") + 
-  theme_shrub()
+  theme_shrub())
 
 ggsave(file = "output/figures/box_high_med_low.png")
 
@@ -399,6 +395,7 @@ str(r3_rsample_categ_clust$cluster)
 
 ggsave(file = "output/figures/scatter_high_medium_low.png")
 dev.off()
+
 # END -----
 
 
