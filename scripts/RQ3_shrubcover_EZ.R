@@ -263,6 +263,8 @@ stargazer(lmer_shrub_sp_rand, type = "text",
 # ggsave(file = "output/figures/genus_rand_slopes.png")
 
 # SEPARATE models per genus ----
+# NB. none significant 
+# They are same as  facet but separate 
 
 # Salix sp.
 Salix <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Salix") 
@@ -417,22 +419,5 @@ pred_shrub_lon <- ggpredict(shrub_long, terms = c("lon_grid"))  # this gives ove
 
 ggsave(file = "output/figures/plot_model_shrub_lon.png")
 
-# Model ----
 
-# F.group fixed ----
-# mixed model with functional group as fixed effect
-lmer_all <- lmer(Mean_cover~YEAR + FuncGroup + (1|YEAR) + (1|PLOT), data = ITEX_all_veg)
-summary(lmer_all)
-
-# Output table model 7 
-stargazer(lmer_all, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-
-predslm <-  predict(lmer_all , interval = "confidence")
-head(predslm)
-
-datlm <- cbind(ITEX_all_veg, predslm)
-head(datlm)
 

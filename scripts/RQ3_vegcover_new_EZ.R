@@ -383,9 +383,6 @@ library(ggpubr)  # For data visualisation formatting
 dev.off()
 
 # 5. FUNCTIONAL GROUP ----
-# NB here you might have 10 plots for each func group - you only want 10 in tot for each year
-ANWR_veg %>% group_by(YEAR) %>%
-   summarise(plot.n = length(PLOT)) # same as for the dataset at the beginnign
 
 unique(ANWR_veg$FuncGroup)  # checking I have all functional groups
 
@@ -400,7 +397,7 @@ unique(ANWR_veg$FuncGroup)  # checking I have all functional groups
 
 ggsave(file = "output/figures/hist_all_veg.png")
 
-ANWR_veg$FuncGroup <- as.factor(as.character(ITEX_all_veg$FuncGroup))
+ANWR_veg$FuncGroup <- as.factor(as.character(ANWR_veg$FuncGroup))
 
 ANWR_veg_fg <- ANWR_veg %>%
    group_by(SiteSubsitePlotYear, FuncGroup) %>%
@@ -414,9 +411,8 @@ ANWR_veg_fg_trim <- ANWR_veg_fg %>%
 
 ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup))
 
-# Model ----
-
-# F.group fixed ----
+# Model 11 ----
+# F.group fixed 
 # mixed model with functional group as fixed effect
 lmer_all <- lmer(mean_cover~YEAR*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all)
@@ -426,7 +422,7 @@ stargazer(lmer_all, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
-# func group significant 
+
 # Extracting model predictions 
 pred_lmer_all_1 <- ggpredict(lmer_all, terms = c("YEAR"))
 pred_lmer_all_2 <- ggpredict(lmer_all, terms = c("FuncGroup"))  # this gives overall predictions for the model
@@ -472,23 +468,16 @@ predict <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"), type = "re")
       labs(x = "\nYear", y = "Predicted mean % cover\n"))
 # all increasing? probably wrong
 
-# simple lm
-lm_all <- lm(Mean_cover ~ YEAR + FuncGroup, data = ITEX_all_veg)
-summary(lm_all)
 
-(scatter_all <- (ggplot(ITEX_all_veg, aes(x = YEAR, y = Mean_cover))+
-                       geom_point(size = 2) +
+(scatter_fgroups <- (ggplot(ANWR_veg_fg_trim, aes(x = YEAR, y = mean_cover, colour= FuncGroup))+
+                       geom_point(size = 0.5) +
                        geom_smooth(method = "lm") + 
+                    facet_wrap(~FuncGroup, scales = "free_y") +
                        labs(y = "Mean vegetation cover\n", x = "\nYear") +
                        theme_shrub()))
 
-(cover_all_fgroup <- (ggplot(ITEX_all_veg, aes(x = YEAR, y = Mean_cover, colour = FuncGroup))+
-                    geom_point(size = 0.5) +
-                    geom_smooth(method = "lm") + 
-                    labs(y = "Mean percentage cover\n", x = "\nYear") +
-                    theme_shrub()))
 
-# ggsave(file = "output/figures/cover_all_fgroup.png")
+ggsave(file = "output/figures/scatter_fgroups.png")
 
 # END -----
 
