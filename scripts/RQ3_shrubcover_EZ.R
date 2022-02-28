@@ -153,7 +153,9 @@ summary(lm_shrub_tot) # not sig: F-statistic: 0.02088 on 1 and 143 DF,  p-value:
 
 ### 2. SHRUB GENUS -----
 # shrub species
-unique(ITEX_shrubs$GENUS)
+unique(ITEX_shrubs$GENUS) 
+# [1] "Dryas"          "Salix"          "Vaccinium"      "Arctostaphylos" "Betula"         "Cassiope"      
+# [7] "Ledum"
 
 # Mean shrub cover per plot per year
 ITEX_shrub_sp <- ITEX_shrubs %>%
@@ -258,9 +260,88 @@ stargazer(lmer_shrub_sp_rand, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
-ggsave(file = "output/figures/genus_rand_slopes.png")
+# ggsave(file = "output/figures/genus_rand_slopes.png")
 
-# SHRUB cover VS LAT ----
+# SEPARATE models per genus ----
+
+# Salix sp.
+Salix <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Salix") 
+salix_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Salix)
+summary(salix_model) # not sig
+(salix_plot <- ggplot(Salix, aes(x = YEAR, y = genus_cover)) +
+   geom_point()+
+    stat_smooth(method = "lm")  +
+    theme(legend.position = "bottom") +
+    labs(x = "\nYear", y = "Genus % cover\n")) 
+
+# Dryas sp.
+Dryas <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Dryas") 
+dryas_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Dryas)
+summary(dryas_model)# not sig
+(dryas_plot <- ggplot(Dryas, aes(x = YEAR, y = genus_cover)) +
+    geom_point()+
+    stat_smooth(method = "lm")  +
+    theme(legend.position = "bottom") +
+    labs(x = "\nYear", y = "Genus % cover\n"))
+
+# Vaccinium sp.
+Vaccinium <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Vaccinium") 
+vacc_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Vaccinium)
+summary(vacc_model)# not sig
+(vacc_plot <- ggplot(Vaccinium, aes(x = YEAR, y = genus_cover)) +
+    geom_point()+
+    stat_smooth(method = "lm")  +
+    theme(legend.position = "bottom") +
+    labs(x = "\nYear", y = "Genus % cover\n"))
+
+# Arctostaphylos sp.
+Arctostaphylos <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Arctostaphylos") 
+arcto_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Arctostaphylos)
+summary(vacc_model)# not sig
+(arcto_plot <- ggplot(Arctostaphylos, aes(x = YEAR, y = genus_cover)) +
+    geom_point()+
+    stat_smooth(method = "lm")  +
+    theme(legend.position = "bottom") +
+    labs(x = "\nYear", y = "Genus % cover\n"))
+
+# Betula sp.
+Betula <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Betula") 
+betula_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Betula)
+summary(betula_model)# not sig
+(betula_plot <- ggplot(Betula, aes(x = YEAR, y = genus_cover)) +
+    geom_point()+
+    stat_smooth(method = "lm")  +
+    theme(legend.position = "bottom") +
+    labs(x = "\nYear", y = "Genus % cover\n"))
+
+# Cassiope sp.
+Cassiope<-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Cassiope") 
+cassiope_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Cassiope)
+summary(cassiope_model)# not sig
+(cassiope_plot <- ggplot(Cassiope, aes(x = YEAR, y = genus_cover)) +
+    geom_point()+
+    stat_smooth(method = "lm")  +
+    theme(legend.position = "bottom") +
+    labs(x = "\nYear", y = "Genus % cover\n"))
+
+# Ledum sp.
+Ledum <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Ledum") 
+ledum_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Ledum)
+summary(ledum_model)# not sig
+(ledum_plot <- ggplot(Ledum, aes(x = YEAR, y = genus_cover)) +
+    geom_point()+
+    stat_smooth(method = "lm")  +
+    theme(legend.position = "bottom") +
+    labs(x = "\nYear", y = "Genus % cover\n"))
+
+# Vary genus name to visualise distributions
+hist(Dryas$genus_cover)
+
+
+
+# 3. SHRUB COVER IN SPACE  ----
+
+# Shrub cover vs latitude 
 shrub_lat <- lm(mean_cover ~ LAT, data = ITEX_shrubs_mean_trim)
 summary(shrub_lat)
 # F-statistic: 55.18 on 1 and 143 DF,  p-value: 9.125e-12***
@@ -298,7 +379,7 @@ pred_shrub_lat <- ggpredict(shrub_lat, terms = c("LAT"))  # this gives overall p
 
 ggsave(file = "output/figures/plot_model_shrub_lat.png")
 
-# SHRUB cover VS LONG ----
+# Shrub cover vs longitude
 shrub_long<- lm(mean_cover ~ LONG, data = ITEX_shrubs_mean_trim)
 summary(shrub_long)
 
