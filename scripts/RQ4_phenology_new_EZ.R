@@ -94,6 +94,9 @@ phenology_green$plot <- as.factor(as.character(phenology_green$plot))
 
 # Classifying early vs late greening plots
 range(phenology_green$DOY) # range of DOY of onset of greening
+quantile(phenology_green$DOY) 
+# 0%  25%  50%  75% 100% 
+# 135  162  166  170  211 
 
 # 135 (earliest greening DOY) 211 (latest greening DOY)
 # 211-135 = 76 days difference
@@ -154,7 +157,7 @@ median(threshold$mean)
 
 # Classify as early or late plots
 phenology_green_class <- phenology_green_trim %>% 
-  mutate(greening_type = ifelse(mean.doy >= 168, "late", "early"))
+  mutate(greening_type = ifelse(mean.doy >= 166, "late", "early")) # using 50% quantile as threshold
 
 # late vs early phenology year as factor
 phenology_green_class$greening_type <- as.factor(phenology_green_class$greening_type)
@@ -253,25 +256,28 @@ str(phenology_green_trim)
 
 # Linear mixed model ----
 # lmer with study_area as random effect 
-lmer_green <- lmer(mean.doy ~ year + (1|study_area), data = phenology_green_trim ) 
+lmer_green <- lmer(mean.doy ~ year + (1+year|study_area), data = phenology_green_trim ) 
 summary(lmer_green)
 stargazer(lmer_green, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
-# Extract
-
 # Extracting model predictions 
-pred_lmer_green <- ggpredict(lmer_green, terms = c("year", "study_area"), type = "re")  # this gives overall predictions for the model
+predictions_pheno <- ggpredict(lmer_green , terms = c("year", "study_area"), type = "re")
+(pheno_rand_slopes <- ggplot(predictions_pheno, aes(x = x, y = predicted, colour = group)) +
+    stat_smooth(method = "lm", se = FALSE)  +
+    theme(legend.position = "bottom") +
+    labs(x = "\nYear", y = "Mean greening DOY\n")+
+    theme_shrub()) # mean greening DOY getting earlier 
 
-write.csv(pred_lmer_green, file = "datasets/pred_model_10.csv")
+ggsave(filename = "output/figures/pheno_rand_slopes.png")
 
 # Plot the predictions 
 (greening_model <- (ggplot(pred_lmer_green) + 
-                         geom_line(aes(x = x, y = predicted)) +          # slope
-                         geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                                     fill = "lightgrey", alpha = 0.5) +  # error band
+                         geom_line(aes(x = x, y = predicted, group=group)) +          # slope
+                         # geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                                     # fill = "lightgrey", alpha = 0.5) +  # error band
                          geom_point(data = phenology_green_trim,                      # adding the raw data 
                                     aes(x = year, y = mean.doy, colour = study_area), size = 0.5) + 
                          labs(x = "\nYear", y = "\nMean greening DOY", 

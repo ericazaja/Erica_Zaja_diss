@@ -132,6 +132,7 @@ ITEX_shrubs_tot <- ITEX_shrubs %>%
   mutate(tot_cover = sum(FuncPlotCover)) %>%
   ungroup()
 
+
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_shrubs_tot_trim <- ITEX_shrubs_tot  %>% 
   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, tot_cover, lat_grid, lon_grid, gridcell) %>% 
