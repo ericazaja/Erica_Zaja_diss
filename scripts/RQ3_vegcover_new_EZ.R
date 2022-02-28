@@ -125,15 +125,14 @@ ITEX_gram$PLOT <- as.factor(as.character(ITEX_gram$PLOT))
 ITEX_gram_mean_trim <- ITEX_gram_mean %>% 
    dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
    distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
-   
+
 (graminoid_scatter <- (ggplot(ITEX_gram_mean_trim)+
                           geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
                           geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
                           labs(y = "Mean graminoid cover\n", x = "\nYear") +
-                          theme_shrub())) # same as above but diff error ribbon
-
-dev.off()
-str(ITEX_gram)
+                          scale_x_continuous(breaks=1997:2006)+
+                          theme_shrub()+
+                          theme(axis.text.x = element_text(angle = 45))))
 
 # Model 7 ----
 # Graminoid cover over time 
