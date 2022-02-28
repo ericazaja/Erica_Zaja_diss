@@ -110,6 +110,7 @@ stargazer(model_6, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
+
 # Extracting model predictions 
 pred_model_6 <- ggpredict(model_6, terms = c("YEAR", "PLOT"))
 # this gives overall predictions for the model
@@ -158,6 +159,12 @@ hist(ITEX_shrubs_tot_trim$tot_cover)
 
 lm_shrub_tot <- lm(tot_cover~YEAR, data = ITEX_shrubs_tot_trim)
 summary(lm_shrub_tot) # not sig: F-statistic: 0.02088 on 1 and 143 DF,  p-value: 0.8853
+
+# Trying brms (to use family = beta)
+bcpriors <- get_prior(cover_prop~YEAR +  (1|PLOT) + (1|YEAR), data=ITEX_shrubs_mean_trim, family="beta")
+
+stmt.fitc <- brm(cover_prop~YEAR +  (1|PLOT) + (1|YEAR), data=ITEX_shrubs_mean_trim, family="beta",
+                 prior = bcpriors) # this doesnt work
 
 ### 2. SHRUB GENUS -----
 # shrub species
