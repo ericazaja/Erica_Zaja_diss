@@ -63,15 +63,19 @@ ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>%
   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
 
 str(ITEX_shrubs_mean_trim)
-ITEX_shrubs$PLOT <- as.factor(as.character(ITEX_shrubs$PLOT))
+ITEX_shrubs_mean_trim$PLOT <- as.factor(as.character(ITEX_shrubs_mean_trim$PLOT))
 hist(ITEX_shrubs_mean_trim$mean_cover)
 
 # Mean shrub cover change over time  
 (shrub_scatter <- (ggplot(ITEX_shrubs_mean_trim)+
                      geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
                      geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
+                     scale_x_continuous(breaks=1997:2009)+
                      labs(y = "Mean shrub % cover\n", x = "\nYear") + 
-                     theme_shrub()))
+                     theme_shrub()+
+                     theme(axis.text.x = element_text(angle = 45))))
+
+                   
 
 
 # Model 6----
@@ -80,8 +84,11 @@ lm_shrub <- lm(mean_cover~YEAR, data = ITEX_shrubs_mean_trim)
 summary(lm_shrub)
 # F-statistic:  5.54 on 1 and 517 DF,  p-value: 0.01896
 
+# Transform percentage cover to proportion (dividing by 100)
+ITEX_shrubs_mean_trim <- ITEX_shrubs_mean_trim %>% mutate(cover_prop = mean_cover/100)
+  hist(ITEX_shrubs_mean_trim$mean_cover)
 # mixed effect model with plot and year as random effects
-model_6 <- glmer(mean_cover~YEAR + (1|PLOT)+ (1|YEAR), family = beta(), data = ITEX_shrubs_mean_trim)
+model_6 <- lmer(cover_prop~YEAR + (1|PLOT)+ (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6)
 
 # total variance: 17.20 + 13.67   =30.87

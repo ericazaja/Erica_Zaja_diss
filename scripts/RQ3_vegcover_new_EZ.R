@@ -130,7 +130,7 @@ ITEX_gram_mean_trim <- ITEX_gram_mean %>%
                           geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
                           geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
                           labs(y = "Mean graminoid cover\n", x = "\nYear") +
-                          scale_x_continuous(breaks=1997:2006)+
+                          scale_x_continuous(breaks=1997:2009)+
                           theme_shrub()+
                           theme(axis.text.x = element_text(angle = 45))))
 
@@ -195,8 +195,11 @@ hist(ITEX_gram_tot_trim$tot_cover)
 (gram_scatter_sum <- (ggplot(ITEX_gram_tot_trim)+
                           geom_point(aes(x = YEAR, y = tot_cover, colour = PLOT), size = 2) +
                           geom_smooth(aes(x = YEAR, y = tot_cover), method = "lm") + 
-                          labs(y = "Total graminoid % cover\n", x = "\nYear") + 
-                          theme_shrub())) # similar trend to mean
+                         scale_x_continuous(breaks=1997:2009)+
+                         labs(y = "Total graminoid % cover\n", x = "\nYear") + 
+                          theme_shrub()+
+                         theme(axis.text.x = element_text(angle = 45))))
+# similar trend to mean
 
 
 # 2. FORB COVER ----
@@ -218,7 +221,9 @@ ITEX_forb_mean_trim <- ITEX_forb_mean %>%
    geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
    geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
       labs(y = "Mean forb cover\n", x = "\nYear") +
-      theme_shrub()))
+      scale_x_continuous(breaks=1997:2009)+
+      theme_shrub() +
+      theme(axis.text.x = element_text(angle = 45))))
 # Forb cover decreasing
 
 # Model 8 ----
