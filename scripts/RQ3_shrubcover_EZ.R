@@ -129,7 +129,7 @@ ggsave(file = "output/figures/shrub_cover_ANWR.png")
 # Total shrub cover 
 ITEX_shrubs_tot <- ITEX_shrubs %>%
   group_by(SiteSubsitePlotYear) %>%
-  mutate(tot_cover = sum(RelCover)) %>%
+  mutate(tot_cover = sum(FuncPlotCover)) %>%
   ungroup()
 
 # Shrinking the dataframe to retain one row per plot etc.
@@ -145,7 +145,7 @@ hist(ITEX_shrubs_tot_trim$tot_cover)
                          geom_point(aes(x = YEAR, y = tot_cover, colour = PLOT), size = 2) +
                          geom_smooth(aes(x = YEAR, y = tot_cover), method = "lm") + 
                          labs(y = "Total shrub % cover\n", x = "\nYear") + 
-                         theme_shrub())) # similar trend to mean
+                         theme_shrub())) # not similar trend to mean but not sig
 
 
 lm_shrub_tot <- lm(tot_cover~YEAR, data = ITEX_shrubs_tot_trim)

@@ -177,6 +177,28 @@ pred_model_7 <- ggpredict(model_7, terms = c("YEAR"))  # this gives overall pred
 
 # ggsave( file = "output/figures/gram_cover_ANWR.png")
 
+# checking that overall graminoid cover change has same trend as mean cover change
+# Total graminoid cover 
+ITEX_gram_tot <- ITEX_gram %>%
+   group_by(SiteSubsitePlotYear) %>%
+   mutate(tot_cover = sum(FuncPlotCover)) %>%
+   ungroup()
+
+# Shrinking the dataframe to retain one row per plot etc.
+ITEX_gram_tot_trim <- ITEX_gram_tot  %>% 
+   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, tot_cover, lat_grid, lon_grid, gridcell) %>% 
+   distinct(SiteSubsitePlotYear, tot_cover, .keep_all = TRUE)
+
+ITEX_gram_tot_trim$PLOT <- as.factor(as.character(ITEX_gram_tot_trim$PLOT))
+hist(ITEX_gram_tot_trim$tot_cover)
+
+# Tot shrub cover change over time  
+(gram_scatter_sum <- (ggplot(ITEX_gram_tot_trim)+
+                          geom_point(aes(x = YEAR, y = tot_cover, colour = PLOT), size = 2) +
+                          geom_smooth(aes(x = YEAR, y = tot_cover), method = "lm") + 
+                          labs(y = "Total graminoid % cover\n", x = "\nYear") + 
+                          theme_shrub())) # similar trend to mean
+
 
 # 2. FORB COVER ----
 
@@ -478,6 +500,12 @@ predict <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"), type = "re")
 
 
 ggsave(file = "output/figures/scatter_fgroups.png")
+
+# Model with random slopes per f group
+lmer_fgroup_rand <- lmer(mean_cover~YEAR + (1+YEAR|FuncGroup) + (1|YEAR), data = ANWR_veg_fg_trim)
+summary(lmer_fgroup_rand ) # doesnt converge
+head(ANWR_veg_fg_trim)
+
 
 # END -----
 
