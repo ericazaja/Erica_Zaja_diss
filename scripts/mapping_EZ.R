@@ -5,9 +5,8 @@
 #                                                          #
 ##%######################################################%##
 
-# ***Problems***
-
 ## LOADING LIBRARIES -----
+
 library(sp)
 library(rgdal)
 library(raster)
@@ -26,10 +25,12 @@ library(tmap)
 library(tmaptools)
 
 ## LOADING DATA ----
+
 shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif") # shrub data (from Berner et al 2018)
 PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") # PCH range data 
 
 ## EXPLORING DATA ------
+
 # class: what type of data 
 class(shrub_agb_p50) # RasterLayer
 class(PCH_core_range) # sf dataframe
@@ -58,6 +59,7 @@ crs(shrub_agb_p50)
 # same CRS: +proj=aea +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs 
 
 ## DATA VISUALISATION -----
+
 # setting a personalised theme 
 theme_shrub <- function(){ theme(legend.position = "right",
                                  axis.title.x = element_text(face="bold", size=20),
@@ -149,12 +151,14 @@ r3_latlong_agg <- raster("datasets/berner_data/r3_latlong_agg.tif")
     theme_shrub() +  # Remove ugly grey background
     xlab("\nLongitude") +
     ylab("Latitude\n") +
+    xlim(-147.5, -140)+
+    ylim(69,70.5)+
     ggtitle("Shrub biomass cover (kg/m2) of the PCH alaskan range\n") +
     theme(plot.title = element_text(hjust = 0.5),             # centres plot title
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 30, hjust = 1)))  # rotates x axis text
 
-# ggsave("output/figures/r3_cropped_viridis.png")
+ggsave("output/figures/r3_cropped_viridis.png")
 
 # Cropped map with personalised colour palette (low-mid)
 (r3_cropped_my_palette <- gplot(r3_latlong_agg) +
@@ -168,28 +172,32 @@ r3_latlong_agg <- raster("datasets/berner_data/r3_latlong_agg.tif")
     theme_shrub() +  # Remove ugly grey background
     xlab("\nLongitude") +
     ylab("Latitude\n") +
+    xlim(-147.5, -140)+
+    ylim(69,70.5)+
     ggtitle("Shrub biomass cover (kg/m2) of the PCH alaskan range") +
     theme(plot.title = element_text(hjust = 0.5),             # centres plot title
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 30, hjust = 1)))  # rotates x axis text
 
-# ggsave("output/figures/r3_cropped_my_palette.png")
+ggsave("output/figures/r3_cropped_my_palette.png")
 
 # Cropped map with personalised colour palette (low-mid-high) 
 (r3_cropped_my_palette_2 <- gplot(r3_latlong_agg) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
-    scale_fill_gradient2(low = "yellow", mid = "green4", high = "brown", midpoint = 500,  na.value="white") +
+    scale_fill_gradient2(low = "brown", mid = "green", high = "yellow", midpoint = 400,  na.value="white") +
     coord_quickmap()+
     theme_shrub() +  # Remove ugly grey background
     xlab("\nLongitude") +
     ylab("Latitude\n") +
+    xlim(-147.5, -140)+
+    ylim(69,70.5)+
     ggtitle("Shrub biomass cover (kg/m2) of the PCH alaskan range\n") +
     theme(plot.title = element_text(hjust = 0.5),             # centres plot title
           text = element_text(size=15),		       	    # font size
           axis.text.x = element_text(angle = 30, hjust = 1)))  # rotates x axis text
 
-# ggsave("output/figures/r3_cropped_my_palette_2.png")
+ggsave("output/figures/r3_cropped_my_palette_2.png")
 
 dev.off()
 
