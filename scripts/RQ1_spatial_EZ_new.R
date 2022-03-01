@@ -179,10 +179,11 @@ summary(model_1)
     geom_point(color='#2980B9', size = 0.1) +
     geom_smooth(method = lm, color ='black', fill = "grey", se=TRUE)+
     labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n") +
+    annotate(geom = "text", x = 70, y = 1250, label="(a)", size = 10) +
          # title = "Shrub biomass decreases with latitude\n") + 
     theme_shrub())
 
-#ggsave(file = "output/figures/biomass_vs_lat_scatter.png")
+ggsave(file = "output/figures/biomass_vs_lat_scatter.png")
 
 # Checking model 1 assumptions 
 plot(model_1)
@@ -225,10 +226,11 @@ summary(model_2)
     geom_point(color='#2980B9', size = 0.01) +
     geom_smooth(method = "lm", colour='black') +
     labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n") +  
+    annotate(geom = "text", x = -141, y = 1250, label="(b)", size = 10) +
          # title = "Shrub biomass decreases with longitude\n") + 
     theme_shrub())
 
-# ggsave(file = "output/figures/biomass_vs_long_scatter.png")
+ggsave(file = "output/figures/biomass_vs_long_scatter.png")
 
 # Checking model 2 assumptions 
 plot(model_2)
@@ -265,9 +267,9 @@ panel_title <- text_grob("Shrub biomass decreases with latitude and longitude",
                          size = 18, face = "bold")
 
 (panel_latlong <- grid.arrange(arrangeGrob(scatter_lat, scatter_lon,
-                                           ncol = 2),  # Sets number of panel columns
-                               top = panel_title  # Adding panel title
-)) 
+                                           ncol = 2))) # Sets number of panel columns
+                              #  top = panel_title  # Adding panel title
+
 
 
 ggsave(panel_latlong, file = "output/figures/panel_latlong.png", width = 18, height = 9)
