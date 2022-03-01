@@ -495,13 +495,15 @@ predict <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"), type = "re")
 # all increasing? probably wrong
 
 
-(scatter_fgroups <- (ggplot(ANWR_veg_fg_trim, aes(x = YEAR, y = mean_cover, colour= FuncGroup))+
+(scatter_fgroups <- (ggplot(ANWR_veg_fg_trim, aes(x = YEAR, y = mean_cover, colour = FuncGroup))+
                        geom_point(size = 0.5) +
                        geom_smooth(method = "lm") + 
                     facet_wrap(~FuncGroup, scales = "free_y") +
+                       scale_x_continuous(breaks=1997:2009)+
                        labs(y = "Mean vegetation cover\n", x = "\nYear") +
-                       theme_shrub()))
-
+                       theme_shrub() +
+                       theme(axis.text.x  = element_text(vjust=0.5, size=10, angle= 45, colour = "black"))))
+            
 
 ggsave(file = "output/figures/scatter_fgroups.png")
 

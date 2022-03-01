@@ -164,6 +164,7 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
 # MODELLING ----
+# r3_rsample_00 <- read_csv("datasets/berner_data/r3_rsample_00.csv")
 
 hist(r3_rsample_00$biomass) # distribution 
 str(r3_rsample_00) # lat and long and biomass numeric

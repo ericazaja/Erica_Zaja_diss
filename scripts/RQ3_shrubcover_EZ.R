@@ -189,11 +189,14 @@ ITEX_shrubs_sp_trim$YEAR<- as.numeric(ITEX_shrubs_sp_trim$YEAR)
 str(ITEX_shrubs_sp_trim)
 
 (facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover, colour = GENUS))+
-                                 geom_point(size = 2) +
+                                 geom_point(size = 0.6) +
                                  geom_smooth(method = "lm") + 
                                  facet_wrap(~ GENUS, scales = "free_y") +
+                                 scale_x_continuous(breaks=1997:2009)+
                                  labs(y = "Mean cover (%) \n", x = "\nYear") +
-                                 theme_shrub()))
+                                 theme_shrub()+
+                                 theme(axis.text.x  = element_text(vjust=0.5, size=10, angle= 45, colour = "black"))))
+
 dev.off()
 ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 
@@ -361,6 +364,7 @@ hist(Dryas$genus_cover)
 # Shrub cover vs latitude 
 shrub_lat <- lm(mean_cover ~ LAT, data = ITEX_shrubs_mean_trim)
 summary(shrub_lat)
+
 # F-statistic: 55.18 on 1 and 143 DF,  p-value: 9.125e-12***
 # mean shrub cover decreases with lat
 
@@ -414,6 +418,7 @@ stargazer(shrub_long, type = "text",
     labs(y = "Mean shrub % cover\n", x = "\nLongitude") +
     theme_shrub())
 
+
 ggsave(file = "output/figures/cover_long_scatter.png")
 
 # Extracting model predictions 
@@ -435,4 +440,10 @@ pred_shrub_lon <- ggpredict(shrub_long, terms = c("lon_grid"))  # this gives ove
 ggsave(file = "output/figures/plot_model_shrub_lon.png")
 
 
+
+(panel_cover_latlong <- grid.arrange(arrangeGrob(cover_lat_scatter,cover_long_scatter,
+                                           ncol = 2)) )# Sets number of panel columns
+
+ggsave(panel_cover_latlong, file = "output/figures/panel_cover_latlong.png")
+           
 
