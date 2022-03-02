@@ -118,8 +118,8 @@ coord.chelsa.combo.c$gridcell <- as.factor(as.character(coord.chelsa.combo.c$gri
 # Model 3 ----
 # biomass ~ temp 
 model_3 <- lm(biomass ~ CH_TempMeanSummer, data = coord.chelsa.combo.c)
-summary(model_3_a)
-# F-statistic:  2093 on 1 and 19990 DF,  p-value: < 2.2e-16*** 
+summary(model_3)
+# F-statistic:  1165 on 1 and 9578 DF,  p-value: < 2.2e-16
 
 # Checking model 3 assumptions
 plot(model_3)
@@ -154,20 +154,21 @@ ggsave(file = "output/figures/biomass_vs_temp.png")
 
 # Quick scatter: biomass ~ temp
 (scatter_temp <- ggplot(coord.chelsa.combo.c, aes(x = CH_TempMeanSummer, y = biomass)) +
-    geom_point(color='#2980B9', size = 0.1) +
+    geom_point(color="skyblue", size = 0.1) +
     geom_smooth(method = "lm", color = "black") +
+    annotate(geom = "text", x = 10.5, y = 900, label="(a)", size = 10) +
+    annotate(geom = "text", x = 8, y = 700, label="slope = 63.80*** ", size = 6) +
     labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n") + 
          # title = "Shrub biomass increases with temperature\n") + 
     theme_shrub())
 
-# ggsave(file = "output/figures/scatter_temp.png")
+ggsave(file = "output/figures/scatter_temp.png")
 
 # Model 4  -----
 # biomass ~ precip 
 model_4 <- lm(biomass ~ CH_PrecipMeanSummer, data = coord.chelsa.combo.c)
 summary(model_4)
-#F-statistic:  3659 on 1 and 19990 DF,  p-value: < 2.2e-16***
-
+# F-statistic:  1753 on 1 and 9578 DF,  p-value: < 2.2e-16
 
 # Checking model 4 assumptions 
 plot(model_4)
@@ -201,8 +202,10 @@ ggsave(file = "output/figures/biomass_vs_precip.png")
 
 # Quick scatter: biomass ~precip
 (scatter_precip <- ggplot(coord.chelsa.combo.c, aes(x = CH_PrecipMeanSummer, y = biomass)) +
-    geom_point(color='#2980B9', size = 0.1) +
+    geom_point(color="skyblue", size = 0.1) +
     geom_smooth(method = "lm", color = "black") +
+    annotate(geom = "text", x = 135, y = 900, label="(b)", size = 10) +
+     annotate(geom = "text", x = 125, y = 700, label="slope = 3.93597*** ", size = 6) +
     labs(x = "\nMean summer precipitation (kg/m2)", y = "Shrub biomass (kg/m2)\n") +
          # title = "Shrub biomass increases with precipiation\n") + 
     theme_shrub())
@@ -215,9 +218,9 @@ panel_title <- text_grob("Shrub biomass increases with mean summer temperature a
                          size = 18, face = "bold")
 
 (panel_scatter <- grid.arrange(arrangeGrob(scatter_temp, scatter_precip,
-                                 ncol = 2),  # Sets number of panel columns
-                            top = panel_title  # Adding panel title
-                            )) 
+                                 ncol = 2)) )# Sets number of panel columns
+                            # top = panel_title  # Adding panel title
+                          
 
 # Panel of model predictions
 (panel_model_pred<- grid.arrange(arrangeGrob(biomass_vs_temp, biomass_vs_precip,
@@ -225,7 +228,7 @@ panel_title <- text_grob("Shrub biomass increases with mean summer temperature a
                               top = panel_title  # Adding panel title
 )) 
 
-# ggsave(panel_scatter, file = "output/figures/panel_scatter.png", width = 18, height = 9)
+ggsave(panel_scatter, file = "output/figures/panel_scatter.png", width = 18, height = 9)
 # ggsave(panel_model_pred, file = "output/figures/panel_model_pred.png", width = 18, height = 9)
 
 
@@ -250,9 +253,10 @@ mean(coord.chelsa.combo.c$CH_PrecipMeanSummer)
 # 101.8274
 
 coord.chelsa.combo.d <- coord.chelsa.combo.c %>% 
-  mutate(moisture = case_when(CH_PrecipMeanSummer >= 60 & CH_PrecipMeanSummer < 78 ~ "dry",
-                              CH_PrecipMeanSummer >= 78 & CH_PrecipMeanSummer < 86 ~ "moist",
-                              CH_PrecipMeanSummer >= 86 & CH_PrecipMeanSummer <= 136  ~ "wet"))
+  mutate(moisture = case_when(CH_PrecipMeanSummer < 78 ~ "dry",
+                              CH_PrecipMeanSummer >= 78 & CH_PrecipMeanSummer < 93 ~ "moist",
+                              CH_PrecipMeanSummer >= 93 ~ "wet"))
+
 
 
 unique(coord.chelsa.combo.d$moisture)
@@ -264,6 +268,7 @@ write.csv(coord.chelsa.combo.d, file = "datasets/climate_data/coord.chelsa.combo
 # Model 5a: biomass Vs temp*moisture
 model_5a <- lm(biomass ~ CH_TempMeanSummer*moisture , data = coord.chelsa.combo.d)
 summary(model_5a)
+#F-statistic: 523.7 on 5 and 9574 DF,  p-value: < 2.2e-16
 
 # model 5a output table 
 stargazer(model_5a, type = "text",
@@ -277,16 +282,25 @@ pred_model_5a <- ggpredict(model_5a, terms = c("CH_TempMeanSummer", "moisture"))
 
 plot_model(model_5a, type = "pred", terms = c("CH_TempMeanSummer", "moisture"))
 
+coord.chelsa.combo.d$moisture <- factor(coord.chelsa.combo.d$moisture,levels=c("dry", "moist", "wet"),
+                                         labels = c("dry", "moist", "wet"),
+                                         ordered = T)
+
+
 # Plot the predictions 
 (biomass_vs_moist_temp<- (ggplot(pred_model_5a) + 
                          geom_line(aes(x = x, y = predicted, group = group, colour = group)) +          # slope
                          geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error, 
-                                     fill = group), alpha = 0.5) +  # error band
+                                     fill = group), alpha = 0.5) +
+                           scale_fill_manual(values = c("brown", "skyblue", "blue4"), name = "Moisture level")+
                          geom_point(data = coord.chelsa.combo.d,                      # adding the raw data 
                                     aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size = 0.3) + 
+                           scale_color_manual(values = c("brown", "skyblue", "blue4"), name = "Moisture level")+
                          labs(x = "\nMean summer temperature (degC)", y = "Shrub biomass (kg/m2)\n", 
                               title = "") + 
-                         theme_shrub()))
+                         theme_shrub()+
+                           theme(legend.text = element_text(size= 12),
+                                 legend.title = element_text(size=15))))
 
 ggsave(file = "output/figures/biomass_vs_moist_temp.png")
 

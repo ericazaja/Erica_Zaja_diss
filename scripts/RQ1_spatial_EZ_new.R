@@ -177,7 +177,7 @@ summary(model_1)
 
 # Quick scatter
 (scatter_lat <- ggplot(r3_rsample_00, aes(x = latitude, y = biomass))+
-    geom_point(color="#8DCCB8", size = 0.1) +
+    geom_point(color="skyblue", size = 0.1) +
     geom_smooth(method = lm, color ='black', fill = "grey", se=TRUE)+
     labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n") +
     annotate(geom = "text", x = 70, y = 1250, label="(a)", size = 10) +
@@ -226,7 +226,7 @@ summary(model_2)
 
 # Quick scatter
 (scatter_lon <- ggplot(r3_rsample_00, aes(x = longitude, y = biomass)) +
-    geom_point(color="#8DCCB8", size = 0.01) +
+    geom_point(color="skyblue", size = 0.01) +
     geom_smooth(method = lm, colour='black') +
     labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n") +  
     annotate(geom = "text", x = -141, y = 1250, label="(b)", size = 10) +
@@ -277,7 +277,7 @@ panel_title <- text_grob("Shrub biomass decreases with latitude and longitude",
 
 
 
-ggsave(panel_latlong, file = "output/figures/panel_latlong.png")
+ggsave(panel_latlong, file = "output/figures/panel_latlong.png", width = 18, height = 9)
 
 # BIOMASS LEVELS ----
 
