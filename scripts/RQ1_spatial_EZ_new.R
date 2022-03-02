@@ -116,7 +116,7 @@ res(r3_latlong_agg)
 # But I want 2 pixels per raster grid cell, so I divide 1414.2/2 = 707.1
 
 # buffered random sampling
-r3_rsample_0 <- as.data.frame(sampleRandom(r3_latlong_agg, 20000, buffer = 707.1, na.rm=TRUE, ext=NULL, 
+r3_rsample_0 <- as.data.frame(sampleRandom(r3_latlong_agg, 9583, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy = TRUE)) 
 hist(r3_rsample_0$r3_latlong_agg) # checking distribution
 
@@ -148,11 +148,11 @@ r3_rsample_00 <- r3_rsample_01 %>%
   mutate(gridcell = paste0("_", lat, "_", long))%>%
   select(cell_ID, latitude, longitude, long, lat, biomass, gridcell)
 
-# write.csv(r3_rsample_00, file= "datasets/berner_data/r3_rsample_00.csv")
+write.csv(r3_rsample_00, file= "datasets/berner_data/r3_rsample_00.csv")
 
 # THEME ----
 
-theme_shrub <- function(){ theme(legend.position = "right",
+theme_shrub <- function(){ theme(legend.position = "right", 
                                  axis.title.x = element_text(face="bold", size=18),
                                  axis.text.x  = element_text(vjust=0.5, size=15, colour = "black"), 
                                  axis.title.y = element_text(face="bold", size=18),
@@ -172,14 +172,17 @@ str(r3_rsample_00) # lat and long and biomass numeric
 # Model 1. biomass vs lat ----
 model_1 <- lm(biomass~latitude, data = r3_rsample_00)
 summary(model_1)
-# F-statistic:  4134 on 1 and 19995 DF,  p-value: < 2.2e-16***
+# F-statistic:  1997 on 1 and 9580 DF,  p-value: < 2.2e-16
+
 
 # Quick scatter
 (scatter_lat <- ggplot(r3_rsample_00, aes(x = latitude, y = biomass))+
-    geom_point(color='#2980B9', size = 0.1) +
+    geom_point(color="#8DCCB8", size = 0.1) +
     geom_smooth(method = lm, color ='black', fill = "grey", se=TRUE)+
     labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n") +
     annotate(geom = "text", x = 70, y = 1250, label="(a)", size = 10) +
+    annotate(geom = "text", x = 69.9, y = 900, label="slope = -309.381*** ", size = 6) +
+    
          # title = "Shrub biomass decreases with latitude\n") + 
     theme_shrub())
 
@@ -223,10 +226,12 @@ summary(model_2)
 
 # Quick scatter
 (scatter_lon <- ggplot(r3_rsample_00, aes(x = longitude, y = biomass)) +
-    geom_point(color='#2980B9', size = 0.01) +
-    geom_smooth(method = "lm", colour='black') +
+    geom_point(color="#8DCCB8", size = 0.01) +
+    geom_smooth(method = lm, colour='black') +
     labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n") +  
     annotate(geom = "text", x = -141, y = 1250, label="(b)", size = 10) +
+    annotate(geom = "text", x = -142, y = 900, label="slope = -13.8502*** ", size = 6) +
+
          # title = "Shrub biomass decreases with longitude\n") + 
     theme_shrub())
 
@@ -272,15 +277,15 @@ panel_title <- text_grob("Shrub biomass decreases with latitude and longitude",
 
 
 
-ggsave(panel_latlong, file = "output/figures/panel_latlong.png", width = 18, height = 9)
+ggsave(panel_latlong, file = "output/figures/panel_latlong.png")
 
 # BIOMASS LEVELS ----
 
 # Categorising into high-medium-low level
 mean(r3_rsample_00$biomass)
-# 267.1607 kg/m2 mean biomass
+#  266.2142 kg/m2 mean biomass
 range(r3_rsample_00$biomass)
-#  2.571958 1221.628784
+#   4.709974 1069.545166
 quantile(r3_rsample_00$biomass)
 #   0%         25%         50%         75%        100% 
 # 2.571958  170.177444  258.294220  346.248993 1221.628784 
