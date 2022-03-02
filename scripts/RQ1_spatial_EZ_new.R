@@ -287,13 +287,13 @@ mean(r3_rsample_00$biomass)
 range(r3_rsample_00$biomass)
 #   4.709974 1069.545166
 quantile(r3_rsample_00$biomass)
-#   0%         25%         50%         75%        100% 
-# 2.571958  170.177444  258.294220  346.248993 1221.628784 
+# 0%         25%         50%         75%        100% 
+# 4.709974  169.224045  256.003128  347.005112 1069.545166 
 
 r3_rsample_categ <- r3_rsample_00 %>%
-  mutate(biomass_level = case_when (biomass < 258.294220   ~ 'Low', # lower than mean biomass
-                                    biomass >= 258.294220  & biomass < 346.248993~ 'Medium', 
-                                    biomass >= 346.248993 ~ 'High')) %>% 
+  mutate(biomass_level = case_when (biomass < 169.224045   ~ 'Low', # lower than mean biomass
+                                    biomass >= 169.224045 & biomass < 347.005112~ 'Medium', 
+                                    biomass >= 347.005112 ~ 'High')) %>% 
   mutate(biomass_level_0 = case_when (biomass_level == 'Low' ~ 1, # 1 = low level
                                     biomass_level == 'Medium' ~ 2, # 2 = medium level
                                     biomass_level == 'High'~ 3)) %>% # 3 = high level
@@ -301,15 +301,23 @@ r3_rsample_categ <- r3_rsample_00 %>%
 
 r3_rsample_categ$biomass_level <- as.factor(as.character(r3_rsample_categ$biomass_level))
 
-
+r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels=c("Low", "Medium", "High"),
+                          labels = c("Low", "Medium", "High"),
+                          ordered = T)
 # Histogram of biomass level
 (hist_high_medium_low <- r3_rsample_categ %>%
     ggplot(aes(x = biomass, fill = biomass_level)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
     geom_vline(aes(xintercept = mean(biomass)),            
                colour = "red", linetype = "dashed", size = 1) +
+    annotate(geom = "text", x = 450, y = 600, label="mean = 266.2142", size = 6) +
+    geom_curve(aes(x = 470, y = 630, xend = mean(r3_rsample_categ$biomass) + 2, yend = 630),
+               arrow = arrow(length = unit(0.07, "inch")), size = 0.7,
+               color = "grey30", curvature = 0.3) +
     labs(x = "\nShrub biomass (kg/m2)", y = "Frequency\n") +
-    scale_fill_manual(values=c( "green4", "tan", "yellow")) +
+    scale_fill_manual(name = "Biomass level", values=c( "tan", "yellow", "green4")) +
+    theme(legend.text = element_text(size=12),
+          legend.title = element_text(size=15)) +
     theme_shrub())
 
 ggsave(file = "output/figures/hist_high_medium_low.png")
@@ -319,29 +327,31 @@ ggsave(file = "output/figures/hist_high_medium_low.png")
 r3_high_biomass <- r3_rsample_categ %>% filter (biomass_level == "High")
 model_lat_high <- lm(biomass~latitude, data = r3_high_biomass )
 summary(model_lat_high)
-# F-statistic: 382.7 on 1 and 2445 DF,  p-value: < 2.2e-16***
+# F-statistic: 359.6 on 1 and 2394 DF,  p-value: < 2.2e-16
+
 model_long_high <- lm(biomass~longitude, data = r3_high_biomass )
 summary(model_long_high) 
-# F-statistic: 190.7 on 1 and 2445 DF,  p-value: < 2.2e-16 ***
+# F-statistic: 163.1 on 1 and 2394 DF,  p-value: < 2.2e-16
+
 
 # 2. MEDIUM
 r3_med_biomass <- r3_rsample_categ %>% filter (biomass_level == "Medium")
 model_lat_med <- lm(biomass~latitude, data = r3_med_biomass )
 summary(model_lat_med)
-# F-statistic: 157.2 on 1 and 7034 DF,  p-value: < 2.2e-16***
+# F-statistic: 198.7 on 1 and 4788 DF,  p-value: < 2.2e-16
 model_long_med <- lm(biomass~longitude, data = r3_med_biomass )
 summary(model_long_med) 
-#F-statistic: 2.245 on 1 and 7034 DF,  p-value: 0.1341 
+#F-statistic: 437.4 on 1 and 4788 DF,  p-value: < 2.2e-16
 
 
 # 3. LOW 
 r3_low_biomass <- r3_rsample_categ %>% filter (biomass_level == "Low")
 model_lat_low <- lm(biomass~latitude, data = r3_low_biomass )
 summary(model_lat_low)
-# F-statistic: 199.6 on 1 and 10512 DF,  p-value: < 2.2e-16***
+# F-statistic: 15.18 on 1 and 2394 DF,  p-value: 0.0001003
 model_long_low <- lm(biomass~longitude, data = r3_low_biomass )
 summary(model_long_low) 
-# F-statistic: 174.1 on 1 and 10512 DF,  p-value: < 2.2e-16***
+# F-statistic: 67.89 on 1 and 2394 DF,  p-value: 2.812e-16
 
 # Vary this scatter to visualise relationships
 (scatter_high <- ggplot(r3_high_biomass, aes(x = latitude, y = biomass)) +
