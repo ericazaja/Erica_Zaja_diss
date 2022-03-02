@@ -440,7 +440,7 @@ ggsave(file = "output/figures/box_high_med_low.png")
 set.seed(99)
 clusters <- kmeans(na.omit(r3_rsample_categ$biomass), centers = 3, nstart = 25)
 cluster.df <- as.data.frame(clusters$cluster)
-cluster_plot <- fviz_cluster(clusters, data = r3_rsample_categ)
+cluster_plot <- fviz_cluster(cluster, data = r3_rsample_categ)
 
 r3_rsample_categ_clust <- r3_rsample_categ %>%
   add_column(cluster = clusters$cluster)
@@ -489,6 +489,14 @@ ggsave(file = "output/figures/scatter_high_medium_low_lat.png")
 
 ggsave(file = "output/figures/scatter_high_medium_low_long.png")
 dev.off()
+
+# PLotting kmeans
+copy_raster <- r3_latlong_agg
+# Now replace raster cell values with 
+# array
+copy_raster[] <- clusters$cluster
+plot(copy_raster, main = "Kmeans", col = viridis_pal(option = "D")(3))
+
 
 # END -----
 
