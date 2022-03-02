@@ -394,6 +394,16 @@ summary(model_long_low)
     theme_shrub() + theme(axis.title.y =element_text(size=12), 
                           axis.title.x = element_text(size=12)))
 
+
+(scatter <- ggplot(r3_rsample_categ, aes(x = latitude, y = biomass, colour = biomass_level)) +
+    geom_point(color='#8DCCB8', size = 0.1) +
+    geom_smooth(method = "lm", colour='black') +
+    facet_wrap(~biomass_level)+
+    labs(x = "\nLongitude", y = "Low biomass (kg/m2)\n") + 
+    theme_shrub() + theme(axis.title.y =element_text(size=12), 
+                          axis.title.x = element_text(size=12)))
+
+
 # Panel latlong levels -----
 (panel_latlong_levels <- grid.arrange(arrangeGrob(scatter_low_lat, scatter_low_long,
                                                   scatter_med_lat, scatter_med_long,
@@ -404,8 +414,8 @@ ggsave(panel_latlong_levels, file="output/figures/panel_latlong_levels.png", hei
 
 # Binomial model ----
 r3_rsample_categ_bi <- r3_rsample_00 %>%
-  mutate(biomass_level = case_when (biomass < 258.294220 ~ 'Low', # lower than mean biomass
-                                    biomass >= 258.294220 ~ 'High' ))
+  mutate(biomass_level = case_when (biomass < 256.003128 ~ 'Low', # lower than mean biomass
+                                    biomass >= 256.003128 ~ 'High' ))
 
 r3_rsample_categ_bi$biomass_level <- as.factor(as.character(r3_rsample_categ_bi$biomass_level))
 biomass_glm <- glm(biomass_level ~ latitude, data = r3_rsample_categ_bi, family = binomial())
@@ -427,32 +437,57 @@ ggsave(file = "output/figures/box_high_med_low.png")
 
 # Kmeans ----
 # Kmeans clustering: Biomass level ~ lat 
-
-clusters <- kmeans(r3_rsample_categ, centers = 3, nstart = 25)
+set.seed(99)
+clusters <- kmeans(na.omit(r3_rsample_categ$biomass), centers = 3, nstart = 25)
 cluster.df <- as.data.frame(clusters$cluster)
 cluster_plot <- fviz_cluster(clusters, data = r3_rsample_categ)
 
-r3_rsample_categ <- r3_rsample_00 %>%
-  mutate(biomass_level = case_when (biomass < 267.1607 ~ 'Low', # lower than mean biomass
-                                    biomass >= 267.1607 & biomass < 400 ~ 'Medium', 
-                                    biomass >= 400 ~ 'High'))
-
 r3_rsample_categ_clust <- r3_rsample_categ %>%
-  add_column(cluster = clusters$cluster )
+  add_column(cluster = clusters$cluster)
 
 # adding cluster column to dataframe
 
 r3_rsample_categ_clust$cluster <- as.factor(as.character(r3_rsample_categ_clust$cluster ))
 str(r3_rsample_categ_clust$cluster)
 
-(scatter_high_medium_low <- ggplot(r3_rsample_categ_clust) +
-    geom_point(aes(x = lat, y = biomass, colour = cluster), size = 0.5) +
-    scale_colour_manual(values = c("1"= "tan", "2" = "yellow", "3"= "green4"))+
-     geom_smooth(aes(x = lat, y = biomass, colour = cluster), method = "lm") +
-    labs(x= "Latitude\n", y = "\nShrub biomass (kg/m2)") +
-    theme_shrub())
+r3_rsample_categ_clust <- r3_rsample_categ_clust %>%
+  mutate(cluster_level = case_when (cluster == "2" ~ 'Low', # 1 = low level
+                                      cluster == "1" ~ 'Medium', # 2 = medium level
+                                      cluster == "3" ~ 'High')) 
+r3_rsample_categ_clust$cluster_level <- as.factor(as.character(r3_rsample_categ_clust$cluster_level ))
 
-ggsave(file = "output/figures/scatter_high_medium_low.png")
+# reordeing factor levels 
+r3_rsample_categ_clust$cluster_level <- factor(r3_rsample_categ_clust$cluster_level,
+                                               levels=c("Low","Medium", "High"),
+                                         labels = c("Low","Medium", "High"),
+                                         ordered = T)
+
+(scatter_high_medium_low_lat <- ggplot(r3_rsample_categ_clust) +
+    geom_point(aes(x = lat, y = biomass, colour = cluster_level), size = 0.5) +
+   scale_colour_manual(values = c("Low"= "tan", "Medium" = "yellow", "High"= "green4"), name = "Biomass level")+
+     geom_smooth(aes(x = lat, y = biomass, colour = cluster_level), method = "lm") +
+    facet_wrap(~cluster_level) +
+   #  scale_fill_manual(name = "Biomass level", values=c( "tan", "yellow", "green4")) +
+    labs(x= "\nLatitude", y = "Shrub biomass (kg/m2)\n") +
+    theme_shrub()+
+    theme(axis.text.x = element_text(vjust=0.5, angle = 45, size=12, colour = "black"), 
+))
+
+ggsave(file = "output/figures/scatter_high_medium_low_lat.png")
+
+(scatter_high_medium_low_long <- ggplot(r3_rsample_categ_clust) +
+    geom_point(aes(x = long, y = biomass, colour = cluster_level), size = 0.5) +
+    scale_colour_manual(values = c("Low"= "tan", "Medium" = "yellow", "High"= "green4"), name = "Biomass level")+
+    geom_smooth(aes(x = long, y = biomass, colour = cluster_level), method = "lm") +
+    facet_wrap(~cluster_level) +
+    #  scale_fill_manual(name = "Biomass level", values=c( "tan", "yellow", "green4")) +
+    labs(x= "\nLongitude", y = "Shrub biomass (kg/m2)\n") +
+    theme_shrub() +
+  theme(axis.text.x = element_text(vjust=0.5, angle = 45, size=12, colour = "black"), 
+  ))
+
+
+ggsave(file = "output/figures/scatter_high_medium_low_long.png")
 dev.off()
 
 # END -----
