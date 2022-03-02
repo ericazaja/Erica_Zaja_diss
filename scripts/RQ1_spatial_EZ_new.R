@@ -334,7 +334,7 @@ summary(model_lat_high)
 (scatter_high_lat <- ggplot(r3_high_biomass, aes(x = latitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
-    labs(x = "\nLatitude", y = "Shrub biomass - high (kg/m2)\n") + 
+    labs(x = "\nLatitude", y = "High biomass (kg/m2)\n") + 
     theme_shrub() + theme(axis.title.y =element_text(size=12), 
                           axis.title.x = element_text(size=12)))
 
@@ -345,7 +345,7 @@ summary(model_long_high)
 (scatter_high_long <- ggplot(r3_high_biomass, aes(x = longitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
-    labs(x = "\nLongitude", y = "Shrub biomass - high (kg/m2)\n") + 
+    labs(x = "\nLongitude", y = "High biomass (kg/m2)\n") + 
     theme_shrub() + theme(axis.title.y =element_text(size=12), 
                           axis.title.x = element_text(size=12)))
 
@@ -357,7 +357,7 @@ summary(model_lat_med)
 (scatter_med_lat <- ggplot(r3_med_biomass, aes(x = latitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
-    labs(x = "\nLatitude", y = "Shrub biomass - medium (kg/m2)\n") + 
+    labs(x = "\nLatitude", y = "Medium biomass (kg/m2)\n") + 
     theme_shrub() + theme(axis.title.y =element_text(size=12), 
                           axis.title.x = element_text(size=12)))
 
@@ -367,7 +367,7 @@ summary(model_long_med)
 (scatter_med_long <- ggplot(r3_med_biomass, aes(x = longitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
-    labs(x = "\nLongitude", y = "Shrub biomass - medium (kg/m2)\n") + 
+    labs(x = "\nLongitude", y = "Medium biomass (kg/m2)\n") + 
     theme_shrub() + theme(axis.title.y =element_text(size=12), 
                           axis.title.x = element_text(size=12)))
 
@@ -380,7 +380,7 @@ summary(model_lat_low)
 (scatter_low_lat <- ggplot(r3_low_biomass, aes(x = latitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
-    labs(x = "\nLatitude", y = "Shrub biomass - low (kg/m2)\n") + 
+    labs(x = "\nLatitude", y = "Low biomass (kg/m2)\n") + 
     theme_shrub() + theme(axis.title.y =element_text(size=12), 
                           axis.title.x = element_text(size=12)))
 
@@ -390,7 +390,7 @@ summary(model_long_low)
 (scatter_low_long <- ggplot(r3_low_biomass, aes(x = longitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
-    labs(x = "\nLongitude", y = "Shrub biomass - low (kg/m2)\n") + 
+    labs(x = "\nLongitude", y = "Low biomass (kg/m2)\n") + 
     theme_shrub() + theme(axis.title.y =element_text(size=12), 
                           axis.title.x = element_text(size=12)))
 
@@ -400,6 +400,7 @@ summary(model_long_low)
                                                   scatter_high_lat, scatter_high_long,
                                            ncol = 2))) # Sets number of panel columns
 
+ggsave(panel_latlong_levels, file="output/figures/panel_latlong_levels.png", height = 16, width = 15)
 
 # Binomial model ----
 r3_rsample_categ_bi <- r3_rsample_00 %>%
