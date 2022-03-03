@@ -45,6 +45,7 @@ shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif")
 PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") #loading data
 st_bbox(PCH_core_range) # extent of the PCH range
 
+### PART 1: SAMPLING -----
 ## CROPPING -----
 
 # Cropping shrub raster to the PCH range and mask 
@@ -89,6 +90,7 @@ r3_latlong_agg <- aggregate(r3_latlong, fact=c(11.47842,30.8642), fun=mean, expa
 res(r3_latlong_agg)
 # 0.007986 x 0.008370 
 # not EXACTLY the same as climate resolution but close enough? 
+projection(r3_latlong_agg)
 
 # RANDOM SAMPLE WHOLE MAP ----
 
@@ -121,7 +123,7 @@ r3_rsample_0 <- as.data.frame(sampleRandom(r3_latlong_agg, 9583, buffer = 1414.2
 hist(r3_rsample_0$r3_latlong_agg) # checking distribution
 
 r3# trying to sample 30000 pixels to see if the distribution is different 
-r3_rsample_0_try <- as.data.frame(sampleRandom(r3_latlong_agg, 30000, buffer = 707.1, na.rm=TRUE, ext=NULL, 
+r3_rsample_0_try <- as.data.frame(sampleRandom(r3_latlong_agg, 30000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
                                            cells=TRUE, rowcol=FALSE, xy = TRUE)) # 30000 pixels 
 hist(r3_rsample_0_try$r3_latlong_agg) # checking distribution - looks similar to the other histogram
 
@@ -133,7 +135,7 @@ r3_rsample_01 <- r3_rsample_0  %>%
 
 # If istance between points > buffer distance, buffer works
 r3_rsample_01 <- r3_rsample_01 %>% 
-  mutate(buff = case_when(Distance >= 707.1 ~ "T", Distance < 707.1 ~ "F"))
+  mutate(buff = case_when(Distance >= 1414.2 ~ "T", Distance < 1414.2 ~ "F"))
 
 r3_rsample_01 <- r3_rsample_01 %>%  filter(buff %in% c("T")) # only keeping obseervations where buff worked
 unique(r3_rsample_01$buff) # T
@@ -148,7 +150,7 @@ r3_rsample_00 <- r3_rsample_01 %>%
   mutate(gridcell = paste0("_", lat, "_", long))%>%
   select(cell_ID, latitude, longitude, long, lat, biomass, gridcell)
 
-write.csv(r3_rsample_00, file= "datasets/berner_data/r3_rsample_00.csv")
+# write.csv(r3_rsample_00, file= "datasets/berner_data/r3_rsample_00.csv")
 
 # THEME ----
 
@@ -163,7 +165,9 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
-# MODELLING ----
+### PART 2: MODELLING ----
+
+# Loading the random sample dataset
 # r3_rsample_00 <- read_csv("datasets/berner_data/r3_rsample_00.csv")
 
 hist(r3_rsample_00$biomass) # distribution 
@@ -172,8 +176,8 @@ str(r3_rsample_00) # lat and long and biomass numeric
 # Model 1. biomass vs lat ----
 model_1 <- lm(biomass~latitude, data = r3_rsample_00)
 summary(model_1)
-# F-statistic:  1997 on 1 and 9580 DF,  p-value: < 2.2e-16
-
+# F-statistic:  2007 on 1 and 9577 DF,  p-value: < 2.2e-16***
+#slope = -307.840 
 
 # Quick scatter
 (scatter_lat <- ggplot(r3_rsample_00, aes(x = latitude, y = biomass))+
@@ -181,8 +185,7 @@ summary(model_1)
     geom_smooth(method = lm, color ='black', fill = "grey", se=TRUE)+
     labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n") +
     annotate(geom = "text", x = 70, y = 1250, label="(a)", size = 10) +
-    annotate(geom = "text", x = 69.9, y = 900, label="slope = -309.381*** ", size = 6) +
-    
+    annotate(geom = "text", x = 69.9, y = 900, label="slope = -307.840*** ", size = 6) +
          # title = "Shrub biomass decreases with latitude\n") + 
     theme_shrub())
 
@@ -222,7 +225,7 @@ dev.off()
 # Model 2. biomass vs long ----
 model_2 <- lm(biomass~longitude, data = r3_rsample_00)
 summary(model_2)
-# F-statistic: 552.4 on 1 and 19995 DF,  p-value: < 2.2e-16***
+# F-statistic: 247.6 on 1 and 9577 DF,  p-value: < 2.2e-16***
 
 # Quick scatter
 (scatter_lon <- ggplot(r3_rsample_00, aes(x = longitude, y = biomass)) +
@@ -230,7 +233,7 @@ summary(model_2)
     geom_smooth(method = lm, colour='black') +
     labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n") +  
     annotate(geom = "text", x = -141, y = 1250, label="(b)", size = 10) +
-    annotate(geom = "text", x = -142, y = 900, label="slope = -13.8502*** ", size = 6) +
+    annotate(geom = "text", x = -142, y = 900, label="slope = -14.3768*** ", size = 6) +
 
          # title = "Shrub biomass decreases with longitude\n") + 
     theme_shrub())
@@ -279,21 +282,22 @@ panel_title <- text_grob("Shrub biomass decreases with latitude and longitude",
 
 ggsave(panel_latlong, file = "output/figures/panel_latlong.png", width = 18, height = 9)
 
+
 # BIOMASS LEVELS ----
 
 # Categorising into high-medium-low level
-mean(r3_rsample_00$biomass)
-#  266.2142 kg/m2 mean biomass
+mean(r3_rsample_00$biomass) 
+#  267.4422 kg/m2 mean biomass
 range(r3_rsample_00$biomass)
-#   4.709974 1069.545166
+#   5.062256 1144.706055
 quantile(r3_rsample_00$biomass)
 # 0%         25%         50%         75%        100% 
-# 4.709974  169.224045  256.003128  347.005112 1069.545166 
+# 5.062256  171.268829  258.787537  345.954544 1144.706055 
 
 r3_rsample_categ <- r3_rsample_00 %>%
-  mutate(biomass_level = case_when (biomass < 169.224045   ~ 'Low', # lower than mean biomass
-                                    biomass >= 169.224045 & biomass < 347.005112~ 'Medium', 
-                                    biomass >= 347.005112 ~ 'High')) %>% 
+  mutate(biomass_level = case_when (biomass < 171.268829   ~ 'Low', # lower than mean biomass
+                                    biomass >= 171.268829  & biomass < 345.954544~ 'Medium', 
+                                    biomass >= 345.954544 ~ 'High')) %>% 
   mutate(biomass_level_0 = case_when (biomass_level == 'Low' ~ 1, # 1 = low level
                                     biomass_level == 'Medium' ~ 2, # 2 = medium level
                                     biomass_level == 'High'~ 3)) %>% # 3 = high level
@@ -312,7 +316,7 @@ r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels=c
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
     geom_vline(aes(xintercept = mean(biomass)),            
                colour = "red", linetype = "dashed", size = 1) +
-    annotate(geom = "text", x = 450, y = 600, label="mean = 266.2142", size = 6) +
+    annotate(geom = "text", x = 450, y = 600, label="mean = 267.4422", size = 6) +
     geom_curve(aes(x = 470, y = 630, xend = mean(r3_rsample_categ$biomass) + 2, yend = 630),
                arrow = arrow(length = unit(0.07, "inch")), size = 0.7,
                color = "grey30", curvature = 0.3) +
@@ -329,7 +333,7 @@ ggsave(file = "output/figures/hist_high_medium_low.png")
 r3_high_biomass <- r3_rsample_categ %>% filter (biomass_level == "High")
 model_lat_high <- lm(biomass~latitude, data = r3_high_biomass )
 summary(model_lat_high)
-# F-statistic: 359.6 on 1 and 2394 DF,  p-value: < 2.2e-16
+# F-statistic: 365.7 on 1 and 2393 DF,  p-value: < 2.2e-16***
 
 (scatter_high_lat <- ggplot(r3_high_biomass, aes(x = latitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
@@ -340,7 +344,7 @@ summary(model_lat_high)
 
 model_long_high <- lm(biomass~longitude, data = r3_high_biomass )
 summary(model_long_high) 
-# F-statistic: 163.1 on 1 and 2394 DF,  p-value: < 2.2e-16
+# F-statistic: 177.2 on 1 and 2393 DF,  p-value: < 2.2e-16***
 
 (scatter_high_long <- ggplot(r3_high_biomass, aes(x = longitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
@@ -353,7 +357,7 @@ summary(model_long_high)
 r3_med_biomass <- r3_rsample_categ %>% filter (biomass_level == "Medium")
 model_lat_med <- lm(biomass~latitude, data = r3_med_biomass )
 summary(model_lat_med)
-# F-statistic: 198.7 on 1 and 4788 DF,  p-value: < 2.2e-16
+# F-statistic: 207.7 on 1 and 4787 DF,  p-value: < 2.2e-16***
 (scatter_med_lat <- ggplot(r3_med_biomass, aes(x = latitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
@@ -363,7 +367,7 @@ summary(model_lat_med)
 
 model_long_med <- lm(biomass~longitude, data = r3_med_biomass )
 summary(model_long_med) 
-#F-statistic: 437.4 on 1 and 4788 DF,  p-value: < 2.2e-16
+#F-statistic: 358.1 on 1 and 4787 DF,  p-value: < 2.2e-16***
 (scatter_med_long <- ggplot(r3_med_biomass, aes(x = longitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
@@ -376,7 +380,7 @@ summary(model_long_med)
 r3_low_biomass <- r3_rsample_categ %>% filter (biomass_level == "Low")
 model_lat_low <- lm(biomass~latitude, data = r3_low_biomass )
 summary(model_lat_low)
-# F-statistic: 15.18 on 1 and 2394 DF,  p-value: 0.0001003
+# F-statistic: 22.18 on 1 and 2393 DF,  p-value: 2.624e-06***
 (scatter_low_lat <- ggplot(r3_low_biomass, aes(x = latitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
@@ -386,7 +390,7 @@ summary(model_lat_low)
 
 model_long_low <- lm(biomass~longitude, data = r3_low_biomass )
 summary(model_long_low) 
-# F-statistic: 67.89 on 1 and 2394 DF,  p-value: 2.812e-16
+# F-statistic: 79.16 on 1 and 2393 DF,  p-value: < 2.2e-16***
 (scatter_low_long <- ggplot(r3_low_biomass, aes(x = longitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
@@ -414,8 +418,8 @@ ggsave(panel_latlong_levels, file="output/figures/panel_latlong_levels.png", hei
 
 # Binomial model ----
 r3_rsample_categ_bi <- r3_rsample_00 %>%
-  mutate(biomass_level = case_when (biomass < 256.003128 ~ 'Low', # lower than mean biomass
-                                    biomass >= 256.003128 ~ 'High' ))
+  mutate(biomass_level = case_when (biomass < 258.787537 ~ 'Low', # lower than mean biomass
+                                    biomass >= 258.787537 ~ 'High' ))
 
 r3_rsample_categ_bi$biomass_level <- as.factor(as.character(r3_rsample_categ_bi$biomass_level))
 biomass_glm <- glm(biomass_level ~ latitude, data = r3_rsample_categ_bi, family = binomial())
@@ -463,9 +467,9 @@ r3_rsample_categ_clust$cluster_level <- factor(r3_rsample_categ_clust$cluster_le
                                          ordered = T)
 
 (scatter_high_medium_low_lat <- ggplot(r3_rsample_categ_clust) +
-    geom_point(aes(x = lat, y = biomass, colour = cluster_level), size = 0.5) +
+    geom_point(aes(x = latitude, y = biomass, colour = cluster_level), size = 0.3) +
    scale_colour_manual(values = c("Low"= "tan", "Medium" = "yellow", "High"= "green4"), name = "Biomass level")+
-     geom_smooth(aes(x = lat, y = biomass, colour = cluster_level), method = "lm") +
+     geom_smooth(aes(x = latitude, y = biomass), colour = "black", method = "lm") +
     facet_wrap(~cluster_level) +
    #  scale_fill_manual(name = "Biomass level", values=c( "tan", "yellow", "green4")) +
     labs(x= "\nLatitude", y = "Shrub biomass (kg/m2)\n") +
@@ -476,9 +480,9 @@ r3_rsample_categ_clust$cluster_level <- factor(r3_rsample_categ_clust$cluster_le
 ggsave(file = "output/figures/scatter_high_medium_low_lat.png")
 
 (scatter_high_medium_low_long <- ggplot(r3_rsample_categ_clust) +
-    geom_point(aes(x = long, y = biomass, colour = cluster_level), size = 0.5) +
+    geom_point(aes(x = longitude, y = biomass, colour = cluster_level), size = 0.3) +
     scale_colour_manual(values = c("Low"= "tan", "Medium" = "yellow", "High"= "green4"), name = "Biomass level")+
-    geom_smooth(aes(x = long, y = biomass, colour = cluster_level), method = "lm") +
+    geom_smooth(aes(x = longitude, y = biomass), colour = "black", method = "lm") +
     facet_wrap(~cluster_level) +
     #  scale_fill_manual(name = "Biomass level", values=c( "tan", "yellow", "green4")) +
     labs(x= "\nLongitude", y = "Shrub biomass (kg/m2)\n") +
@@ -490,7 +494,7 @@ ggsave(file = "output/figures/scatter_high_medium_low_lat.png")
 ggsave(file = "output/figures/scatter_high_medium_low_long.png")
 dev.off()
 
-# PLotting kmeans
+# Plotting kmeans
 copy_raster <- r3_latlong_agg
 # Now replace raster cell values with 
 # array

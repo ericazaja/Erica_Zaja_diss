@@ -119,7 +119,7 @@ coord.chelsa.combo.c$gridcell <- as.factor(as.character(coord.chelsa.combo.c$gri
 # biomass ~ temp 
 model_3 <- lm(biomass ~ CH_TempMeanSummer, data = coord.chelsa.combo.c)
 summary(model_3)
-# F-statistic:  1165 on 1 and 9578 DF,  p-value: < 2.2e-16
+# F-statistic: 993.7 on 1 and 9573 DF,  p-value: < 2.2e-16
 
 # Checking model 3 assumptions
 plot(model_3)
@@ -145,7 +145,6 @@ pred_model_3 <- ggpredict(model_3, terms = c("CH_TempMeanSummer"))  # this gives
                    geom_line(aes(x = x, y = predicted)) +          # slope
                    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                                fill = "lightgrey", alpha = 0.5) +  # error band
-                  
                    labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n") +  
                         # title = "Shrub biomass increases with temperature\n") + 
                    theme_shrub()))
@@ -157,7 +156,7 @@ ggsave(file = "output/figures/biomass_vs_temp.png")
     geom_point(color="skyblue", size = 0.1) +
     geom_smooth(method = "lm", color = "black") +
     annotate(geom = "text", x = 10.5, y = 900, label="(a)", size = 10) +
-    annotate(geom = "text", x = 8, y = 700, label="slope = 63.80*** ", size = 6) +
+    annotate(geom = "text", x = 8, y = 700, label="slope = 59.678*** ", size = 6) +
     labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n") + 
          # title = "Shrub biomass increases with temperature\n") + 
     theme_shrub())
@@ -168,7 +167,7 @@ ggsave(file = "output/figures/scatter_temp.png")
 # biomass ~ precip 
 model_4 <- lm(biomass ~ CH_PrecipMeanSummer, data = coord.chelsa.combo.c)
 summary(model_4)
-# F-statistic:  1753 on 1 and 9578 DF,  p-value: < 2.2e-16
+# F-statistic:  1746 on 1 and 9573 DF,  p-value: < 2.2e-16
 
 # Checking model 4 assumptions 
 plot(model_4)
@@ -205,7 +204,7 @@ ggsave(file = "output/figures/biomass_vs_precip.png")
     geom_point(color="skyblue", size = 0.1) +
     geom_smooth(method = "lm", color = "black") +
     annotate(geom = "text", x = 135, y = 900, label="(b)", size = 10) +
-     annotate(geom = "text", x = 125, y = 700, label="slope = 3.93597*** ", size = 6) +
+     annotate(geom = "text", x = 125, y = 700, label="slope =  3.90713*** ", size = 6) +
     labs(x = "\nMean summer precipitation (kg/m2)", y = "Shrub biomass (kg/m2)\n") +
          # title = "Shrub biomass increases with precipiation\n") + 
     theme_shrub())
@@ -250,7 +249,7 @@ quantile(coord.chelsa.combo.c$CH_PrecipMeanSummer)
 # 135+40 = 175
 # 55 (dry), 114.5 (moist), 174 (wet)
 mean(coord.chelsa.combo.c$CH_PrecipMeanSummer)
-# 101.8274
+# 86.44856
 
 coord.chelsa.combo.d <- coord.chelsa.combo.c %>% 
   mutate(moisture = case_when(CH_PrecipMeanSummer < 78 ~ "dry",
@@ -268,7 +267,7 @@ write.csv(coord.chelsa.combo.d, file = "datasets/climate_data/coord.chelsa.combo
 # Model 5a: biomass Vs temp*moisture
 model_5a <- lm(biomass ~ CH_TempMeanSummer*moisture , data = coord.chelsa.combo.d)
 summary(model_5a)
-#F-statistic: 523.7 on 5 and 9574 DF,  p-value: < 2.2e-16
+#F-statistic: 529 on 5 and 9569 DF,  p-value: < 2.2e-16
 
 # model 5a output table 
 stargazer(model_5a, type = "text",
