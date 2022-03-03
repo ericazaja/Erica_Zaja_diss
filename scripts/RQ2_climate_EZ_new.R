@@ -295,7 +295,7 @@ coord.chelsa.combo.d$moisture <- factor(coord.chelsa.combo.d$moisture,levels=c("
                          geom_point(data = coord.chelsa.combo.d,                      # adding the raw data 
                                     aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size = 0.3) + 
                            scale_color_manual(values = c("brown", "skyblue", "blue4"), name = "Moisture level")+
-                         labs(x = "\nMean summer temperature (degC)", y = "Shrub biomass (kg/m2)\n", 
+                         labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n", 
                               title = "") + 
                          theme_shrub()+
                            theme(legend.text = element_text(size= 12),

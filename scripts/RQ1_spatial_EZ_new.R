@@ -414,7 +414,7 @@ summary(model_long_low)
                                                   scatter_high_lat, scatter_high_long,
                                            ncol = 2))) # Sets number of panel columns
 
-ggsave(panel_latlong_levels, file="output/figures/panel_latlong_levels.png", height = 16, width = 15)
+ggsave(panel_latlong_levels,  file="output/figures/panel_latlong_levels.png", height = 16, width = 15)
 
 # Binomial model ----
 r3_rsample_categ_bi <- r3_rsample_00 %>%
