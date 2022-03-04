@@ -415,10 +415,10 @@ unique(ANWR_veg$FuncGroup)  # checking I have all functional groups
 (hist_all_veg <- ANWR_veg %>%
       ggplot(aes(x = RelCover, fill = FuncGroup)) +
       geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 30) +
-      geom_vline(aes(xintercept = mean(RelCover)),            
-                 colour = "red", linetype = "dashed", size = 1) +
+      # geom_vline(aes(xintercept = mean(RelCover)),            
+                 # colour = "red", linetype = "dashed", size = 1) +
       labs(x = "\nPercentage cover", y = "Frequency\n") +
-      scale_fill_manual(values=c( "green4", "blue", "yellow", "purple", "red")) +
+      scale_fill_manual(values=c( "green4", "blue", "yellow", "purple", "red"), name = "Functional group") +
       theme_shrub())
 
 ggsave(file = "output/figures/hist_all_veg.png")
@@ -509,9 +509,18 @@ ggsave(file = "output/figures/scatter_fgroups.png")
 
 # Model with random slopes per f group
 lmer_fgroup_rand <- lmer(mean_cover~YEAR + (1+YEAR|FuncGroup) + (1|YEAR), data = ANWR_veg_fg_trim)
-summary(lmer_fgroup_rand ) # doesnt converge
+summary(lmer_fgroup_rand) # doesnt converge
 head(ANWR_veg_fg_trim)
+predictions_fgroup_slopes <- ggpredict(lmer_fgroup_rand , terms = c("YEAR", "FuncGroup"), type = "re")
 
+(fgroup_rand_slopes <- ggplot(predictions_fgroup_slopes, aes(x = x, y = predicted, colour = group)) +
+      stat_smooth(method = "lm", se = FALSE)  +
+      scale_y_continuous(limits = c(0, 30)) +
+      scale_x_continuous(breaks=1997:2009)+
+      theme(legend.position = "bottom") +
+      labs(x = "\nYear", y = "Mean shrub genus cover (%)\n")+
+      theme_shrub()+ 
+      theme(axis.text.x = element_text(angle = 45)))
 
 # END -----
 
