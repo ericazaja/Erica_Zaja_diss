@@ -173,19 +173,23 @@ theme_shrub <- function(){ theme(legend.position = "right",
 hist(r3_rsample_00$biomass) # distribution 
 str(r3_rsample_00) # lat and long and biomass numeric
 
+# Standardising lat and long (explanatory variables)
+r3_rsample_00$latitude <- scale(r3_rsample_00$latitude, center = TRUE, scale = TRUE)
+r3_rsample_00$longitude <- scale(r3_rsample_00$longitude, center = TRUE, scale = TRUE)
+
 # Model 1. biomass vs lat ----
 model_1 <- lm(biomass~latitude, data = r3_rsample_00)
 summary(model_1)
 # F-statistic:  2007 on 1 and 9577 DF,  p-value: < 2.2e-16***
-#slope = -307.840 
+#slope =  -49.448
 
 # Quick scatter
 (scatter_lat <- ggplot(r3_rsample_00, aes(x = latitude, y = biomass))+
     geom_point(color="skyblue", size = 0.1) +
     geom_smooth(method = lm, color ='black', fill = "grey", se=TRUE)+
     labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n") +
-    annotate(geom = "text", x = 70, y = 1250, label="(a)", size = 10) +
-    annotate(geom = "text", x = 69.9, y = 900, label="slope = -307.840*** ", size = 6) +
+   annotate(geom = "text", x = 2, y = 1250, label="(a)", size = 10) +
+   annotate(geom = "text", x = 1, y = 900, label="slope =  -49.448*** ", size = 6) +
          # title = "Shrub biomass decreases with latitude\n") + 
     theme_shrub())
 
@@ -203,22 +207,20 @@ stargazer(model_1, type = "text",
           digit.separator = "")
 
 # Extracting model predictions 
-pred_model_1 <- ggpredict(model_1, terms = c("latitude"))  # this gives overall predictions for the model
+predictions_1 <- as.data.frame(predict(model_1, newdata = r3_rsample_00, interval = "confidence")) # this gives overall predictions for the model
+model_1_lat <- cbind(r3_rsample_00, predictions_1)
 write.csv(pred_model_1, file = "datasets/pred_model_1.csv")
 
 # Plot the predictions 
-(biomass_vs_lat <- (ggplot(pred_model_1) + 
-                   geom_line(aes(x = x, y = predicted)) +          # slope
-                   geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                               fill = "lightgrey", alpha = 0.5) +  # error band
-                     geom_point(data = r3_rsample_00,                      # adding the raw data 
-                              aes(x = latitude, y = biomass), size = 0.5) + 
-                   labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n", 
-                        title = "Shrub biomass decreases with latitude\n") + 
-                   theme_shrub())
-)
+(predictions_biomass_vs_lat <- (ggplot(model_1_lat, aes(latitude, fit)) + 
+                      geom_point() +
+                      stat_smooth(method=lm)+
+                      geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
+                      geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+        labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n")+ 
+                   theme_shrub()))
 
-# ggsave(file = "output/figures/biomass_vs_lat.png")
+ggsave(file = "output/figures/predictions_biomass_vs_lat.png")
 
 dev.off()
 
@@ -226,15 +228,15 @@ dev.off()
 model_2 <- lm(biomass~longitude, data = r3_rsample_00)
 summary(model_2)
 # F-statistic: 247.6 on 1 and 9577 DF,  p-value: < 2.2e-16***
+# slope -18.858
 
 # Quick scatter
 (scatter_lon <- ggplot(r3_rsample_00, aes(x = longitude, y = biomass)) +
     geom_point(color="skyblue", size = 0.01) +
     geom_smooth(method = lm, colour='black') +
     labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n") +  
-    annotate(geom = "text", x = -141, y = 1250, label="(b)", size = 10) +
-    annotate(geom = "text", x = -142, y = 900, label="slope = -14.3768*** ", size = 6) +
-
+   annotate(geom = "text", x = 2, y = 1250, label="(b)", size = 10) +
+  annotate(geom = "text", x = 1, y = 900, label="slope = -18.858*** ", size = 6) +
          # title = "Shrub biomass decreases with longitude\n") + 
     theme_shrub())
 
@@ -252,22 +254,20 @@ stargazer(model_2, type = "text",
           digit.separator = "")
 
 # Extracting model predictions 
-pred_model_2 <- ggpredict(model_2, terms = c("longitude"))  # this gives overall predictions for the model
-# write.csv(pred_model_2, file = "datasets/pred_model_2.csv")
+predictions_2 <- as.data.frame(predict(model_2, newdata = r3_rsample_00, interval = "confidence")) # this gives overall predictions for the model
+model_2_long <- cbind(r3_rsample_00, predictions_2)
 
 # Plot the predictions 
-(biomass_vs_long <- (ggplot(pred_model_2) + 
-                   geom_line(aes(x = x, y = predicted)) +          # slope
-                   geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                               fill = "lightgrey", alpha = 0.5) +  # error band
-                   geom_point(data = r3_rsample_00,                      # adding the raw data 
-                              aes(x = longitude, y = biomass), size = 0.5) + 
-                   labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n", 
-                        title = "Shrub biomass decreases with longitude\n") + 
-                   theme_shrub())
-)
+(predictions_biomass_vs_long <- (ggplot(model_2_long, aes(longitude, fit)) + 
+                      geom_point() +
+                      stat_smooth(method=lm)+
+                      geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
+                      geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+                      labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n")+ 
+                      theme_shrub()))
 
-# ggsave(file = "output/figures/biomass_vs_long.png")
+
+ggsave(file = "output/figures/predictions_biomass_vs_long.png")
 
 # Panel latlong ----
 # Panel of scatters 
@@ -278,9 +278,13 @@ panel_title <- text_grob("Shrub biomass decreases with latitude and longitude",
                                            ncol = 2))) # Sets number of panel columns
                               #  top = panel_title  # Adding panel title
 
-
-
 ggsave(panel_latlong, file = "output/figures/panel_latlong.png", width = 18, height = 9)
+
+(panel_latlong_predictions <- grid.arrange(arrangeGrob(predictions_biomass_vs_lat, predictions_biomass_vs_long,
+                                           ncol = 2))) # Sets number of panel columns
+
+ggsave(panel_latlong_predictions, file = "output/figures/panel_latlong_predictions.png", width = 18, height = 9)
+
 
 
 # BIOMASS LEVELS ----
