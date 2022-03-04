@@ -462,12 +462,12 @@ predics <- ggpredict(lmer_all, terms = c("YEAR", "FuncGroup"), type = "re")
       labs(x = "\nYear", y = "Cover\n"))
 
 # trying diff graph
-ITEX_all_veg$Predicted <- predict(lmer_all, ITEX_all_veg)
+ANWR_veg_fg_trim$Predicted <- predict(lmer_all, ANWR_veg_fg_trim)
 
 # plot predicted values
-ggplot(ITEX_all_veg, aes(YEAR, Predicted)) +
+ggplot(ANWR_veg_fg_trim, aes(YEAR, Predicted)) +
    facet_wrap(~FuncGroup) +
-   geom_point(aes(x = YEAR, y = Mean_cover, colour= FuncGroup), size = .5) +
+   geom_point(aes(x = YEAR, y = mean_cover, colour= FuncGroup), size = .5) +
    geom_smooth(aes(y = Predicted, colour= FuncGroup), linetype = "solid", 
                se = T, method = "lm") +
    guides(color=guide_legend(override.aes=list(fill=NA))) +  

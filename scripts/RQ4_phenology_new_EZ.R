@@ -83,7 +83,7 @@ unique(phenology_green$phenophase) # only greening
 
 (greening <- (ggplot(phenology_green, aes(x = phenophase, y = DOY))+
                  geom_boxplot(size = 0.5) +
-                 labs(x = "\nOnset of shrub greening", y = "Day of Year\n") +                  theme_shrub()))
+                 labs(x = "\nOnset of shrub greening", y = "Day of Year\n") + theme_shrub()))
  
 # ggsave(file = "output/figures/greening.png")
 unique(phenology_green$year)
@@ -97,13 +97,6 @@ range(phenology_green$DOY) # range of DOY of onset of greening
 quantile(phenology_green$DOY) 
 # 0%  25%  50%  75% 100% 
 # 135  162  166  170  211 
-
-# 135 (earliest greening DOY) 211 (latest greening DOY)
-# 211-135 = 76 days difference
-# 76/2= 38
-# 135+38 = 173 midpoint
-# greening < 173 DOY --> early greening year
-# greening > 173 DOY --> late greening year
 
 # BUT checking the number of plots per year 
 phenology_green_98 <- phenology_green %>% filter(year == "1998") # 451 obs
@@ -200,14 +193,14 @@ hist(prop_greening_plots$prop_late)# not normal
 # DATA VISUALISATION ----
 # 1. EARLY GREENING  -----
 (early_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_early)) +
-    geom_point(size = 0.1) +
-    geom_smooth(method = "lm")+
-    labs(x = "Year\n", y = "Early greening plots (prop)\n",
-         title = "Proportion of early greening plots increasing\n") +
+    geom_point(size = 3, colour = "skyblue") +
+    geom_smooth(method = "lm", colour = "black")+
+   annotate(geom = "text", x = 2020, y = 1, label="(a)", size = 10) +
+    labs(x = "\nYear", y = "Proportion of early greening plots\n") +
+         #title = "Proportion of early greening plots increasing\n") +
     theme_shrub())
 
 ggsave(file = "output/figures/early_greening_plots.png")
-# need to add subsite?
 
 # Model ----
 lm_early <- lm(prop_early~ year, data = prop_greening_plots) 
@@ -227,10 +220,11 @@ stargazer(glm_early, type = "text",
 
 # 2. LATE GREENING -----
 (late_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_late)) +
-    geom_point(size = 0.1) +
-    geom_smooth(method = "lm")+
-    labs(x = "Year\n", y = "Late greening plots (prop)\n",
-         title = "Proportion of late greening plots decreasing\n") +
+    geom_point(size = 3, colour = "skyblue") +
+    geom_smooth(method = "lm", colour = "black")+
+   annotate(geom = "text", x = 2020, y = 1, label="(b)", size = 10) +
+   labs(x = "\nYear", y = "Proportion of late greening plots\n") +
+   #title = "Proportion of early greening plots increasing\n") +
     theme_shrub())
 
 ggsave(file = "output/figures/late_greening_plots.png")
@@ -250,13 +244,20 @@ stargazer(glm_late, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
+# Panel ----
+
+panel_pheno <- grid.arrange(arrangeGrob(early_greening_plots, late_greening_plots,
+                                           ncol = 2))# Sets number of panel columns
+
+ggsave(panel_pheno, file="output/figures/panel_pheno.png", height = 10, width = 20)
+
+# Linear mixed model ----
 phenology_green_trim$study_area<- as.factor(as.character(phenology_green_trim$study_area))
 phenology_green_trim$SiteSubsitePlotYear<- as.factor(as.character(phenology_green_trim$SiteSubsitePlotYear))
 str(phenology_green_trim)
 
-# Linear mixed model ----
 # lmer with study_area as random effect 
-lmer_green <- lmer(mean.doy ~ year + (1+year|study_area), data = phenology_green_trim ) 
+lmer_green <- lmer(mean.doy ~ year + (1 + year|study_area), data = phenology_green_trim ) 
 summary(lmer_green)
 stargazer(lmer_green, type = "text",
           digits = 3,
@@ -274,6 +275,8 @@ predictions_pheno <- ggpredict(lmer_green , terms = c("year", "study_area"), typ
 ggsave(filename = "output/figures/pheno_rand_slopes.png")
 
 # Plot the predictions 
+pred_lmer_green <- ggpredict(lmer_green , terms = c("year", "study_area"), type = "re")
+
 (greening_model <- (ggplot(pred_lmer_green) + 
                          geom_line(aes(x = x, y = predicted, group=group)) +          # slope
                          # geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
@@ -300,7 +303,83 @@ ggsave(file = "outputs/figures/slopes_pred_lmer_green.png")
     labs(x = "greening type (count)", y = "proportion") +
     theme_shrub())
 
-# TO DO 
-# lmer(count_no_early_years ~ years + (1 | SUBSITE))
-## Year (x) VS DOY of greening (y) —> negative trned 
-# lmer(DOY ~ YEAR  + (1|subsite)) 
+# Separate models per study area ----
+## ONLY QIKI significant  
+# Qikiqtaruk -----
+Qikiqtaruk <-  phenology_green_trim %>% filter (study_area == "Qikiqtaruk") 
+lmer_Qiki <- lmer(mean.doy ~ year + (1|year), data =Qikiqtaruk ) 
+summary(lmer_Qiki)
+plot(lmer_Qiki)
+stargazer(lmer_Qiki, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "") # Mean DOY does decrease in Qiki
+(Qiki_DOY <- ggplot(Qikiqtaruk, aes(x = year, y =mean.doy)) +
+    geom_point(size = 3, colour = "skyblue") +
+    geom_smooth(method = "lm", colour = "black")+
+    annotate(geom = "text", x = 2015, y = 190, label="(a)", size = 10) +
+    annotate(geom = "text", x = 2005, y = 145, label="slope = -0.982** ", size = 6) +
+    labs(x = "\nYear", y = "Mean greening DOY\n") +
+    #title = "Proportion of early greening plots increasing\n") +
+    theme_shrub())
+
+ggsave(Qiki_DOY, filename = "output/figures/Qiki_DOY.png")
+
+# Atqasuk -----
+Atqasuk <-  phenology_green_trim %>% filter (study_area == "Atqasuk") 
+lmer_Atqasuk <- lmer(mean.doy ~ year + (1|year), data =Atqasuk ) 
+summary(lmer_Atqasuk)
+plot(lmer_Atqasuk)
+stargazer(lmer_Atqasuk, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "") # Mean DOY does decrease in Qiki
+(Atqasuk_DOY <- ggplot(Atqasuk, aes(x = year, y =mean.doy)) +
+    geom_point(size = 3, colour = "skyblue") +
+    geom_smooth(method = "lm", colour = "black")+
+    #annotate(geom = "text", x = 2015, y = 190, label="(a)", size = 10) +
+    #annotate(geom = "text", x = 2005, y = 145, label="slope = -0.982** ", size = 6) +
+    labs(x = "\nYear", y = "Mean greening DOY\n") +
+    #title = "Proportion of early greening plots increasing\n") +
+    theme_shrub())
+
+# Toolik -----
+Toolik <-  phenology_green_trim %>% filter (study_area == "Toolik Lake") 
+lmer_Toolik <- lmer(mean.doy ~ year + (1|year), data =Toolik) 
+summary(lmer_Toolik)
+plot(lmer_Toolik)
+stargazer(lmer_Toolik, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "") # Mean DOY does decrease in Qiki
+(Toolik_DOY <- ggplot(Toolik, aes(x = year, y =mean.doy)) +
+    geom_point(size = 3, colour = "skyblue") +
+    geom_smooth(method = "lm", colour = "black")+
+    #annotate(geom = "text", x = 2015, y = 190, label="(a)", size = 10) +
+    #annotate(geom = "text", x = 2005, y = 145, label="slope = -0.982** ", size = 6) +
+    labs(x = "\nYear", y = "Mean greening DOY\n") +
+    #title = "Proportion of early greening plots increasing\n") +
+    theme_shrub())
+
+# Utqiagvik -----
+
+Utqiagvik<-  phenology_green_trim %>% filter (study_area == "Utqiagvik") 
+lmer_Utqiagvik <- lmer(mean.doy ~ year + (1|year), data =Utqiagvik) 
+summary(lmer_Toolik)
+plot(lmer_Utqiagvik)
+stargazer(lmer_Utqiagvik, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "") # Mean DOY does decrease in Qiki
+(Utqiagvik_DOY <- ggplot(Utqiagvik, aes(x = year, y =mean.doy)) +
+    geom_point(size = 3, colour = "skyblue") +
+    geom_smooth(method = "lm", colour = "black")+
+    #annotate(geom = "text", x = 2015, y = 190, label="(a)", size = 10) +
+    #annotate(geom = "text", x = 2005, y = 145, label="slope = -0.982** ", size = 6) +
+    labs(x = "\nYear", y = "Mean greening DOY\n") +
+    #title = "Proportion of early greening plots increasing\n") +
+    theme_shrub())
+
+
+
+ 
