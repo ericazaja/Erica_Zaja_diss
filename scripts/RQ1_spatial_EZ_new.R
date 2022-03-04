@@ -328,6 +328,62 @@ r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels=c
 
 ggsave(file = "output/figures/hist_high_medium_low.png")
 
+# Random slope and intercept biomass level across latitudes ----
+level_rs <- lmer(biomass ~ latitude + (1+ latitude|biomass_level), data = r3_rsample_categ)
+summary(level_rs)
+#  latitude estimate: -92.308**     
+
+stargazer(level_rs, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
+# Random intercepts and slopes 
+predict_levels <- ggpredict(level_rs , terms = c("latitude", "biomass_level"), type = "re") 
+(levels_rand_slopes <- ggplot(predict_levels, aes(x = x, y = predicted, colour = group)) +
+    stat_smooth(method = "lm", se = FALSE)  +
+    scale_colour_manual(values=c("tan", "yellow", "green4"), name = "Biomass level") + 
+    theme(legend.position = "bottom") +
+    annotate(geom = "text", x = 70, y = 500, label="(a)", size = 10) +
+    labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n")+
+    theme_shrub()+ 
+    theme(axis.text.x = element_text(angle = 45), legend.text=element_text(size=12),
+          legend.title=element_text(size=15)))
+
+ggsave(levels_rand_slopes, file = "output/figures/levels_rand_slopes.png")
+
+
+# Random slope and intercept biomass level across longitudes ----
+level_rs_long <- lmer(biomass ~ longitude + (1+ longitude|biomass_level), data = r3_rsample_categ)
+summary(level_rs_long)
+# long  estimate: 3.491 (not sig)
+
+stargazer(level_rs_long, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
+
+# Random intercepts and slopes 
+predict_levels_long <- ggpredict(level_rs_long , terms = c("longitude", "biomass_level"), type = "re") 
+(levels_rand_slopes_long <- ggplot(predict_levels_long, aes(x = x, y = predicted, colour = group)) +
+    stat_smooth(method = "lm", se = FALSE)  +
+    scale_colour_manual(values=c("tan", "yellow", "green4"), name = "Biomass level") + 
+    theme(legend.position = "bottom") +
+    labs(x = "\nLongitude", y = "Shrub biomass (kg/m2) \n")+
+    annotate(geom = "text", x = -142, y = 500, label="(b)", size = 10) +
+    theme_shrub()+ 
+    theme(axis.text.x = element_text(angle = 45),legend.text=element_text(size=12),
+          legend.title=element_text(size=15)))
+
+ggsave(levels_rand_slopes_long, file = "output/figures/levels_rand_slopes_long.png")
+
+(panel_slopes_levels <- grid.arrange(arrangeGrob(levels_rand_slopes, levels_rand_slopes_long,
+                                                  ncol = 2))) # Sets number of panel columns
+
+
+ggsave(panel_slopes_levels, file = "output/figures/panel_slopes_levels.png", height = 7, width=18)
+
 # Filter for high/medium/low biomass separately
 # 1. HIGH 
 r3_high_biomass <- r3_rsample_categ %>% filter (biomass_level == "High")
@@ -406,6 +462,7 @@ summary(model_long_low)
     labs(x = "\nLongitude", y = "Low biomass (kg/m2)\n") + 
     theme_shrub() + theme(axis.title.y =element_text(size=12), 
                           axis.title.x = element_text(size=12)))
+                          
 
 
 # Panel latlong levels -----
@@ -500,6 +557,8 @@ copy_raster <- r3_latlong_agg
 # array
 copy_raster[] <- clusters$cluster
 plot(copy_raster, main = "Kmeans", col = viridis_pal(option = "D")(3))
+
+
 
 
 # END -----
