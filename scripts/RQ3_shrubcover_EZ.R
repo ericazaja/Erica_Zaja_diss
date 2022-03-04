@@ -43,8 +43,6 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
 
-ITEX_all_veg$FuncGroup <- as.factor(as.character(ITEX_all_veg$FuncGroup))
-
 
 # MODELLING -----
 
