@@ -116,10 +116,15 @@ coord.chelsa.combo.c$gridcell <- as.factor(as.character(coord.chelsa.combo.c$gri
 # MODELLING ----
 
 # Model 3 ----
+# Standardising explanatory variables
+coord.chelsa.combo.c$CH_TempMeanSummer <-scale(coord.chelsa.combo.c$CH_TempMeanSummer, center = TRUE, scale = TRUE)
+coord.chelsa.combo.c$CH_PrecipMeanSummer <-scale(coord.chelsa.combo.c$CH_PrecipMeanSummer, center = TRUE, scale = TRUE)
+
 # biomass ~ temp 
 model_3 <- lm(biomass ~ CH_TempMeanSummer, data = coord.chelsa.combo.c)
 summary(model_3)
 # F-statistic: 993.7 on 1 and 9573 DF,  p-value: < 2.2e-16
+# slope = 36.433***
 
 # Checking model 3 assumptions
 plot(model_3)
@@ -135,29 +140,28 @@ stargazer(model_3, type = "text",
 # shrub biomass increases with mean summer temp
 
 # Extracting model predictions 
-pred_model_3 <- ggpredict(model_3, terms = c("CH_TempMeanSummer"))  # this gives overall predictions for the model
-# write.csv(pred_model_3, file = "datasets/pred_model_3.csv")
+predictions_3 <- as.data.frame(predict(model_3, newdata = coord.chelsa.combo.c, interval = "confidence")) # this gives overall predictions for the model
+model_3_preds <- cbind(coord.chelsa.combo.c, predictions_3)
 
 # Plot the predictions 
-(biomass_vs_temp <- (ggplot(pred_model_3) + 
-                    geom_point(data = coord.chelsa.combo.c,                      # adding the raw data 
-                                  aes(x = CH_TempMeanSummer, y = biomass), color = '#2980B9', size = 0.5) + 
-                   geom_line(aes(x = x, y = predicted)) +          # slope
-                   geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                               fill = "lightgrey", alpha = 0.5) +  # error band
-                   labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n") +  
-                        # title = "Shrub biomass increases with temperature\n") + 
-                   theme_shrub()))
+(predictions_biomass_vs_temp <- (ggplot(model_3_preds, aes(CH_TempMeanSummer, fit)) + 
+                                  geom_point() +
+                                  stat_smooth(method=lm)+
+                                  geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
+                                  geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+                                  labs(x = "\nMean summer temperature (°C) (indexed)", y = "Shrub biomass (kg/m2)\n")+ 
+                                  theme_shrub()))
 
-ggsave(file = "output/figures/biomass_vs_temp.png")
+
+ggsave(file = "output/figures/predictions_biomass_vs_temp.png")
 
 # Quick scatter: biomass ~ temp
 (scatter_temp <- ggplot(coord.chelsa.combo.c, aes(x = CH_TempMeanSummer, y = biomass)) +
     geom_point(color="skyblue", size = 0.1) +
     geom_smooth(method = "lm", color = "black") +
-    annotate(geom = "text", x = 10.5, y = 900, label="(a)", size = 10) +
-    annotate(geom = "text", x = 8, y = 700, label="slope = 59.678*** ", size = 6) +
-    labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n") + 
+    annotate(geom = "text", x = 2.5, y = 1200, label="(a)", size = 10) +
+    annotate(geom = "text", x = 0, y = 800, label="slope = 36.433*** ", size = 6) +
+    labs(x = "\nMean summer temperature indexed (°C)", y = "Shrub biomass (kg/m2)\n") + 
          # title = "Shrub biomass increases with temperature\n") + 
     theme_shrub())
 
@@ -168,6 +172,7 @@ ggsave(file = "output/figures/scatter_temp.png")
 model_4 <- lm(biomass ~ CH_PrecipMeanSummer, data = coord.chelsa.combo.c)
 summary(model_4)
 # F-statistic:  1746 on 1 and 9573 DF,  p-value: < 2.2e-16
+# slope = 46.655***
 
 # Checking model 4 assumptions 
 plot(model_4)
@@ -183,28 +188,28 @@ stargazer(model_4, type = "text",
 # shrub biomass increases with mean summer precip
 
 # Extracting model predictions 
-pred_model_4 <- ggpredict(model_4, terms = c("CH_PrecipMeanSummer"))  # this gives overall predictions for the model
-# write.csv(pred_model_4, file = "datasets/pred_model_4.csv")
+predictions_4 <- as.data.frame(predict(model_4, newdata = coord.chelsa.combo.c, interval = "confidence")) # this gives overall predictions for the model
+model_4_preds <- cbind(coord.chelsa.combo.c, predictions_4)
 
 # Plot the predictions 
-(biomass_vs_precip <- (ggplot(pred_model_4) + 
-              geom_point(data = coord.chelsa.combo.c,                      # adding the raw data 
-              aes(x = CH_PrecipMeanSummer, y = biomass), color = '#2980B9',  size = 0.5) + 
-                   geom_line(aes(x = x, y = predicted)) +          # slope
-                   geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                               fill = "lightgrey", alpha = 0.5) +  # error band
-                   labs(x = "\nMean summer precipitation (kg/m2)", y = "Shrub biomass (kg/m2)\n")+ 
-                        # title = "Shrub biomass increases with precipiation\n") + 
-                   theme_shrub()))
+(predictions_biomass_vs_precip <- (ggplot(model_4_preds, aes(CH_PrecipMeanSummer, fit)) + 
+                                   geom_point() +
+                                   stat_smooth(method=lm)+
+                                   geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
+                                   geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+                                   labs(x = "\nMean summer precipitation (kg/m2) (indexed)", y = "Shrub biomass (kg/m2)\n")+ 
+                                   theme_shrub()))
 
-ggsave(file = "output/figures/biomass_vs_precip.png")
+
+ggsave(file = "output/figures/predictions_biomass_vs_precip.png")
+
 
 # Quick scatter: biomass ~precip
 (scatter_precip <- ggplot(coord.chelsa.combo.c, aes(x = CH_PrecipMeanSummer, y = biomass)) +
     geom_point(color="skyblue", size = 0.1) +
     geom_smooth(method = "lm", color = "black") +
-    annotate(geom = "text", x = 135, y = 900, label="(b)", size = 10) +
-     annotate(geom = "text", x = 125, y = 700, label="slope =  3.90713*** ", size = 6) +
+    annotate(geom = "text", x = 4, y = 1000, label="(b)", size = 10) +
+    annotate(geom = "text", x = 3, y = 700, label="slope =  46.655*** ", size = 6) +
     labs(x = "\nMean summer precipitation (kg/m2)", y = "Shrub biomass (kg/m2)\n") +
          # title = "Shrub biomass increases with precipiation\n") + 
     theme_shrub())
@@ -220,16 +225,13 @@ panel_title <- text_grob("Shrub biomass increases with mean summer temperature a
                                  ncol = 2)) )# Sets number of panel columns
                             # top = panel_title  # Adding panel title
                           
+ggsave(panel_scatter, file = "output/figures/panel_scatter.png", width = 18, height = 9)
 
 # Panel of model predictions
-(panel_model_pred<- grid.arrange(arrangeGrob(biomass_vs_temp, biomass_vs_precip,
-                                          ncol = 2),  # Sets number of panel columns
-                              top = panel_title  # Adding panel title
-)) 
-
-ggsave(panel_scatter, file = "output/figures/panel_scatter.png", width = 18, height = 9)
-# ggsave(panel_model_pred, file = "output/figures/panel_model_pred.png", width = 18, height = 9)
-
+(panel_model_pred<- grid.arrange(arrangeGrob(predictions_biomass_vs_temp, predictions_biomass_vs_precip,
+                                          ncol = 2)))# Sets number of panel columns
+                              
+ggsave(panel_model_pred, file = "output/figures/panel_model_pred.png", width = 18, height = 9)
 
 
 # Model 5 ----
@@ -239,22 +241,15 @@ ggsave(panel_scatter, file = "output/figures/panel_scatter.png", width = 18, hei
 # Plot 3 lines in plot with temp on the x and biomass on y and points coloured by moisture level
 range(coord.chelsa.combo.c$CH_PrecipMeanSummer)
 quantile(coord.chelsa.combo.c$CH_PrecipMeanSummer)
-# 0%  25%  50%  75% 100% 
-# 60   78   86   93  136 
-# 55 (min) 174 (max precip (kg m-2))
-# 174-55 = 119
-# 119/3 = 39.66667
-# 55 + 40 = 95 
-# 95 + 40 = 135
-# 135+40 = 175
-# 55 (dry), 114.5 (moist), 174 (wet)
+#0%         25%         50%         75%        100% 
+#-2.21492909 -0.70752311 -0.03756489  0.54864855  4.14967397 
 mean(coord.chelsa.combo.c$CH_PrecipMeanSummer)
 # 86.44856
 
 coord.chelsa.combo.d <- coord.chelsa.combo.c %>% 
-  mutate(moisture = case_when(CH_PrecipMeanSummer < 78 ~ "dry",
-                              CH_PrecipMeanSummer >= 78 & CH_PrecipMeanSummer < 93 ~ "moist",
-                              CH_PrecipMeanSummer >= 93 ~ "wet"))
+  mutate(moisture = case_when(CH_PrecipMeanSummer < -0.70752311 ~ "dry",
+                              CH_PrecipMeanSummer >= -0.70752311 & CH_PrecipMeanSummer < 0.54864855 ~ "moist",
+                              CH_PrecipMeanSummer >= 0.54864855 ~ "wet"))
 
 
 
@@ -275,6 +270,23 @@ stargazer(model_5a, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
+# Extract predictions
+predictions_5 <- as.data.frame(predict(model_5a, newdata = coord.chelsa.combo.d, interval = "confidence")) # this gives overall predictions for the model
+model_5_preds <- cbind(coord.chelsa.combo.d, predictions_5)
+
+# Plot the predictions 
+(predictions_interaction<- (ggplot(model_5_preds, aes(CH_TempMeanSummer, fit, group = moisture)) + 
+                                   geom_point(aes(colour = moisture)) +
+                              scale_colour_manual(values = c("brown", "skyblue", "blue4"), name = "Moisture level")+
+                                   stat_smooth(method=lm, aes(colour = moisture))+
+                                   geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
+                                   geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+                                   labs(x = "\nMean summer temperature (indexed) ", y = "Shrub biomass (kg/m2)\n")+ 
+                                   theme_shrub()))
+
+ggsave(filename = "output/figures/predictions_interaction.png")
+
+# this BELOW is to plot scatter with interaction: Need NOT standardised climate variables
 # Extracting model predictions 
 pred_model_5a <- ggpredict(model_5a, terms = c("CH_TempMeanSummer", "moisture"))  # this gives overall predictions for the model
 #write.csv(pred_model_5a, file = "datasets/pred_model_5a.csv")
@@ -293,7 +305,7 @@ coord.chelsa.combo.d$moisture <- factor(coord.chelsa.combo.d$moisture,levels=c("
                                      fill = group), alpha = 0.5) +
                            scale_fill_manual(values = c("brown", "skyblue", "blue4"), name = "Moisture level")+
                          geom_point(data = coord.chelsa.combo.d,                      # adding the raw data 
-                                    aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size = 0.3) + 
+                                   aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size = 0.3) + 
                            scale_color_manual(values = c("brown", "skyblue", "blue4"), name = "Moisture level")+
                          labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n", 
                               title = "") + 

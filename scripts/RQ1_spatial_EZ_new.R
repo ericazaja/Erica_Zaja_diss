@@ -133,7 +133,7 @@ r3_rsample_01 <- r3_rsample_0  %>%
   mutate(r3_rsample_0 , Distance = distHaversine(cbind(x, y),
                                                    cbind(lag(x), lag(y))))
 
-# If istance between points > buffer distance, buffer works
+# If distance between points > buffer distance, buffer works
 r3_rsample_01 <- r3_rsample_01 %>% 
   mutate(buff = case_when(Distance >= 1414.2 ~ "T", Distance < 1414.2 ~ "F"))
 
@@ -209,7 +209,6 @@ stargazer(model_1, type = "text",
 # Extracting model predictions 
 predictions_1 <- as.data.frame(predict(model_1, newdata = r3_rsample_00, interval = "confidence")) # this gives overall predictions for the model
 model_1_lat <- cbind(r3_rsample_00, predictions_1)
-write.csv(pred_model_1, file = "datasets/pred_model_1.csv")
 
 # Plot the predictions 
 (predictions_biomass_vs_lat <- (ggplot(model_1_lat, aes(latitude, fit)) + 
@@ -333,9 +332,13 @@ r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels=c
 ggsave(file = "output/figures/hist_high_medium_low.png")
 
 # Random slope and intercept biomass level across latitudes ----
-level_rs <- lmer(biomass ~ latitude + (1+ latitude|biomass_level), data = r3_rsample_categ)
+# Standardising explanatory variables
+r3_rsample_categ$latitude <- scale(r3_rsample_categ$latitude, center = TRUE, scale = TRUE)
+r3_rsample_categ$longitude <- scale(r3_rsample_categ$longitude, center = TRUE, scale = TRUE)
+
+level_rs <- lmer(biomass ~ latitude + (1 + latitude|biomass_level), data = r3_rsample_categ)
 summary(level_rs)
-#  latitude estimate: -92.308**     
+#  latitude estimate:  -14.87    
 
 stargazer(level_rs, type = "text",
           digits = 3,
@@ -348,19 +351,19 @@ predict_levels <- ggpredict(level_rs , terms = c("latitude", "biomass_level"), t
     stat_smooth(method = "lm", se = FALSE)  +
     scale_colour_manual(values=c("tan", "yellow", "green4"), name = "Biomass level") + 
     theme(legend.position = "bottom") +
-    annotate(geom = "text", x = 70, y = 500, label="(a)", size = 10) +
+    annotate(geom = "text", x = 2, y = 510, label="(a)", size = 10) +
     labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n")+
     theme_shrub()+ 
-    theme(axis.text.x = element_text(angle = 45), legend.text=element_text(size=12),
+    theme(legend.text=element_text(size=12),
           legend.title=element_text(size=15)))
 
 ggsave(levels_rand_slopes, file = "output/figures/levels_rand_slopes.png")
 
 
 # Random slope and intercept biomass level across longitudes ----
-level_rs_long <- lmer(biomass ~ longitude + (1+ longitude|biomass_level), data = r3_rsample_categ)
+level_rs_long <- lmer(biomass ~ longitude + (1 + longitude|biomass_level), data = r3_rsample_categ)
 summary(level_rs_long)
-# long  estimate: 3.491 (not sig)
+# long  estimate:  4.666   (not sig)
 
 stargazer(level_rs_long, type = "text",
           digits = 3,
@@ -375,9 +378,9 @@ predict_levels_long <- ggpredict(level_rs_long , terms = c("longitude", "biomass
     scale_colour_manual(values=c("tan", "yellow", "green4"), name = "Biomass level") + 
     theme(legend.position = "bottom") +
     labs(x = "\nLongitude", y = "Shrub biomass (kg/m2) \n")+
-    annotate(geom = "text", x = -142, y = 500, label="(b)", size = 10) +
+    annotate(geom = "text", x = 2, y = 510, label="(b)", size = 10) +
     theme_shrub()+ 
-    theme(axis.text.x = element_text(angle = 45),legend.text=element_text(size=12),
+    theme(legend.text=element_text(size=12),
           legend.title=element_text(size=15)))
 
 ggsave(levels_rand_slopes_long, file = "output/figures/levels_rand_slopes_long.png")
@@ -477,35 +480,12 @@ summary(model_long_low)
 
 ggsave(panel_latlong_levels,  file="output/figures/panel_latlong_levels.png", height = 16, width = 15)
 
-# Binomial model ----
-r3_rsample_categ_bi <- r3_rsample_00 %>%
-  mutate(biomass_level = case_when (biomass < 258.787537 ~ 'Low', # lower than mean biomass
-                                    biomass >= 258.787537 ~ 'High' ))
-
-r3_rsample_categ_bi$biomass_level <- as.factor(as.character(r3_rsample_categ_bi$biomass_level))
-biomass_glm <- glm(biomass_level ~ latitude, data = r3_rsample_categ_bi, family = binomial())
-summary(biomass_glm)
-
-stargazer(biomass_glm, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-
-(box_high_med_low <- ggplot(r3_rsample_categ_bi, aes(x = latitude, y = biomass_level)) +
-  geom_boxplot() +
-  labs(x = "\nLatitude", y = "Shrub biomass level \n", 
-       title = "More high biomass shrubs at lower latitudes \n") + 
-  theme_shrub())
-
-ggsave(file = "output/figures/box_high_med_low.png")
-
-
 # Kmeans ----
 # Kmeans clustering: Biomass level ~ lat 
 set.seed(99)
 clusters <- kmeans(na.omit(r3_rsample_categ$biomass), centers = 3, nstart = 25)
 cluster.df <- as.data.frame(clusters$cluster)
-cluster_plot <- fviz_cluster(cluster, data = r3_rsample_categ)
+cluster_plot <- fviz_cluster(clusters, data = r3_rsample_categ)
 
 r3_rsample_categ_clust <- r3_rsample_categ %>%
   add_column(cluster = clusters$cluster)

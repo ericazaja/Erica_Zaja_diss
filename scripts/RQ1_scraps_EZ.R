@@ -761,3 +761,26 @@ glimpse(extracted_shrub_6)
 extracted_shrub_6 <- na.omit(extracted_shrub_6)
 
 
+# # Binomial model ----
+r3_rsample_categ_bi <- r3_rsample_00 %>%
+  mutate(biomass_level = case_when (biomass < 258.787537 ~ 'Low', # lower than mean biomass
+                                    biomass >= 258.787537 ~ 'High' ))
+
+r3_rsample_categ_bi$biomass_level <- as.factor(as.character(r3_rsample_categ_bi$biomass_level))
+biomass_glm <- glm(biomass_level ~ latitude, data = r3_rsample_categ_bi, family = binomial())
+summary(biomass_glm)
+
+stargazer(biomass_glm, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
+(box_high_med_low <- ggplot(r3_rsample_categ_bi, aes(x = latitude, y = biomass_level)) +
+    geom_boxplot() +
+    labs(x = "\nLatitude", y = "Shrub biomass level \n", 
+         title = "More high biomass shrubs at lower latitudes \n") + 
+    theme_shrub())
+
+ggsave(file = "output/figures/box_high_med_low.png")
+
+
