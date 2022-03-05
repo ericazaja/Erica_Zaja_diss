@@ -9,6 +9,9 @@
 
 # LOADING LIBRARIES -----
 library(tidyverse)
+library(betareg)
+library(emmeans)
+
 
 # LOADING DATA  -----
 phenology_data <- read_csv("datasets/phenology_data/CCIN13215_20210302_tundra_phenology_database.csv")

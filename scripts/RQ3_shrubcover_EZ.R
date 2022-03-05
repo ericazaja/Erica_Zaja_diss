@@ -64,13 +64,14 @@ str(ITEX_shrubs_mean_trim)
 ITEX_shrubs_mean_trim$PLOT <- as.factor(as.character(ITEX_shrubs_mean_trim$PLOT))
 hist(ITEX_shrubs_mean_trim$mean_cover)
 
+
 # Mean shrub cover change over time  
 (shrub_mean_change <- (ggplot(ITEX_shrubs_mean_trim)+
                      geom_point(aes(x = YEAR, y = mean_cover), colour = "skyblue", size = 1) +
                      geom_smooth(aes(x = YEAR, y = mean_cover), colour= "black", method = "lm") + 
-                     scale_x_continuous(breaks=1997:2009)+
+                     scale_x_continuous(breaks=1996:2009)+
                      labs(y = "Mean shrub % cover\n", x = "\nYear") + 
-                    annotate(geom = "text", x = 2007, y = 50, label="(a)", size = 10) +
+                   annotate(geom = "text", x = 2007, y = 50, label="(a)", size = 10) +
                      theme_shrub()+
                      theme(axis.text.x = element_text(angle = 45))))
 
@@ -78,15 +79,11 @@ ggsave(shrub_mean_change, file = "output/figures/shrub_mean_change.png")
 
 # Model 6----
 # Shrub cover over time
-lm_shrub <- lm(mean_cover~YEAR, data = ITEX_shrubs_mean_trim)
-summary(lm_shrub) # not significant 
-# F-statistic: 1.175 on 1 and 143 DF,  p-value: 0.2802
-
 # Transform percentage cover to proportion (dividing by 100)
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean_trim %>% mutate(cover_prop = mean_cover/100)
   hist(ITEX_shrubs_mean_trim$mean_cover)
 # mixed effect model with plot and year as random effects
-model_6 <- lmer(cover_prop~YEAR + (1|PLOT)+ (1|YEAR), data = ITEX_shrubs_mean_trim)
+model_6 <- lmer(mean_cover ~ YEAR + (1|PLOT)+ (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6)
 
 # Checking model 6 assumptions 
@@ -110,7 +107,7 @@ pred_model_6a <- ggpredict(model_6, terms = c("YEAR"))
 
 # Plot the predictions 
 (shrub_cover_ANWR <- (ggplot(pred_model_6) + 
-                        geom_line(aes(x = x, y = predicted, group=group)) +          # slope
+                        geom_line(aes(x = x, y = predicted)) +          # slope
                         # geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                         # fill = "lightgrey", alpha = 0.5) +  # error band
                         geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data 
@@ -123,38 +120,6 @@ pred_model_6a <- ggpredict(model_6, terms = c("YEAR"))
 
 ggsave(file = "output/figures/shrub_cover_ANWR.png")
 
-# checking that overall shrub cover change has same trend as mean cover change
-# Total shrub cover 
-ITEX_shrubs_tot <- ITEX_shrubs %>%
-  group_by(SiteSubsitePlotYear) %>%
-  mutate(tot_cover = sum(FuncPlotCover)) %>%
-  ungroup()
-
-
-# Shrinking the dataframe to retain one row per plot etc.
-ITEX_shrubs_tot_trim <- ITEX_shrubs_tot  %>% 
-  dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, tot_cover, lat_grid, lon_grid, gridcell) %>% 
-  distinct(SiteSubsitePlotYear, tot_cover, .keep_all = TRUE)
-
-ITEX_shrubs_tot_trim$PLOT <- as.factor(as.character(ITEX_shrubs_tot_trim$PLOT))
-hist(ITEX_shrubs_tot_trim$tot_cover) # Wrong because goes more than 100
-
-# Tot shrub cover change over time  
-(shrub_scatter_sum <- (ggplot(ITEX_shrubs_tot_trim)+
-                         geom_point(aes(x = YEAR, y = tot_cover), size = 2) +
-                         geom_smooth(aes(x = YEAR, y = tot_cover), method = "lm") + 
-                         labs(y = "Total shrub % cover\n", x = "\nYear") + 
-                         theme_shrub())) # not similar trend to mean but not sig
-
-
-lm_shrub_tot <- lm(tot_cover~YEAR, data = ITEX_shrubs_tot_trim)
-summary(lm_shrub_tot) # not sig: F-statistic: 0.02088 on 1 and 143 DF,  p-value: 0.8853
-
-# Trying brms (to use family = beta)
-bcpriors <- get_prior(cover_prop~YEAR +  (1|PLOT) + (1|YEAR), data=ITEX_shrubs_mean_trim, family="beta")
-
-stmt.fitc <- brm(cover_prop~YEAR +  (1|PLOT) + (1|YEAR), data=ITEX_shrubs_mean_trim, family="beta",
-                 prior = bcpriors) # this doesnt work
 
 ### 2. SHRUB GENUS -----
 # shrub species
@@ -209,6 +174,11 @@ pred_model_shrub_sp_1 <- ggpredict(lmer_shrub_sp, terms = "YEAR")
 pred_model_shrub_sp_2 <- ggpredict(lmer_shrub_sp, terms = "GENUS")
 str(ITEX_shrub_sp)
 
+# assumptions
+plot(lmer_shrub_sp)
+qqnorm(resid(lmer_shrub_sp))
+qqline(resid(lmer_shrub_sp)) 
+
 # Plot the predictions 
 (plot_model_shrub_sp <- (ggplot(pred_model_shrub_sp) + 
                            geom_line(aes(x = x, y = predicted, colour = group) +          # slope
@@ -253,6 +223,9 @@ predict_sp <- ggpredict(lmer_shrub_sp , terms = c("YEAR", "GENUS"), type = "re")
 # Model with random slopes per genus
 lmer_shrub_sp_rand <- lmer(genus_cover~YEAR + (1+YEAR|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp_rand )
+plot(lmer_shrub_sp_rand)
+qqnorm(resid(lmer_shrub_sp_rand))
+qqline(resid(lmer_shrub_sp_rand)) 
 
 predictions_rs_ri <- ggpredict(lmer_shrub_sp_rand , terms = c("YEAR", "GENUS"), type = "re")
 (genus_rand_slopes <- ggplot(predictions_rs_ri, aes(x = x, y = predicted, colour = group)) +
@@ -263,7 +236,6 @@ predictions_rs_ri <- ggpredict(lmer_shrub_sp_rand , terms = c("YEAR", "GENUS"), 
     labs(x = "\nYear", y = "Mean shrub genus cover (%)\n")+
     theme_shrub()+ 
     theme(axis.text.x = element_text(angle = 45)))
-
 
 stargazer(lmer_shrub_sp_rand, type = "text",
           digits = 3,
@@ -352,13 +324,18 @@ hist(Dryas$genus_cover)
 
 
 # 3. SHRUB COVER IN SPACE  ----
+# standardise lat and long
+ITEX_shrubs_mean_trim$LAT <-scale(ITEX_shrubs_mean_trim$LAT , center = TRUE, scale = TRUE)
+ITEX_shrubs_mean_trim$LONG <-scale(ITEX_shrubs_mean_trim$LONG , center = TRUE, scale = TRUE)
 
 # Shrub cover vs latitude 
 shrub_lat <- lm(mean_cover ~ LAT, data = ITEX_shrubs_mean_trim)
 summary(shrub_lat)
 
 # F-statistic: 55.18 on 1 and 143 DF,  p-value: 9.125e-12***
-# mean shrub cover decreases with lat
+# mean shrub cover decreases with lat (-4.4189***)
+
+plot(shrub_lat)
 
 stargazer(shrub_lat, type = "text",
           digits = 3,
@@ -369,8 +346,8 @@ stargazer(shrub_lat, type = "text",
     geom_point(aes(x = LAT, y = mean_cover), colour= "skyblue", size = 2) +
     geom_smooth(aes(x = LAT, y = mean_cover),colour = "black", method = "lm") + 
     labs(y = "Mean shrub % cover\n", x = "\nLatitude") +
-    annotate(geom = "text", x = 69.7, y = 60, label="(a)", size = 10) +
-    annotate(geom = "text", x = 69.25, y = 20, label="slope = -7.214*** ", size = 6) +
+    annotate(geom = "text", x = 1, y = 60, label="(a)", size = 10) +
+    annotate(geom = "text", x = 0.5, y = 20, label="slope = -4.419*** ", size = 6) +
      theme_shrub())
 
 ggsave(file = "output/figures/cover_lat_scatter.png")
@@ -398,8 +375,9 @@ ggsave(file = "output/figures/plot_model_shrub_lat.png")
 shrub_long<- lm(mean_cover ~ LONG, data = ITEX_shrubs_mean_trim)
 summary(shrub_long)
 # F-statistic: 55.18 on 1 and 143 DF,  p-value: 9.123e-12***
+# -4.4189***
 
-
+plot(shrub_long)
 stargazer(shrub_long, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -411,15 +389,15 @@ stargazer(shrub_long, type = "text",
     geom_point(aes(x = LONG, y = mean_cover), colour = "skyblue", size = 2) +
     geom_smooth(aes(x = LONG, y = mean_cover), colour = "black", method = "lm") + 
     labs(y = "Mean shrub % cover\n", x = "\nLongitude") +
-    annotate(geom = "text", x = -144, y = 60, label="(b)", size = 10) +
-    annotate(geom = "text", x = -146, y = 20, label="slope = -1.563*** ", size = 6) +
+    annotate(geom = "text", x = 1, y = 60, label="(b)", size = 10) +
+    annotate(geom = "text", x = 0.5, y = 20, label="slope = -4.419*** ", size = 6) +
     theme_shrub())
 
 
 ggsave(file = "output/figures/cover_long_scatter.png")
 
 # Extracting model predictions 
-pred_shrub_lon <- ggpredict(shrub_long, terms = c("lon_grid"))  # this gives overall predictions for the model
+pred_shrub_lon <- ggpredict(shrub_long, terms = c("LONG"))  # this gives overall predictions for the model
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
 # Plot the predictions 
@@ -442,5 +420,6 @@ ggsave(file = "output/figures/plot_model_shrub_lon.png")
                                            ncol = 2)) )# Sets number of panel columns
 
 ggsave(panel_cover_latlong, file = "output/figures/panel_cover_latlong.png", height = 10, width = 20)
-           
+
+# END -----           
 

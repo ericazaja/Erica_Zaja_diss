@@ -442,6 +442,9 @@ ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup)
 # mixed model with functional group as fixed effect
 lmer_all <- lmer(mean_cover~YEAR*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all)
+plot(lmer_all)
+qqnorm(resid(lmer_all))
+qqline(resid(lmer_all))  
 
 # Output table model 7 
 stargazer(lmer_all, type = "text",

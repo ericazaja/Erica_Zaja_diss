@@ -364,6 +364,40 @@ coord.chelsa.combo.3 <- coord.chelsa.combo.2 %>%
 write.csv(coord.chelsa.combo.3, "scripts/josephjeverest/FuncDiv_v2/data/output_03_chelsa.csv")
 
 
+# checking that overall shrub cover change has same trend as mean cover change
+# Total shrub cover 
+ITEX_shrubs_tot <- ITEX_shrubs %>%
+  group_by(SiteSubsitePlotYear, GENUS) %>%
+  mutate(tot_cover = sum(FuncPlotCover)) %>%
+  ungroup()
+
+### RQ3_scraps 
+# Shrinking the dataframe to retain one row per plot etc.
+ITEX_shrubs_tot_trim <- ITEX_shrubs_tot  %>% 
+  dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, GENUS, tot_cover, lat_grid, lon_grid, gridcell) %>% 
+  distinct(SiteSubsitePlotYear, tot_cover, .keep_all = TRUE)
+
+ITEX_shrubs_tot_trim$PLOT <- as.factor(as.character(ITEX_shrubs_tot_trim$PLOT))
+hist(ITEX_shrubs_tot_trim$tot_cover) # Wrong because goes more than 100
+
+# Tot shrub cover change over time  
+(shrub_scatter_sum <- (ggplot(ITEX_shrubs_tot_trim)+
+                         geom_point(aes(x = YEAR, y = tot_cover), size = 2) +
+                         geom_smooth(aes(x = YEAR, y = tot_cover), method = "lm") + 
+                         labs(y = "Total shrub % cover\n", x = "\nYear") + 
+                         theme_shrub())) # not similar trend to mean but not sig
+
+
+lm_shrub_tot <- lm(tot_cover~YEAR, data = ITEX_shrubs_tot_trim)
+summary(lm_shrub_tot) # not sig: F-statistic: 0.02088 on 1 and 143 DF,  p-value: 0.8853
+
+# Trying brms (to use family = beta)
+bcpriors <- get_prior(cover_prop~YEAR +  (1|PLOT) + (1|YEAR), data=ITEX_shrubs_mean_trim, family="beta")
+
+stmt.fitc <- brm(cover_prop~YEAR +  (1|PLOT) + (1|YEAR), data=ITEX_shrubs_mean_trim, family="beta",
+                 prior = bcpriors) # this doesnt work
+
+
 #####################################################
 # OTHER (Random) -----
 ## eg. code to make site/block/plot categorical from https://ourcodingclub.github.io/tutorials/model-design/ 
