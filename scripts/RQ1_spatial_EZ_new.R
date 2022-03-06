@@ -287,6 +287,21 @@ ggsave(panel_latlong, file = "output/figures/panel_latlong.png", width = 18, hei
 ggsave(panel_latlong_predictions, file = "output/figures/panel_latlong_predictions.png", width = 18, height = 9)
 
 
+# Model  biomass vs long*lat ----
+model_2a <- lm(biomass~longitude*latitude, data = r3_rsample_00)
+summary(model_2a)
+# F-statistic:  1058 on 3 and 9575 DF,  p-value: < 2.2e-16
+
+(latlong_interaction <- ggplot(r3_rsample_00, aes(x = longitude, y = biomass, size = latitude))+
+  geom_point()+
+  labs(x = 'Latitude', y = 'Shrub biomass')+
+  scale_size_continuous(guide = FALSE)+
+  #geom_abline(aes(intercept=33.965, slope=-4.3985, linetype='-1SD Gear'))+
+  #geom_abline(aes(intercept=38.1208, slope=-5.854, linetype='Mean Gear'))+
+  #geom_abline(aes(intercept=42.2767, slope=-7.3095, linetype='+1SD Gear'))+
+  #scale_linetype_manual(values=c('dotted','dashed','solid'),
+                       # breaks=c('-1SD Gear','Mean Gear','+1SD Gear'),name='Simple\nSlope')+
+  theme_shrub())
 
 # BIOMASS LEVELS ----
 

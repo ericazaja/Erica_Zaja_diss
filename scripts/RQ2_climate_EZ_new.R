@@ -149,7 +149,7 @@ model_3_preds <- cbind(coord.chelsa.combo.c, predictions_3)
                                   stat_smooth(method=lm)+
                                   geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
                                   geom_line(aes(y=upr), color = "red", linetype = "dashed")+
-                                  labs(x = "\nMean summer temperature (°C) (indexed)", y = "Shrub biomass (kg/m2)\n")+ 
+                                  labs(x = "\nMean summer temperature (°C) (standardised)", y = "Shrub biomass (kg/m2)\n")+ 
                                   theme_shrub()))
 
 
@@ -161,7 +161,7 @@ ggsave(file = "output/figures/predictions_biomass_vs_temp.png")
     geom_smooth(method = "lm", color = "black") +
     annotate(geom = "text", x = 2.5, y = 1200, label="(a)", size = 10) +
     annotate(geom = "text", x = 0, y = 800, label="slope = 36.433*** ", size = 6) +
-    labs(x = "\nMean summer temperature indexed (°C)", y = "Shrub biomass (kg/m2)\n") + 
+    labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n") + 
          # title = "Shrub biomass increases with temperature\n") + 
     theme_shrub())
 
