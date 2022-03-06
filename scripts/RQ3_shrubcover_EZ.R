@@ -79,11 +79,12 @@ ggsave(shrub_mean_change, file = "output/figures/shrub_mean_change.png")
 
 # Model 6----
 # Shrub cover over time
+unique(ITEX_shrubs_mean_trim$YEAR)
 # Transform percentage cover to proportion (dividing by 100)
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean_trim %>% mutate(cover_prop = mean_cover/100)
   hist(ITEX_shrubs_mean_trim$mean_cover)
 # mixed effect model with plot and year as random effects
-model_6 <- lmer(mean_cover ~ YEAR + (1|PLOT)+ (1|YEAR), data = ITEX_shrubs_mean_trim)
+model_6 <- lmer(mean_cover ~ I(YEAR-1995) + (1|PLOT)+ (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6)
 
 # Checking model 6 assumptions 
@@ -158,14 +159,14 @@ ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 # Model ----
 
 # mixed effect model with year as random effects
-lmer_shrub_sp <- lmer(genus_cover~YEAR*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp <- lmer(genus_cover~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp)
 
 print(lmer_shrub_sp, correlation=TRUE)
 stargazer(lmer_shrub_sp, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
+          digit.separator = "") # DRYAS significant
 
 # Extracting model predictions 
 pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"))  # this gives overall predictions for the model
@@ -190,6 +191,8 @@ qqline(resid(lmer_shrub_sp))
                                             title = "Shrub species cover (%) in the ANWR") + 
                                        theme_shrub())))
 # wrong
+
+plot(lmer_shrub_sp)
 
 # trying diff graph
 ITEX_shrubs_sp_trim$Predicted <- predict(lmer_shrub_sp, ITEX_shrubs_sp_trim)
@@ -250,8 +253,13 @@ ggsave(file = "output/figures/genus_rand_slopes.png")
 
 # Salix sp.
 Salix <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Salix") 
-salix_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Salix)
+salix_model <- lmer(genus_cover ~ I(YEAR-1995)+ (1|YEAR), data = Salix)
 summary(salix_model) # not sig
+stargazer(salix_model, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
 (salix_plot <- ggplot(Salix, aes(x = YEAR, y = genus_cover)) +
    geom_point()+
     stat_smooth(method = "lm")  +
@@ -260,8 +268,13 @@ summary(salix_model) # not sig
 
 # Dryas sp.
 Dryas <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Dryas") 
-dryas_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Dryas)
+dryas_model <- lmer(genus_cover ~ I(YEAR-1995) + (1|YEAR), data = Dryas)
 summary(dryas_model)# not sig
+
+stargazer(dryas_model, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
 (dryas_plot <- ggplot(Dryas, aes(x = YEAR, y = genus_cover)) +
     geom_point()+
     stat_smooth(method = "lm")  +

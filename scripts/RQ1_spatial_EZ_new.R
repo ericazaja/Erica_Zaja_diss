@@ -121,12 +121,14 @@ res(r3_latlong_agg)
 r3_rsample_0 <- as.data.frame(sampleRandom(r3_latlong_agg, 9583, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
                                               cells=TRUE, rowcol=FALSE, xy = TRUE)) 
 hist(r3_rsample_0$r3_latlong_agg) # checking distribution
+mean(r3_rsample_0$r3_latlong_agg) # 267.4187
 
+# logic checks 
 r3# trying to sample 30000 pixels to see if the distribution is different 
 r3_rsample_0_try <- as.data.frame(sampleRandom(r3_latlong_agg, 30000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
                                            cells=TRUE, rowcol=FALSE, xy = TRUE)) # 30000 pixels 
 hist(r3_rsample_0_try$r3_latlong_agg) # checking distribution - looks similar to the other histogram
-
+mean(r3_rsample_0_try$r3_latlong_agg) #267.4842
 # checking buffer works
 # calculating distance between points (x and y coordinates)
 r3_rsample_01 <- r3_rsample_0  %>% 

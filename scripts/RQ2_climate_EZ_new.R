@@ -352,21 +352,25 @@ ggsave(file = "output/figures/biomass_vs_temp.png")
     geom_smooth(method = "lm") +
     theme_classic())
 
+# ASSUMPTION CHECK -----
+# standardise lat and long
+coord.chelsa.combo.c$latitude <-scale(coord.chelsa.combo.c$latitude, center = TRUE, scale = TRUE)
+coord.chelsa.combo.c$longitude<-scale(coord.chelsa.combo.c$longitude, center = TRUE, scale = TRUE)
 
 # Checking temp ~ lat -----
-temp_lat_model <- lm(CH_TempMeanSummer~ latitude, data=coord.chelsa.combo.c)
+temp_lat_model <- lm(CH_TempMeanSummer ~ latitude, data=coord.chelsa.combo.c)
 summary(temp_lat_model) 
 #F-statistic:  1146 on 1 and 9573 DF,  p-value: < 2.2e-16***
 # temp decreases with latitude. I.e. northern latitudes colder
+# -3.270e-01 ***
 
 (scatter_lat_temp <- ggplot(coord.chelsa.combo.c, aes(x =latitude , y = CH_TempMeanSummer )) +
    geom_point(size = 0.3, color="skyblue") +
    geom_smooth(method = "lm", colour = "black") +
     labs(x = "\nLatitude", y = "Mean summer temperature (°C)\n")+ 
-    annotate(geom = "text", x = 70, y = 11, label="(a)", size = 10) +
-    annotate(geom = "text", x = 69.9, y = 7, label="slope = -1.24338*** ", size = 6) +
-   theme_shrub())
-  #+ theme(axis.title.y =element_text(size=12), 
+    annotate(geom = "text", x = 2, y = 2.5, label="(a)", size = 10) +
+   annotate(geom = "text", x = 0, y = -2.5, label="slope = -3.270e-01*** ", size = 6) +
+   theme_shrub()+ theme(axis.title.y =element_text(size=12), 
                         axis.title.x = element_text(size=12)))
 
 ggsave(file = "output/figures/scatter_lat_temp.png")
@@ -381,8 +385,8 @@ summary(temp_long_model)
     geom_point(size = 0.3, color = "skyblue") +
     geom_smooth(method = "lm", color="black") +
     labs(x = "\nLongitude", y = "Mean summer temperature (°C)\n")+ 
-    annotate(geom = "text", x = -141, y = 11, label="(b)", size = 10) +
-    annotate(geom = "text", x = -142, y = 7, label="slope = 0.061870*** ", size = 6) +
+    #annotate(geom = "text", x = -141, y = 11, label="(b)", size = 10) +
+    #annotate(geom = "text", x = -142, y = 7, label="slope = 0.061870*** ", size = 6) +
     theme_shrub())
   #+ theme(axis.title.y =element_text(size=12), 
                          #axis.title.x = element_text(size=12)))
