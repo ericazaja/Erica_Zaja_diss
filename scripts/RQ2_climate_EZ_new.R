@@ -108,6 +108,10 @@ theme_shrub <- function(){ theme(legend.position = "right",
                                  plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
 # DATA MANIPULATION ----
+coord.chelsa.combo.c <- read_csv("datasets/climate_data/coord_chelsa_combo_new.csv")
+range(coord.chelsa.combo.c$CH_TempMeanSummer)
+range(coord.chelsa.combo.c$CH_PrecipMeanSummer)
+glimpse(coord.chelsa.combo.c)
 str(coord.chelsa.combo.c)
 unique(coord.chelsa.combo.c$gridcell)
 # making grid cell into a factor
@@ -385,8 +389,8 @@ summary(temp_long_model)
     geom_point(size = 0.3, color = "skyblue") +
     geom_smooth(method = "lm", color="black") +
     labs(x = "\nLongitude", y = "Mean summer temperature (°C)\n")+ 
-    #annotate(geom = "text", x = -141, y = 11, label="(b)", size = 10) +
-    #annotate(geom = "text", x = -142, y = 7, label="slope = 0.061870*** ", size = 6) +
+    annotate(geom = "text", x = 2, y = 2.5, label="(b)", size = 10) +
+    annotate(geom = "text", x = 1, y = -2.5, label="slope = 0.061870*** ", size = 6) +
     theme_shrub())
   #+ theme(axis.title.y =element_text(size=12), 
                          #axis.title.x = element_text(size=12)))
@@ -403,8 +407,8 @@ summary(precip_lat_model)
     geom_point(size = 0.3, color = "skyblue") +
     geom_smooth(method = "lm", color="black") +
     labs(x = "\nLatitude", y = "Mean summer precipitation (kg/m2)\n")+ 
-    annotate(geom = "text", x = 70, y = 125, label="(c)", size = 10) +
-    annotate(geom = "text", x = 69.9, y = 100, label="slope = -65.5282*** ", size = 6) +
+    annotate(geom = "text", x = 2, y = 4, label="(c)", size = 10) +
+    annotate(geom = "text", x = 1, y = 2, label="slope = -65.5282*** ", size = 6) +
     theme_shrub() )
   #+ theme(axis.title.y =element_text(size=12), 
           #axis.title.x = element_text(size=12)))
@@ -421,8 +425,8 @@ summary(precip_long_model)
     geom_point(size = 0.3, color = "skyblue") +
     geom_smooth(method = "lm", color="black") +
     labs(x = "\nLongitude", y = "Mean summer precipitation (kg/m2)\n")+ 
-    annotate(geom = "text", x = -141.5, y = 125, label="(d)", size = 10) +
-    annotate(geom = "text", x = -141.5, y = 70, label="slope = 1.34762*** ", size = 6) +
+    annotate(geom = "text", x = 2, y = 4, label="(d)", size = 10) +
+    annotate(geom = "text", x = 1, y = 2, label="slope = 1.34762*** ", size = 6) +
     theme_shrub())
   #+ theme(axis.title.y =element_text(size=12), 
                          #axis.title.x = element_text(size=12)))
@@ -437,6 +441,33 @@ ggsave(file = "output/figures/scatter_long_precip.png")
 ggsave(panel_temp_precip_coords, file="output/figures/panel_temp_precip_coords.png", height = 16, width = 15)
 
 #  top = panel_title  # Adding panel title
+
+
+## MODEL with ALL -----
+model_all <- lm(biomass ~ CH_PrecipMeanSummer + CH_TempMeanSummer + latitude + longitude, data = coord.chelsa.combo.c)
+summary(model_all) # Adjusted R-squared:  0.2819 
+
+model_all_2 <- lm(biomass ~ CH_PrecipMeanSummer*CH_TempMeanSummer + latitude*longitude, data = coord.chelsa.combo.c)
+summary(model_all_2) # Adjusted R-squared:  0.3275 
+
+model_all_3 <- lm(biomass ~ CH_TempMeanSummer + latitude, data = coord.chelsa.combo.c)
+summary(model_all_3) # Adjusted R-squared:  0.2027 
+
+model_all_4 <- lm(biomass ~ CH_PrecipMeanSummer*CH_TempMeanSummer + latitude, data = coord.chelsa.combo.c)
+summary(model_all_4) #Adjusted R-squared:  0.2226
+
+model_all_5 <- lm(biomass ~ CH_PrecipMeanSummer*CH_TempMeanSummer + longitude, data = coord.chelsa.combo.c)
+summary(model_all_5) # Adjusted R-squared:  0.3028 
+
+model_all_6<- lm(biomass ~ CH_TempMeanSummer + latitude*longitude, data = coord.chelsa.combo.c)
+summary(model_all_6) # Adjusted R-squared:  0.2806 
+
+model_all_7<- lm(biomass ~ CH_PrecipMeanSummer + latitude*longitude, data = coord.chelsa.combo.c)
+summary(model_all_7) #Adjusted R-squared:  0.2555 
+
+
+
+
 
 
 
