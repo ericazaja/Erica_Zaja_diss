@@ -67,9 +67,9 @@ hist(ITEX_shrubs_mean_trim$mean_cover)
 
 # Mean shrub cover change over time  
 (shrub_mean_change <- (ggplot(ITEX_shrubs_mean_trim)+
-                     geom_point(aes(x = YEAR, y = mean_cover), colour = "skyblue", size = 1) +
+                     geom_point(aes(x = YEAR, y = mean_cover), colour = "green4", size = 1) +
                      geom_smooth(aes(x = YEAR, y = mean_cover), colour= "black", method = "lm") + 
-                     scale_x_continuous(breaks=1996:2009)+
+                     scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
                      labs(y = "Mean shrub % cover\n", x = "\nYear") + 
                    annotate(geom = "text", x = 2007, y = 50, label="(a)", size = 10) +
                      theme_shrub()+
@@ -84,7 +84,7 @@ unique(ITEX_shrubs_mean_trim$YEAR)
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean_trim %>% mutate(cover_prop = mean_cover/100)
   hist(ITEX_shrubs_mean_trim$mean_cover)
 # mixed effect model with plot and year as random effects
-model_6 <- lmer(mean_cover ~ I(YEAR-1995) + (1|PLOT)+ (1|YEAR), data = ITEX_shrubs_mean_trim)
+model_6 <- lmer(mean_cover ~ YEAR + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6)
 
 # Checking model 6 assumptions 
@@ -148,7 +148,8 @@ str(ITEX_shrubs_sp_trim)
                                  geom_point(size = 0.6) +
                                  geom_smooth(method = "lm") + 
                                  facet_wrap(~ GENUS, scales = "free_y") +
-                                 scale_x_continuous(breaks=1997:2009)+
+                                 scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
+                                 scale_colour_manual(values = c("green4", "green3", "red", "red4", "brown", "blue4", 'blue3' ))+
                                  labs(y = "Mean cover (%) \n", x = "\nYear") +
                                  theme_shrub()+
                                  theme(axis.text.x  = element_text(vjust=0.5, size=10, angle= 45, colour = "black"))))
@@ -356,7 +357,7 @@ stargazer(shrub_lat, type = "text",
           digit.separator = "")
 
 (cover_lat_scatter <- (ggplot(ITEX_shrubs_mean_trim))+
-    geom_point(aes(x = LAT, y = mean_cover), colour= "skyblue", size = 2) +
+    geom_point(aes(x = LAT, y = mean_cover), colour= "green4", size = 1) +
     geom_smooth(aes(x = LAT, y = mean_cover),colour = "black", method = "lm") + 
     labs(y = "Mean shrub % cover\n", x = "\nLatitude") +
     annotate(geom = "text", x = 1, y = 60, label="(a)", size = 10) +
@@ -367,20 +368,24 @@ ggsave(file = "output/figures/cover_lat_scatter.png")
 
 
 # Extracting model predictions 
-pred_shrub_lat <- ggpredict(shrub_lat, terms = c("LAT"))  # this gives overall predictions for the model
+predictions_10 <- as.data.frame(predict(shrub_lat, newdata = ITEX_shrubs_mean_trim, interval = "confidence")) # this gives overall predictions for the model
+model_10_preds <- cbind(ITEX_shrubs_mean_trim, predictions_10)
+
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
 # Plot the predictions 
-(plot_model_shrub_lat <- (ggplot(pred_shrub_lat) + 
-                            geom_line(aes(x = x, y = predicted)) +          # slope
-                            geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                                        fill = "lightgrey", alpha = 0.5) +  # error band
-                            geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data 
-                                       aes(x = LAT, y = mean_cover), size = 0.5) + 
-                            labs(x = "Latitude", y = "Shrub cover (%)", 
+(plot_model_shrub_lat <- (ggplot(model_10_preds, aes(LAT, fit)) +
+                            geom_point(aes(x = LAT, y = mean_cover)         # adding the raw data 
+                                       ,colour = "green4", size = 1) + 
+                            stat_smooth(method=lm, colour = "black")+
+                            geom_line(aes(y=lwr,  color = "grey"), linetype = "dashed")+
+                            geom_line(aes(y=upr, color = "grey"), linetype = "dashed")+
+                            annotate(geom = "text", x = 1, y = 60, label="(a)", size = 10) +
+                            annotate(geom = "text", x = 0.5, y = 20, label="slope = -4.419*** ", size = 6) +
+                            labs(x = "\nLatitude", y = "Shrub cover (%)\n", 
                                  title = "") + 
                             # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
-                            theme_shrub()))
+                            theme_shrub() + theme(legend.position = "none")))
 
 ggsave(file = "output/figures/plot_model_shrub_lat.png")
 
@@ -410,22 +415,26 @@ stargazer(shrub_long, type = "text",
 ggsave(file = "output/figures/cover_long_scatter.png")
 
 # Extracting model predictions 
-pred_shrub_lon <- ggpredict(shrub_long, terms = c("LONG"))  # this gives overall predictions for the model
+predictions_11 <- as.data.frame(predict(shrub_long, newdata = ITEX_shrubs_mean_trim, interval = "confidence")) # this gives overall predictions for the model
+model_11_preds <- cbind(ITEX_shrubs_mean_trim, predictions_11)
+
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
 # Plot the predictions 
-  (plot_model_shrub_lon <- (ggplot(pred_shrub_lon) + 
-                              geom_line(aes(x = x, y = predicted)) +          # slope
-                              geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                                          fill = "lightgrey", alpha = 0.5) +  # error band
-                              geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data 
-                                         aes(x = lon_grid, y = mean_cover), size = 0.5) + 
-                              labs(x = "Longitude", y = "Shrub cover (%)", 
-                                   title = "") + 
-                              # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
-                              theme_shrub()))
+(plot_model_shrub_long <- (ggplot(model_11_preds, aes(LONG, fit)) +
+                            geom_point(aes(x = LONG, y = mean_cover)         # adding the raw data 
+                                       ,colour = "green4", size = 1) + 
+                            stat_smooth(method=lm, colour = "black")+
+                            geom_line(aes(y=lwr,  color = "grey"), linetype = "dashed")+
+                            geom_line(aes(y=upr, color = "grey"), linetype = "dashed")+
+                             annotate(geom = "text", x = 1, y = 60, label="(b)", size = 10) +
+                             annotate(geom = "text", x = 0.5, y = 20, label="slope = -4.419*** ", size = 6) +
+                            labs(x = "\nLongitude", y = "Shrub cover (%)\n", 
+                                 title = "") + 
+                            # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
+                            theme_shrub()+ theme(legend.position = "none")))
 
-ggsave(file = "output/figures/plot_model_shrub_lon.png")
+ggsave(file = "output/figures/plot_model_shrub_long.png")
 
 
 
@@ -433,6 +442,11 @@ ggsave(file = "output/figures/plot_model_shrub_lon.png")
                                            ncol = 2)) )# Sets number of panel columns
 
 ggsave(panel_cover_latlong, file = "output/figures/panel_cover_latlong.png", height = 10, width = 20)
+
+(panel_cover_latlong_pred <- grid.arrange(arrangeGrob(plot_model_shrub_lat,plot_model_shrub_long,
+                                                 ncol = 2)) )# Sets number of panel columns
+
+ggsave(panel_cover_latlong_pred, file = "output/figures/panel_cover_latlong_pred.png", height = 10, width = 20)
 
 # END -----           
 

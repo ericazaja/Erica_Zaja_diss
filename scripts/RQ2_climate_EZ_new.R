@@ -149,11 +149,13 @@ model_3_preds <- cbind(coord.chelsa.combo.c, predictions_3)
 
 # Plot the predictions 
 (predictions_biomass_vs_temp <- (ggplot(model_3_preds, aes(CH_TempMeanSummer, fit)) + 
-                                  geom_point() +
-                                  stat_smooth(method=lm)+
-                                  geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
-                                  geom_line(aes(y=upr), color = "red", linetype = "dashed")+
-                                  labs(x = "\nMean summer temperature (°C) (standardised)", y = "Shrub biomass (kg/m2)\n")+ 
+                                  geom_point(data = model_3_preds, aes(x= CH_TempMeanSummer, y =biomass), colour = "green4", size= 0.1 ) +
+                                  stat_smooth(method=lm, colour = "black")+
+                                  geom_line(aes(y=lwr),  color = "grey", linetype = "dashed")+
+                                  geom_line(aes(y=upr), color = "grey", linetype = "dashed")+
+                                   annotate(geom = "text", x = 2.5, y = 1200, label="(a)", size = 10) +
+                                   annotate(geom = "text", x = 0, y = 800, label="slope = 36.433*** ", size = 6) +
+                                  labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n")+ 
                                   theme_shrub()))
 
 
@@ -197,11 +199,13 @@ model_4_preds <- cbind(coord.chelsa.combo.c, predictions_4)
 
 # Plot the predictions 
 (predictions_biomass_vs_precip <- (ggplot(model_4_preds, aes(CH_PrecipMeanSummer, fit)) + 
-                                   geom_point() +
-                                   stat_smooth(method=lm)+
-                                   geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
-                                   geom_line(aes(y=upr), color = "red", linetype = "dashed")+
-                                   labs(x = "\nMean summer precipitation (kg/m2) (indexed)", y = "Shrub biomass (kg/m2)\n")+ 
+                                   geom_point(data = model_4_preds, aes( x= CH_PrecipMeanSummer, y = biomass), colour = "green4", size = 0.1) +
+                                   stat_smooth(method=lm, colour = "black")+
+                                   geom_line(aes(y=lwr),  color = "grey", linetype = "dashed")+
+                                   geom_line(aes(y=upr), color = "grey", linetype = "dashed")+
+                                     annotate(geom = "text", x = 4, y = 1000, label="(b)", size = 10) +
+                                     annotate(geom = "text", x = 3, y = 700, label="slope =  46.655*** ", size = 6) +
+                                   labs(x = "\nMean summer precipitation (kg/m2) ", y = "Shrub biomass (kg/m2)\n")+ 
                                    theme_shrub()))
 
 
@@ -371,7 +375,7 @@ temp_lat_model <- lm(CH_TempMeanSummer ~ latitude, data=coord.chelsa.combo.c)
 summary(temp_lat_model) 
 #F-statistic:  1146 on 1 and 9573 DF,  p-value: < 2.2e-16***
 # temp decreases with latitude. I.e. northern latitudes colder
-# -3.270e-01 ***
+# -2.03669  ***
 
 (scatter_lat_temp <- ggplot(coord.chelsa.combo.c, aes(x =latitude , y = CH_TempMeanSummer )) +
    geom_point(size = 0.3, color="skyblue") +
