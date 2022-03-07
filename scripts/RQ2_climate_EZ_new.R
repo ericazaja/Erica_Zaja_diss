@@ -92,7 +92,7 @@ coord.chelsa.combo.c <- coord.chelsa.combo.b %>%
 unique(coord.chelsa.combo.c$CH_TempMeanSummer)
 
 # Exporting the dataframe to csv
-# write.csv(coord.chelsa.combo.c, "datasets/climate_data/coord_chelsa_combo_new.csv")
+write.csv(coord.chelsa.combo.c, "datasets/climate_data/coord_chelsa_combo_new.csv")
 
 # THEME ----
 
@@ -244,6 +244,9 @@ ggsave(panel_model_pred, file = "output/figures/panel_model_pred.png", width = 1
 # To display interaction: categorise precipitation 'dry', 'moist', 'wet': 
 # Plot 3 lines in plot with temp on the x and biomass on y and points coloured by moisture level
 range(coord.chelsa.combo.c$CH_PrecipMeanSummer)
+coord.chelsa.combo.c$CH_TempMeanSummer <-scale(coord.chelsa.combo.c$CH_TempMeanSummer, center = TRUE, scale = TRUE)
+coord.chelsa.combo.c$CH_PrecipMeanSummer <-scale(coord.chelsa.combo.c$CH_PrecipMeanSummer, center = TRUE, scale = TRUE)
+
 quantile(coord.chelsa.combo.c$CH_PrecipMeanSummer)
 #0%         25%         50%         75%        100% 
 #-2.21492909 -0.70752311 -0.03756489  0.54864855  4.14967397 
@@ -280,18 +283,20 @@ model_5_preds <- cbind(coord.chelsa.combo.d, predictions_5)
 
 # Plot the predictions 
 (predictions_interaction<- (ggplot(model_5_preds, aes(CH_TempMeanSummer, fit, group = moisture)) + 
-                                   geom_point(aes(colour = moisture)) +
-                              scale_colour_manual(values = c("brown", "skyblue", "blue4"), name = "Moisture level")+
+                                   geom_point(aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size =0.1) +
+                              scale_colour_manual(values = c("brown", "green4", "blue4"), name = "Moisture level")+
                                    stat_smooth(method=lm, aes(colour = moisture))+
-                                   geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
-                                   geom_line(aes(y=upr), color = "red", linetype = "dashed")+
-                                   labs(x = "\nMean summer temperature (indexed) ", y = "Shrub biomass (kg/m2)\n")+ 
-                                   theme_shrub()))
+                                  geom_line(aes(y=lwr,  color = moisture), linetype = "dashed")+
+                                   geom_line(aes(y=upr, color = moisture), linetype = "dashed")+
+                                   labs(x = "\nMean summer temperature (°C) ", y = "Shrub biomass (kg/m2)\n")+ 
+                                   theme_shrub()+ theme(legend.text = element_text(size= 12),
+                                                        legend.title = element_text(size=15))))
 
 ggsave(filename = "output/figures/predictions_interaction.png")
 
 # this BELOW is to plot scatter with interaction: Need NOT standardised climate variables
 # Extracting model predictions 
+str(coord.chelsa.combo.d)
 pred_model_5a <- ggpredict(model_5a, terms = c("CH_TempMeanSummer", "moisture"))  # this gives overall predictions for the model
 #write.csv(pred_model_5a, file = "datasets/pred_model_5a.csv")
 
@@ -303,8 +308,8 @@ coord.chelsa.combo.d$moisture <- factor(coord.chelsa.combo.d$moisture,levels=c("
 
 
 # Plot the predictions 
-(biomass_vs_moist_temp<- (ggplot(pred_model_5a) + 
-                         geom_line(aes(x = x, y = predicted, group = group, colour = group)) +          # slope
+(biomass_vs_moist_temp<- (ggplot(predictions_5) + 
+                         geom_line(aes(x = fit, y = predicted, group = group, colour = group)) +          # slope
                          geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error, 
                                      fill = group), alpha = 0.5) +
                            scale_fill_manual(values = c("brown", "skyblue", "blue4"), name = "Moisture level")+
@@ -443,7 +448,7 @@ ggsave(panel_temp_precip_coords, file="output/figures/panel_temp_precip_coords.p
 #  top = panel_title  # Adding panel title
 
 
-## MODEL with ALL -----
+## MODELS with ALL -----
 model_all <- lm(biomass ~ CH_PrecipMeanSummer + CH_TempMeanSummer + latitude + longitude, data = coord.chelsa.combo.c)
 summary(model_all) # Adjusted R-squared:  0.2819 
 

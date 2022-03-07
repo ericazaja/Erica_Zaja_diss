@@ -170,11 +170,11 @@ theme_shrub <- function(){ theme(legend.position = "right",
 ### PART 2: MODELLING ----
 
 # Loading the random sample dataset
-# r3_rsample_00 <- read_csv("datasets/berner_data/r3_rsample_00.csv")
+r3_rsample_00 <- read_csv("datasets/berner_data/r3_rsample_00.csv")
 
 hist(r3_rsample_00$biomass) # distribution 
 str(r3_rsample_00) # lat and long and biomass numeric
-
+range(r3_rsample_00$biomass)
 # Standardising lat and long (explanatory variables)
 r3_rsample_00$latitude <- scale(r3_rsample_00$latitude, center = TRUE, scale = TRUE)
 r3_rsample_00$longitude <- scale(r3_rsample_00$longitude, center = TRUE, scale = TRUE)
@@ -214,10 +214,12 @@ model_1_lat <- cbind(r3_rsample_00, predictions_1)
 
 # Plot the predictions 
 (predictions_biomass_vs_lat <- (ggplot(model_1_lat, aes(latitude, fit)) + 
-                      geom_point() +
-                      stat_smooth(method=lm)+
-                      geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
-                      geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+                      geom_point(data = model_1_lat, aes(x = latitude, y = biomass), colour = "green4", size = 0.1) +
+                      stat_smooth(method=lm, colour = "black")+
+                      geom_line(aes(y=lwr),  color = "grey", linetype = "dashed")+
+                      geom_line(aes(y=upr), color = "grey", linetype = "dashed")+
+                        annotate(geom = "text", x = 2, y = 1200, label="(a)", size = 10) +
+                        annotate(geom = "text", x = 1, y = 900, label="slope =  -49.448*** ", size = 6) +
         labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n")+ 
                    theme_shrub()))
 
@@ -260,12 +262,15 @@ model_2_long <- cbind(r3_rsample_00, predictions_2)
 
 # Plot the predictions 
 (predictions_biomass_vs_long <- (ggplot(model_2_long, aes(longitude, fit)) + 
-                      geom_point() +
-                      stat_smooth(method=lm)+
-                      geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
-                      geom_line(aes(y=upr), color = "red", linetype = "dashed")+
-                      labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n")+ 
-                      theme_shrub()))
+                      geom_point(data = model_2_long, aes(x= longitude, y = biomass), colour = "green4", size = 0.1) +
+                      stat_smooth(method=lm, colour = "black")+
+                      geom_line(aes(y=lwr),  color = "grey", linetype = "dashed")+
+                      geom_line(aes(y=upr), color = "grey", linetype = "dashed")+
+                        annotate(geom = "text", x = 2, y = 1200, label="(b)", size = 10) +
+                        annotate(geom = "text", x = 1, y = 900, label="slope = -18.858*** ", size = 6) +
+                        labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n")+ 
+                      theme_shrub())) 
+                        
 
 
 ggsave(file = "output/figures/predictions_biomass_vs_long.png")
@@ -291,17 +296,6 @@ ggsave(panel_latlong_predictions, file = "output/figures/panel_latlong_predictio
 model_2a <- lm(biomass~longitude*latitude, data = r3_rsample_00)
 summary(model_2a)
 # F-statistic:  1058 on 3 and 9575 DF,  p-value: < 2.2e-16
-
-(latlong_interaction <- ggplot(r3_rsample_00, aes(x = longitude, y = biomass, size = latitude))+
-  geom_point()+
-  labs(x = 'Latitude', y = 'Shrub biomass')+
-  scale_size_continuous(guide = FALSE)+
-  #geom_abline(aes(intercept=33.965, slope=-4.3985, linetype='-1SD Gear'))+
-  #geom_abline(aes(intercept=38.1208, slope=-5.854, linetype='Mean Gear'))+
-  #geom_abline(aes(intercept=42.2767, slope=-7.3095, linetype='+1SD Gear'))+
-  #scale_linetype_manual(values=c('dotted','dashed','solid'),
-                       # breaks=c('-1SD Gear','Mean Gear','+1SD Gear'),name='Simple\nSlope')+
-  theme_shrub())
 
 # BIOMASS LEVELS ----
 
