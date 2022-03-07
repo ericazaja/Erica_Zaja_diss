@@ -84,7 +84,7 @@ unique(ITEX_shrubs_mean_trim$YEAR)
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean_trim %>% mutate(cover_prop = mean_cover/100)
   hist(ITEX_shrubs_mean_trim$mean_cover)
 # mixed effect model with plot and year as random effects
-model_6 <- lmer(mean_cover ~ YEAR + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
+model_6 <- lmer(mean_cover ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6)
 
 # Checking model 6 assumptions 

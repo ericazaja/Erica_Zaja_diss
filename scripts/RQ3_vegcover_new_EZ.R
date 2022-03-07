@@ -440,7 +440,7 @@ ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup)
 # Model 11 ----
 # F.group fixed 
 # mixed model with functional group as fixed effect
-lmer_all <- lmer(mean_cover~YEAR*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+lmer_all <- lmer(mean_cover~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all)
 plot(lmer_all)
 qqnorm(resid(lmer_all))
@@ -502,7 +502,8 @@ predict <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"), type = "re")
                        geom_point(size = 0.5) +
                        geom_smooth(method = "lm") + 
                     facet_wrap(~FuncGroup, scales = "free_y") +
-                       scale_x_continuous(breaks=1997:2009)+
+                       scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
+                       scale_colour_manual(values = c("green4", "red", "red4", "brown", "blue4"))+
                        labs(y = "Mean vegetation cover\n", x = "\nYear") +
                        theme_shrub() +
                        theme(axis.text.x  = element_text(vjust=0.5, size=10, angle= 45, colour = "black"))))
@@ -511,15 +512,21 @@ predict <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"), type = "re")
 ggsave(file = "output/figures/scatter_fgroups.png")
 
 # Model with random slopes per f group
-lmer_fgroup_rand <- lmer(mean_cover~YEAR + (1+YEAR|FuncGroup) + (1|YEAR), data = ANWR_veg_fg_trim)
+lmer_fgroup_rand <- lmer(mean_cover~I(YEAR-1995) + (1+I(YEAR-1995)|FuncGroup), data = ANWR_veg_fg_trim)
 summary(lmer_fgroup_rand) # doesnt converge
 head(ANWR_veg_fg_trim)
+
+stargazer(lmer_fgroup_rand, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+
 predictions_fgroup_slopes <- ggpredict(lmer_fgroup_rand , terms = c("YEAR", "FuncGroup"), type = "re")
 
 (fgroup_rand_slopes <- ggplot(predictions_fgroup_slopes, aes(x = x, y = predicted, colour = group)) +
       stat_smooth(method = "lm", se = FALSE)  +
-      scale_y_continuous(limits = c(0, 30)) +
-      scale_x_continuous(breaks=1997:2009)+
+      #scale_y_continuous(limits = c(0, 30)) +
+     # scale_x_continuous(breaks=1997:2009)+
       theme(legend.position = "bottom") +
       labs(x = "\nYear", y = "Mean shrub genus cover (%)\n")+
       theme_shrub()+ 

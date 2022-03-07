@@ -197,8 +197,8 @@ hist(prop_greening_plots$prop_late)# not normal
 # 1. EARLY GREENING  -----
 (early_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_early)) +
     geom_point(size = 3, colour = "green4") +
-    geom_smooth(method = "lm", colour = "black")+
-   scale_x_continuous(breaks=1994:2019)+
+    geom_smooth(method = "lm", colour = "black",  fill ="green4")+
+   scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
    annotate(geom = "text", x = 2020, y = 1, label="(a)", size = 10) +
     labs(x = "\nYear", y = "Proportion of early greening plots\n") +
          #title = "Proportion of early greening plots increasing\n") +
@@ -208,13 +208,15 @@ hist(prop_greening_plots$prop_late)# not normal
 
 ggsave(file = "output/figures/early_greening_plots.png")
 
+unique(prop_greening_plots$year)
 # Model ----
-lm_early <- lm(prop_early~ year, data = prop_greening_plots) 
+lm_early <- lm(prop_early~ I(year-1995), data = prop_greening_plots) 
 summary(lm_early) # not sig
 # F-statistic: 1.064 on 1 and 24 DF,  p-value: 0.3126
+plot(lm_early)
 
 # Generalised linear model family binomial 
-glm_early <- glm(prop_early ~ year, family = binomial, data = prop_greening_plots)
+glm_early <- glm(prop_early ~  I(year-1995), family = binomial, data = prop_greening_plots)
 summary(glm_early)
 
 plot(glm_early)
@@ -229,7 +231,8 @@ stargazer(glm_early, type = "text",
 # 2. LATE GREENING -----
 (late_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_late)) +
     geom_point(size = 3, colour = "green4") +
-    geom_smooth(method = "lm", colour = "black")+
+    geom_smooth(method = "lm", colour = "black", fill ="green4")+
+   scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
    annotate(geom = "text", x = 2020, y = 1, label="(b)", size = 10) +
    labs(x = "\nYear", y = "Proportion of late greening plots\n") +
    #title = "Proportion of early greening plots increasing\n") +
@@ -240,12 +243,12 @@ ggsave(file = "output/figures/late_greening_plots.png")
 
 # Model ----
 # simple lm
-lm_late <- lm(prop_late~ year, data = prop_greening_plots) 
+lm_late <- lm(prop_late~ I(year-1995), data = prop_greening_plots) 
 summary(lm_late) # not sig
 # F-statistic: 1.064 on 1 and 24 DF,  p-value: 0.3126
 
 # Generalised linear model family binomial 
-glm_late <- glm(prop_late ~ year, family = binomial, data = prop_greening_plots)
+glm_late <- glm(prop_late ~ I(year-1995), family = binomial, data = prop_greening_plots)
 summary(glm_late)
 
 stargazer(glm_late, type = "text",
@@ -266,7 +269,7 @@ phenology_green_trim$SiteSubsitePlotYear<- as.factor(as.character(phenology_gree
 str(phenology_green_trim)
 
 # lmer with study_area as random effect 
-lmer_green <- lmer(mean.doy ~ year + (1 |study_area), data = phenology_green_trim ) # doesnt converge
+lmer_green <- lmer(mean.doy ~ I(year-1995) + (1 |study_area), data = phenology_green_trim ) # doesnt converge
 summary(lmer_green)
 stargazer(lmer_green, type = "text",
           digits = 3,
@@ -320,7 +323,7 @@ ggsave(file = "outputs/figures/slopes_pred_lmer_green.png")
 ## ONLY QIKI significant  
 # Qikiqtaruk -----
 Qikiqtaruk <-  phenology_green_trim %>% filter (study_area == "Qikiqtaruk") 
-lmer_Qiki <- lmer(mean.doy ~ year + (1|year), data =Qikiqtaruk ) 
+lmer_Qiki <- lmer(mean.doy ~ I(year-1995) + (1|year), data =Qikiqtaruk ) 
 summary(lmer_Qiki)
 plot(lmer_Qiki)
 stargazer(lmer_Qiki, type = "text",
@@ -330,7 +333,7 @@ stargazer(lmer_Qiki, type = "text",
 (Qiki_DOY <- ggplot(Qikiqtaruk, aes(x = year, y =mean.doy)) +
     geom_point(size = 2, colour = "green4") +
     geom_smooth(method = "lm", colour = "black")+
-    scale_x_continuous(breaks=1994:2019)+
+    scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
     annotate(geom = "text", x = 2015, y = 190, label="(a)", size = 10) +
     annotate(geom = "text", x = 2005, y = 145, label="slope = -0.982** ", size = 6) +
     labs(x = "\nYear", y = "Mean greening DOY\n") +
