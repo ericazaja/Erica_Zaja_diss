@@ -144,12 +144,13 @@ hist(ITEX_shrubs_sp_trim$genus_cover)
 ITEX_shrubs_sp_trim$YEAR<- as.numeric(ITEX_shrubs_sp_trim$YEAR)
 str(ITEX_shrubs_sp_trim)
 
-(facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover, colour = GENUS))+
-                                 geom_point(size = 0.6) +
-                                 geom_smooth(method = "lm") + 
+(facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover))+
+                                 geom_point(size = 0.6, aes( colour = GENUS)) +
+                                 scale_colour_manual(values = c("green4", "green3", "red", "red4", "brown", "blue4", 'blue3' ))+
+                                 geom_smooth(method = lm, aes(colour = GENUS))+
+                                 #scale_fill_manual(values = c("green4", "green3", "red", "red4", "brown", "blue4", 'blue3' ))+ 
                                  facet_wrap(~ GENUS, scales = "free_y") +
                                  scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
-                                 scale_colour_manual(values = c("green4", "green3", "red", "red4", "brown", "blue4", 'blue3' ))+
                                  labs(y = "Mean cover (%) \n", x = "\nYear") +
                                  theme_shrub()+
                                  theme(axis.text.x  = element_text(vjust=0.5, size=10, angle= 45, colour = "black"))))

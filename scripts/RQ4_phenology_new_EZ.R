@@ -197,7 +197,7 @@ hist(prop_greening_plots$prop_late)# not normal
 # 1. EARLY GREENING  -----
 (early_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_early)) +
     geom_point(size = 3, colour = "green4") +
-    geom_smooth(method = "lm", colour = "black",  fill ="green4")+
+    geom_smooth(method = "lm", colour = "black",  fill ="yellow4")+
    scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
    annotate(geom = "text", x = 2020, y = 1, label="(a)", size = 10) +
     labs(x = "\nYear", y = "Proportion of early greening plots\n") +
@@ -231,7 +231,7 @@ stargazer(glm_early, type = "text",
 # 2. LATE GREENING -----
 (late_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_late)) +
     geom_point(size = 3, colour = "green4") +
-    geom_smooth(method = "lm", colour = "black", fill ="green4")+
+    geom_smooth(method = "lm", colour = "black", fill ="yellow4")+
    scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
    annotate(geom = "text", x = 2020, y = 1, label="(b)", size = 10) +
    labs(x = "\nYear", y = "Proportion of late greening plots\n") +
@@ -275,7 +275,8 @@ stargazer(lmer_green, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
-
+str(phenology_green_trim
+    )
 # Extracting model predictions 
 predictions_pheno <- ggpredict(lmer_green , terms = c("year", "study_area"), type = "re")
 (pheno_rand_slopes <- ggplot(predictions_pheno, aes(x = x, y = predicted, colour = group)) +
@@ -289,13 +290,12 @@ ggsave(filename = "output/figures/pheno_rand_slopes.png")
 # Plot the predictions 
 pred_lmer_green <- ggpredict(lmer_green , terms = c("year", "study_area"), type = "re")
 
-(greening_model <- (ggplot(pred_lmer_green, aes(x = x, y = predicted)) + 
-                             # slope
+(greening_model <- (ggplot(pred_lmer_green, aes(x = x, y = predicted), group=group) + 
                          #geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                            #           fill = "lightgrey", alpha = 0.5) +  # error band
-                      scale_x_continuous(breaks = 1994:2020)+
+                      #scale_x_continuous(breaks = 1994:2020)+
                          geom_point(data = phenology_green_trim,                      # adding the raw data 
-                                    aes(x = year, y = mean.doy,colour= study_area),  size = 0.5) + 
+                                    aes(x = year, y = mean.doy, colour= study_area),  size = 0.5) + 
                       stat_smooth(method = lm, color= "green4")+
                          labs(x = "\nYear", y = "Mean greening DOY\n")+ 
                              # title = "Mean greening DOY not changing\n") + 
@@ -304,7 +304,19 @@ pred_lmer_green <- ggpredict(lmer_green , terms = c("year", "study_area"), type 
                       
 
  ggsave(file = "output/figures/greening_model.png")
-
+ 
+ (all_sites_greening<- (ggplot(phenology_green_trim, aes(x = year, y = mean.doy)) +
+                       geom_point(size = 1, aes(colour = study_area))+
+                       scale_colour_manual(values = c("brown", "green4", "blue4", "yellow4"), name = "Study area"))+
+                       geom_smooth(method = lm, aes(colour= study_area, fill =study_area), show.legend = FALSE)+ 
+    # scale_fill_manual(values = c("brown", "green4", "blue4", "yellow4"))+
+     scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
+     labs(x = "\nYear", y = "Mean greening DOY\n")+ 
+                       theme_shrub() +  theme(axis.text.x = element_text(size= 10, angle = 45)
+                                              ))
+ 
+ ggsave(file = "output/figures/all_sites_greening.png")
+ 
 # I might want random slopes/intercepts?
 (slopes_pred_lmer_green <- ggplot(pred_lmer_green, aes(x = x, y = predicted, colour = group)) +
     stat_smooth(method = "lm", se = FALSE)  +
@@ -313,11 +325,6 @@ pred_lmer_green <- ggpredict(lmer_green , terms = c("year", "study_area"), type 
 
 ggsave(file = "outputs/figures/slopes_pred_lmer_green.png")
 
-(years_count <- ggplot(prop_greening_plots) +
-    geom_bar(aes(x = year, y = prop, colour = greening_type, fill= greening_type),
-             stat = "identity", binwidth = 3) +
-    labs(x = "greening type (count)", y = "proportion") +
-    theme_shrub())
 
 # Separate models per study area ----
 ## ONLY QIKI significant  
@@ -332,7 +339,7 @@ stargazer(lmer_Qiki, type = "text",
           digit.separator = "") # Mean DOY does decrease in Qiki
 (Qiki_DOY <- ggplot(Qikiqtaruk, aes(x = year, y =mean.doy)) +
     geom_point(size = 2, colour = "green4") +
-    geom_smooth(method = "lm", colour = "black")+
+    geom_smooth(method = "lm", colour = "black", fill = "yellow4")+
     scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
     annotate(geom = "text", x = 2015, y = 190, label="(a)", size = 10) +
     annotate(geom = "text", x = 2005, y = 145, label="slope = -0.982** ", size = 6) +
