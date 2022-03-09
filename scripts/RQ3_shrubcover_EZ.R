@@ -16,6 +16,7 @@ library(lme4)
 library(ggeffects)
 library(sjPlot)  # to visualise model outputs
 library(stargazer)
+library(blmeco)
 
 # LOADING DATA ----
 
@@ -84,13 +85,14 @@ unique(ITEX_shrubs_mean_trim$YEAR)
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean_trim %>% mutate(cover_prop = mean_cover/100)
   hist(ITEX_shrubs_mean_trim$mean_cover)
 # mixed effect model with plot and year as random effects
-model_6 <- lmer(mean_cover ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
+model_6 <- glmer.nb(mean_cover ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6)
 
 # Checking model 6 assumptions 
 plot(model_6)
 qqnorm(resid(model_6))
 qqline(resid(model_6))  # points fall nicely onto the line - good!
+dispersion_glmer(model_6) #0.9665275
 
 # Output table model 6 
 stargazer(model_6, type = "text",
@@ -141,7 +143,7 @@ ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>%
 
 ITEX_shrubs_sp_trim$GENUS <- as.factor(as.character(ITEX_shrubs_sp_trim$GENUS ))
 hist(ITEX_shrubs_sp_trim$genus_cover)
-ITEX_shrubs_sp_trim$YEAR<- as.numeric(ITEX_shrubs_sp_trim$YEAR)
+ITEX_shrubs_sp_trim$YEAR <- as.numeric(ITEX_shrubs_sp_trim$YEAR)
 str(ITEX_shrubs_sp_trim)
 
 (facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover))+
@@ -161,14 +163,23 @@ ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 # Model ----
 
 # mixed effect model with year as random effects
-lmer_shrub_sp <- lmer(genus_cover~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp <- glmer.nb(genus_cover~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp)
+
+str(ITEX_shrubs_sp_trim)
 
 print(lmer_shrub_sp, correlation=TRUE)
 stargazer(lmer_shrub_sp, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "") # DRYAS significant
+
+# Output table model 7 
+stargazer(lmer_shrub_sp,
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "", 
+          type = "html", out = "output/tables/lmer_shrub_sp.html")
 
 # Extracting model predictions 
 pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"))  # this gives overall predictions for the model
@@ -181,6 +192,9 @@ str(ITEX_shrub_sp)
 plot(lmer_shrub_sp)
 qqnorm(resid(lmer_shrub_sp))
 qqline(resid(lmer_shrub_sp)) 
+dispersion_glmer(lmer_shrub_sp) #1.019987
+
+
 
 # Plot the predictions 
 (plot_model_shrub_sp <- (ggplot(pred_model_shrub_sp) + 
@@ -193,8 +207,6 @@ qqline(resid(lmer_shrub_sp))
                                             title = "Shrub species cover (%) in the ANWR") + 
                                        theme_shrub())))
 # wrong
-
-plot(lmer_shrub_sp)
 
 # trying diff graph
 ITEX_shrubs_sp_trim$Predicted <- predict(lmer_shrub_sp, ITEX_shrubs_sp_trim)
@@ -226,7 +238,7 @@ predict_sp <- ggpredict(lmer_shrub_sp , terms = c("YEAR", "GENUS"), type = "re")
     labs(x = "\nYear", y = "Predicted mean % cover\n"))
 
 # Model with random slopes per genus
-lmer_shrub_sp_rand <- lmer(genus_cover~YEAR + (1+YEAR|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_rand <- lmer(genus_cover~YEAR+ (1+YEAR|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp_rand )
 plot(lmer_shrub_sp_rand)
 qqnorm(resid(lmer_shrub_sp_rand))
@@ -235,9 +247,9 @@ qqline(resid(lmer_shrub_sp_rand))
 predictions_rs_ri <- ggpredict(lmer_shrub_sp_rand , terms = c("YEAR", "GENUS"), type = "re")
 (genus_rand_slopes <- ggplot(predictions_rs_ri, aes(x = x, y = predicted, colour = group)) +
     stat_smooth(method = "lm", se = FALSE)  +
-    scale_y_continuous(limits = c(0, 30)) +
+    scale_colour_manual(values = c("green4", "green3", "red", "red4", "brown", "blue4", 'blue3'), name = "Shrub genus")+
     scale_x_continuous(breaks=1997:2009)+
-    theme(legend.position = "bottom") +
+  theme(legend.position = "bottom") +
     labs(x = "\nYear", y = "Mean shrub genus cover (%)\n")+
     theme_shrub()+ 
     theme(axis.text.x = element_text(angle = 45)))
@@ -255,7 +267,7 @@ ggsave(file = "output/figures/genus_rand_slopes.png")
 
 # Salix sp.
 Salix <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Salix") 
-salix_model <- lmer(genus_cover ~ I(YEAR-1995)+ (1|YEAR), data = Salix)
+salix_model <- glmer.nb(genus_cover ~ I(YEAR-1995)+ (1|YEAR), data = Salix)
 summary(salix_model) # not sig
 stargazer(salix_model, type = "text",
           digits = 3,
@@ -270,22 +282,28 @@ stargazer(salix_model, type = "text",
 
 # Dryas sp.
 Dryas <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Dryas") 
-dryas_model <- lmer(genus_cover ~ I(YEAR-1995) + (1|YEAR), data = Dryas)
+dryas_model <- glmer.nb(genus_cover ~ I(YEAR-1995) + (1|YEAR), data = Dryas)
 summary(dryas_model)# not sig
 
 stargazer(dryas_model, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
-(dryas_plot <- ggplot(Dryas, aes(x = YEAR, y = genus_cover)) +
-    geom_point()+
-    stat_smooth(method = "lm")  +
-    theme(legend.position = "bottom") +
-    labs(x = "\nYear", y = "Genus % cover\n"))
 
+(dryas_plot <- ggplot(Dryas, aes(x = YEAR, y = genus_cover)) +
+    geom_point(colour = "green4", size = 1)+
+    stat_smooth(method = "lm", colour = 'black', fill = 'yellow4')  +
+    scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
+    labs(x = "\nYear", y = "Dryas % cover\n")+ 
+    theme_shrub()+
+    theme(legend.position = "bottom") +
+    theme(axis.text.x = element_text(angle = 45)))
+
+  
 # Vaccinium sp.
 Vaccinium <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Vaccinium") 
-vacc_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Vaccinium)
+hist(Vaccinium$genus_cover)
+vacc_model <- glmer.nb(genus_cover ~ YEAR + (1|YEAR), data = Vaccinium)
 summary(vacc_model)# not sig
 (vacc_plot <- ggplot(Vaccinium, aes(x = YEAR, y = genus_cover)) +
     geom_point()+
@@ -295,8 +313,8 @@ summary(vacc_model)# not sig
 
 # Arctostaphylos sp.
 Arctostaphylos <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Arctostaphylos") 
-arcto_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Arctostaphylos)
-summary(vacc_model)# not sig
+arcto_model <- glmer.nb(genus_cover ~ YEAR + (1|YEAR), data = Arctostaphylos)
+summary(arcto_model)# not sig
 (arcto_plot <- ggplot(Arctostaphylos, aes(x = YEAR, y = genus_cover)) +
     geom_point()+
     stat_smooth(method = "lm")  +
@@ -305,7 +323,7 @@ summary(vacc_model)# not sig
 
 # Betula sp.
 Betula <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Betula") 
-betula_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Betula)
+betula_model <- glmer.nb(genus_cover ~ YEAR + (1|YEAR), data = Betula)
 summary(betula_model)# not sig
 (betula_plot <- ggplot(Betula, aes(x = YEAR, y = genus_cover)) +
     geom_point()+
@@ -315,7 +333,7 @@ summary(betula_model)# not sig
 
 # Cassiope sp.
 Cassiope<-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Cassiope") 
-cassiope_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Cassiope)
+cassiope_model <- glmer.nb(genus_cover ~ YEAR + (1|YEAR), data = Cassiope)
 summary(cassiope_model)# not sig
 (cassiope_plot <- ggplot(Cassiope, aes(x = YEAR, y = genus_cover)) +
     geom_point()+
@@ -325,7 +343,7 @@ summary(cassiope_model)# not sig
 
 # Ledum sp.
 Ledum <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Ledum") 
-ledum_model <- lmer(genus_cover ~ YEAR + (1|YEAR), data = Ledum)
+ledum_model <- glmer.nb(genus_cover ~ YEAR + (1|YEAR), data = Ledum)
 summary(ledum_model)# not sig
 (ledum_plot <- ggplot(Ledum, aes(x = YEAR, y = genus_cover)) +
     geom_point()+
@@ -334,7 +352,7 @@ summary(ledum_model)# not sig
     labs(x = "\nYear", y = "Genus % cover\n"))
 
 # Vary genus name to visualise distributions
-hist(Dryas$genus_cover)
+hist(Salix$genus_cover)
 
 
 

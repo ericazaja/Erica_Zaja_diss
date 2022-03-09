@@ -335,7 +335,7 @@ r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels=c
                arrow = arrow(length = unit(0.07, "inch")), size = 0.7,
                color = "grey30", curvature = 0.3) +
     labs(x = "\nShrub biomass (kg/m2)", y = "Frequency\n") +
-    scale_fill_manual(name = "Biomass level", values=c( "tan", "yellow", "green4")) +
+    scale_fill_manual(name = "Biomass level", values=c( "tan", "yellow3", "green4")) +
     theme(legend.text = element_text(size=12),
           legend.title = element_text(size=15)) +
     theme_shrub())
@@ -360,7 +360,7 @@ stargazer(level_rs, type = "text",
 predict_levels <- ggpredict(level_rs , terms = c("latitude", "biomass_level"), type = "re") 
 (levels_rand_slopes <- ggplot(predict_levels, aes(x = x, y = predicted, colour = group)) +
     stat_smooth(method = "lm", se = FALSE)  +
-    scale_colour_manual(values=c("tan", "yellow", "green4"), name = "Biomass level") + 
+    scale_colour_manual(values=c("tan", "yellow3", "green4"), name = "Biomass level") + 
     theme(legend.position = "bottom") +
     annotate(geom = "text", x = 2, y = 510, label="(a)", size = 10) +
     labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n")+
@@ -386,7 +386,7 @@ stargazer(level_rs_long, type = "text",
 predict_levels_long <- ggpredict(level_rs_long , terms = c("longitude", "biomass_level"), type = "re") 
 (levels_rand_slopes_long <- ggplot(predict_levels_long, aes(x = x, y = predicted, colour = group)) +
     stat_smooth(method = "lm", se = FALSE)  +
-    scale_colour_manual(values=c("tan", "yellow", "green4"), name = "Biomass level") + 
+    scale_colour_manual(values=c("tan", "yellow3", "green4"), name = "Biomass level") + 
     theme(legend.position = "bottom") +
     labs(x = "\nLongitude", y = "Shrub biomass (kg/m2) \n")+
     annotate(geom = "text", x = 2, y = 510, label="(b)", size = 10) +

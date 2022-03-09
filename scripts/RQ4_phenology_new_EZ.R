@@ -209,6 +209,7 @@ hist(prop_greening_plots$prop_late)# not normal
 ggsave(file = "output/figures/early_greening_plots.png")
 
 unique(prop_greening_plots$year)
+
 # Model ----
 lm_early <- lm(prop_early~ I(year-1995), data = prop_greening_plots) 
 summary(lm_early) # not sig
@@ -341,7 +342,7 @@ stargazer(lmer_Qiki, type = "text",
     geom_point(size = 2, colour = "green4") +
     geom_smooth(method = "lm", colour = "black", fill = "yellow4")+
     scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
-    annotate(geom = "text", x = 2015, y = 190, label="(a)", size = 10) +
+    #annotate(geom = "text", x = 2015, y = 190, label="(a)", size = 10) +
     annotate(geom = "text", x = 2005, y = 145, label="slope = -0.982** ", size = 6) +
     labs(x = "\nYear", y = "Mean greening DOY\n") +
     #title = "Proportion of early greening plots increasing\n") +

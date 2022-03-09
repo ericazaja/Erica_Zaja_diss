@@ -135,9 +135,10 @@ ITEX_gram_mean_trim <- ITEX_gram_mean %>%
                           theme(axis.text.x = element_text(angle = 45))))
 
 # Model 7 ----
+hist(ITEX_gram_mean_trim$mean_cover)
 # Graminoid cover over time 
 # mixed effect model with plot and year as random effects
-model_7 <- lmer(mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
+model_7 <- glmer.nb(mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
 summary(model_7)
 # total variance: 19.36 + 59.00 =78.36
 # variance for plot =  19.36
@@ -415,11 +416,13 @@ unique(ANWR_veg$FuncGroup)  # checking I have all functional groups
 (hist_all_veg <- ANWR_veg %>%
       ggplot(aes(x = RelCover, fill = FuncGroup)) +
       geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 30) +
-      # geom_vline(aes(xintercept = mean(RelCover)),            
-                 # colour = "red", linetype = "dashed", size = 1) +
-      labs(x = "\nPercentage cover", y = "Frequency\n") +
-      scale_fill_manual(values=c( "green4", "blue", "yellow", "purple", "red"), name = "Functional group") +
-      theme_shrub())
+      geom_vline(aes(xintercept = mean(RelCover)),            
+                 colour = "red", linetype = "dashed", size = 1) +
+      labs(x = "\nCover (%)", y = "Frequency\n") +
+      scale_fill_manual(values=c( "brown", "green4", "blue3", "yellow3", "red2"), name = "Functional group")+
+      theme_shrub() +
+      theme(legend.text = element_text(size=12),
+            legend.title = element_text(size=15)) )
 
 ggsave(file = "output/figures/hist_all_veg.png")
 
@@ -440,17 +443,19 @@ ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup)
 # Model 11 ----
 # F.group fixed 
 # mixed model with functional group as fixed effect
-lmer_all <- lmer(mean_cover~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+lmer_all <- glmer.nb(mean_cover~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all)
 plot(lmer_all)
 qqnorm(resid(lmer_all))
 qqline(resid(lmer_all))  
+dispersion_glmer(lmer_all)# 0.9356298
 
 # Output table model 7 
-stargazer(lmer_all, type = "text",
+stargazer(lmer_all,
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
+          digit.separator = "", 
+          type = "html", out = "output/tables/lmer_all.html")
 
 # Extracting model predictions 
 pred_lmer_all_1 <- ggpredict(lmer_all, terms = c("YEAR"))
