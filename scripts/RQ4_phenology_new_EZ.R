@@ -211,16 +211,14 @@ ggsave(file = "output/figures/early_greening_plots.png")
 unique(prop_greening_plots$year)
 
 # Model ----
-lm_early <- lm(prop_early~ I(year-1995), data = prop_greening_plots) 
-summary(lm_early) # not sig
-# F-statistic: 1.064 on 1 and 24 DF,  p-value: 0.3126
-plot(lm_early)
-
-# Generalised linear model family binomial 
-glm_early <- glm(prop_early ~  I(year-1995), family = binomial, data = prop_greening_plots)
+# Generalised linear mixed model model family binomial 
+glm_early <- glmer(prop_early ~  I(year-1995) + (1|year), family = binomial, data = prop_greening_plots)
 summary(glm_early)
 
 plot(glm_early)
+dispersion_glmer(glm_early)# 0.7259031
+qqnorm(resid(glm_early))
+qqline(resid(glm_early))
 
 stargazer(glm_early, type = "text",
           digits = 3,
@@ -243,14 +241,13 @@ stargazer(glm_early, type = "text",
 ggsave(file = "output/figures/late_greening_plots.png")
 
 # Model ----
-# simple lm
-lm_late <- lm(prop_late~ I(year-1995), data = prop_greening_plots) 
-summary(lm_late) # not sig
-# F-statistic: 1.064 on 1 and 24 DF,  p-value: 0.3126
-
-# Generalised linear model family binomial 
-glm_late <- glm(prop_late ~ I(year-1995), family = binomial, data = prop_greening_plots)
+# Generalised linear mixed model family binomial 
+glm_late <- glmer(prop_late ~ I(year-1995) + (1|year), family = binomial, data = prop_greening_plots)
 summary(glm_late)
+plot(glm_late)
+dispersion_glmer(glm_late)# 0.7259028
+qqnorm(resid(glm_late))
+qqline(resid(glm_late))
 
 stargazer(glm_late, type = "text",
           digits = 3,
@@ -264,20 +261,25 @@ panel_pheno <- grid.arrange(arrangeGrob(early_greening_plots, late_greening_plot
 
 ggsave(panel_pheno, file="output/figures/panel_pheno.png", height = 10, width = 20)
 
-# Linear mixed model ----
+# 3. MEAN DOY ----
+# Linear mixed model 
 phenology_green_trim$study_area<- as.factor(as.character(phenology_green_trim$study_area))
 phenology_green_trim$SiteSubsitePlotYear<- as.factor(as.character(phenology_green_trim$SiteSubsitePlotYear))
 str(phenology_green_trim)
 
 # lmer with study_area as random effect 
-lmer_green <- lmer(mean.doy ~ I(year-1995) + (1 |study_area), data = phenology_green_trim ) # doesnt converge
+hist(phenology_green_trim$mean.doy) # normal distribution
+lmer_green <- glmer(mean.doy ~ I(year-1995) + (1 |study_area) + (1|year), data = phenology_green_trim ) # doesnt converge
 summary(lmer_green)
 stargazer(lmer_green, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
-str(phenology_green_trim
-    )
+plot(lmer_green)
+dispersion_glmer(lmer_green)# 6.780939
+qqnorm(resid(glm_late))
+qqline(resid(glm_late))
+
 # Extracting model predictions 
 predictions_pheno <- ggpredict(lmer_green , terms = c("year", "study_area"), type = "re")
 (pheno_rand_slopes <- ggplot(predictions_pheno, aes(x = x, y = predicted, colour = group)) +
