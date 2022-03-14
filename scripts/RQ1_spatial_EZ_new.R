@@ -296,6 +296,11 @@ ggsave(panel_latlong_predictions, file = "output/figures/panel_latlong_predictio
 model_2a <- lm(biomass~longitude*latitude, data = r3_rsample_00)
 summary(model_2a)
 # F-statistic:  1058 on 3 and 9575 DF,  p-value: < 2.2e-16
+cor.test( r3_rsample_00$latitude,r3_rsample_00$longitude, method = "pearson")
+# t = -20.437, df = 9577, p-value < 2.2e-16 
+# lat and long are correlated 
+# doesnt mean much. As latitude increases longitude decreases
+
 
 # BIOMASS LEVELS ----
 

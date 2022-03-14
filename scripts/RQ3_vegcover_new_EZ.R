@@ -138,7 +138,7 @@ ITEX_gram_mean_trim <- ITEX_gram_mean %>%
 hist(ITEX_gram_mean_trim$mean_cover)
 # Graminoid cover over time 
 # mixed effect model with plot and year as random effects
-model_7 <- glmer.nb(mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
+model_7 <- glmer.nb(mean_cover~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
 summary(model_7)
 # total variance: 19.36 + 59.00 =78.36
 # variance for plot =  19.36
@@ -230,7 +230,7 @@ ITEX_forb_mean_trim <- ITEX_forb_mean %>%
 # Model 8 ----
 # Forb cover over time 
 # mixed effect model with plot and year as random effects
-model_8 <- lmer(mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_forb_mean_trim)
+model_8 <- glmer.nb(mean_cover~I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_forb_mean_trim)
 summary(model_8)
 # total variance: 5.687 + 13.076   =18.763
 # variance for plot =   5.687 
@@ -294,7 +294,7 @@ ITEX_moss_mean_trim <- ITEX_moss_mean %>%
 # Model 9 ----
 # Moss cover over time
 # mixed effect model with plot and year as random effects
-model_9 <- lmer(mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_moss_mean_trim)
+model_9 <- glmer.nb(mean_cover~I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_moss_mean_trim)
 summary(model_9)
 # total variance: 15.09    + 61.07   =76.16
 # variance for plot =   15.09
@@ -360,7 +360,7 @@ ITEX_lich_mean_trim <- ITEX_lich_mean %>%
 # Model 10 ----
 # Lichen cover over time 
 # mixed effect model with plot and year as random effects
-model_10 <- lmer(mean_cover~YEAR + (1|PLOT) + (1|YEAR), data = ITEX_lich_mean_trim)
+model_10 <- glmer.nb(mean_cover~I(YEAR-1995)+ (1|PLOT) + (1|YEAR), data = ITEX_lich_mean_trim)
 summary(model_10)
 # total variance: 99.37     + 260.29  = 359.66
 # variance for plot =   99.37
@@ -443,16 +443,30 @@ hist(ANWR_veg_fg_trim$mean_cover)
 
 # Model 11 ----
 # F.group fixed 
+lmer_all_2 <- glmer.nb(mean_cover~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+summary(lmer_all_2)
+
 # mixed model with functional group as fixed effect
 lmer_all <- glmer.nb(mean_cover~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all)
 plot(lmer_all)
 qqnorm(resid(lmer_all))
 qqline(resid(lmer_all))  
-dispersion_glmer(lmer_all)# 0.9356298
+dispersion_glmer(lmer_all_2)# 0.9356298
 
+lmer_all_2<- glmer(mean_cover~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), family = poisson, data = ANWR_veg_fg_trim)
+summary(lmer_all_2)
+plot(lmer_all_2)
+qqnorm(resid(lmer_all_2))
+qqline(resid(lmer_all_2))  
+dispersion_glmer(lmer_all_2)# 1.477103
+
+stargazer(lmer_all_2,
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "", type= "text")
 # Output table model 7 
-stargazer(lmer_all,
+stargazer(lmer_all_2,
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "", 

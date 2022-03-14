@@ -83,16 +83,19 @@ ggsave(shrub_mean_change, file = "output/figures/shrub_mean_change.png")
 unique(ITEX_shrubs_mean_trim$YEAR)
 # Transform percentage cover to proportion (dividing by 100)
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean_trim %>% mutate(cover_prop = mean_cover/100)
-  hist(ITEX_shrubs_mean_trim$mean_cover)
+hist(ITEX_shrubs_mean_trim$mean_cover)
 # mixed effect model with plot and year as random effects
 model_6 <- glmer.nb(mean_cover ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6)
 
+model_6a <- glmer(mean_cover ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), family = poisson, data = ITEX_shrubs_mean_trim)
+summary(model_6a)
+
 # Checking model 6 assumptions 
-plot(model_6)
-qqnorm(resid(model_6))
-qqline(resid(model_6))  # points fall nicely onto the line - good!
-dispersion_glmer(model_6) #0.9665275
+plot(model_6a)
+qqnorm(resid(model_6a))
+qqline(resid(model_6a))  # points fall nicely onto the line - good!
+dispersion_glmer(model_6a) #0.9665275
 
 # Output table model 6 
 stargazer(model_6, type = "text",
@@ -163,19 +166,21 @@ ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 # Model ----
 hist(ITEX_shrubs_sp_trim$genus_cover)
 
+lmer_shrub_sp_2 <- glmer.nb(genus_cover~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
+
 # mixed effect model with year as random effects
 lmer_shrub_sp <- glmer.nb(genus_cover~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
-summary(lmer_shrub_sp)
-dispersion_glmer(lmer_shrub_sp)
+summary(lmer_shrub_sp_2)
+dispersion_glmer(lmer_shrub_sp_2)
 str(ITEX_shrubs_sp_trim)
-plot(lmer_shrub_sp)
+plot(lmer_shrub_sp_2)
 
 qqnorm(resid(lmer_shrub_sp))
 qqline(resid(lmer_shrub_sp)) 
 
 
 print(lmer_shrub_sp, correlation=TRUE)
-stargazer(lmer_shrub_sp, type = "text",
+stargazer(lmer_shrub_sp_2, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "") # DRYAS significant
@@ -369,10 +374,12 @@ ITEX_shrubs_mean_trim$LAT <-scale(ITEX_shrubs_mean_trim$LAT , center = TRUE, sca
 ITEX_shrubs_mean_trim$LONG <-scale(ITEX_shrubs_mean_trim$LONG , center = TRUE, scale = TRUE)
 hist(ITEX_shrubs_mean_trim$mean_cover)
 # Shrub cover vs latitude 
-shrub_lat <- glm(mean_cover ~ LAT, data = ITEX_shrubs_mean_trim)
+shrub_lat <- glm(mean_cover ~ LAT, family = poisson, data = ITEX_shrubs_mean_trim)
 summary(shrub_lat)
 
-# F-statistic: 55.18 on 1 and 143 DF,  p-value: 9.125e-12***
+# Null deviance: 10098.6
+# Residual deviance:  7286.7 
+# goodness of fit = 10098.6-7286.7 = 2811.9
 # mean shrub cover decreases with lat (-4.4189***)
 
 plot(shrub_lat)
@@ -384,7 +391,7 @@ stargazer(shrub_lat, type = "text",
 
 (cover_lat_scatter <- (ggplot(ITEX_shrubs_mean_trim))+
     geom_point(aes(x = LAT, y = mean_cover), colour= "green4", size = 1) +
-    geom_smooth(aes(x = LAT, y = mean_cover),colour = "black", method = "lm") + 
+    geom_smooth(aes(x = LAT, y = mean_cover),colour = "black", method = "glm") + 
     labs(y = "Mean shrub % cover\n", x = "\nLatitude") +
     annotate(geom = "text", x = 1, y = 60, label="(a)", size = 10) +
     annotate(geom = "text", x = 0.5, y = 20, label="slope = -4.419*** ", size = 6) +
@@ -416,7 +423,7 @@ model_10_preds <- cbind(ITEX_shrubs_mean_trim, predictions_10)
 ggsave(file = "output/figures/plot_model_shrub_lat.png")
 
 # Shrub cover vs longitude
-shrub_long<- glm(mean_cover ~ LONG, data = ITEX_shrubs_mean_trim)
+shrub_long<- glm(mean_cover ~ LONG, family = poisson, data = ITEX_shrubs_mean_trim)
 summary(shrub_long)
 # F-statistic: 55.18 on 1 and 143 DF,  p-value: 9.123e-12***
 # -4.4189***
