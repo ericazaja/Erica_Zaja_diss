@@ -451,6 +451,7 @@ ggsave(panel_temp_precip_coords, file="output/figures/panel_temp_precip_coords.p
 
 #  top = panel_title  # Adding panel title
 
+hist(coord.chelsa.combo.c$biomass)
 
 ## MODELS with ALL -----
 model_all <- lm(biomass ~ CH_PrecipMeanSummer + CH_TempMeanSummer + latitude + longitude, data = coord.chelsa.combo.c)
@@ -474,7 +475,26 @@ summary(model_all_6) # Adjusted R-squared:  0.2806
 model_all_7<- lm(biomass ~ CH_PrecipMeanSummer + latitude*longitude, data = coord.chelsa.combo.c)
 summary(model_all_7) #Adjusted R-squared:  0.2555 
 
+model_all_8<- lm(biomass ~ CH_PrecipMeanSummer + latitude, data = coord.chelsa.combo.c)
+summary(model_all_8) #Adjusted R-squared:  0.1759 
 
+model_all_9<- lm(biomass ~ CH_PrecipMeanSummer + longitude, data = coord.chelsa.combo.c)
+summary(model_all_9) #Adjusted R-squared:  0.202 
+
+model_all_10<- lm(biomass ~ CH_TempMeanSummer + longitude, data = coord.chelsa.combo.c)
+summary(model_all_10) #Adjusted R-squared:  0.1343 
+
+model_all_11<- lm(biomass ~ CH_TempMeanSummer*longitude, data = coord.chelsa.combo.c)
+summary(model_all_11) # Adjusted R-squared:  0.1344 
+
+model_all_12<- lm(biomass ~ CH_TempMeanSummer*latitude, data = coord.chelsa.combo.c)
+summary(model_all_12) # Adjusted R-squared:  0.2107 
+
+model_all_13<- lm(biomass ~ CH_PrecipMeanSummer*longitude, data = coord.chelsa.combo.c)
+summary(model_all_13) # Adjusted R-squared:  0.2223 
+
+model_all_14<- lm(biomass ~ CH_PrecipMeanSummer*latitude, data = coord.chelsa.combo.c)
+summary(model_all_14) # Adjusted R-squared:  0.1817 
 
 
 

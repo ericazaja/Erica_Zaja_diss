@@ -439,6 +439,7 @@ ANWR_veg_fg_trim <- ANWR_veg_fg %>%
    distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
 
 ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup))
+hist(ANWR_veg_fg_trim$mean_cover)
 
 # Model 11 ----
 # F.group fixed 

@@ -269,14 +269,15 @@ str(phenology_green_trim)
 
 # lmer with study_area as random effect 
 hist(phenology_green_trim$mean.doy) # normal distribution
-lmer_green <- glmer(mean.doy ~ I(year-1995) + (1 |study_area) + (1|year), data = phenology_green_trim ) # doesnt converge
+lmer_green <- lmer(mean.doy ~ I(year-1995) + (1 |study_area) + (1|year), data = phenology_green_trim ) 
 summary(lmer_green)
+
 stargazer(lmer_green, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
+
 plot(lmer_green)
-dispersion_glmer(lmer_green)# 6.780939
 qqnorm(resid(glm_late))
 qqline(resid(glm_late))
 
@@ -333,6 +334,7 @@ ggsave(file = "outputs/figures/slopes_pred_lmer_green.png")
 ## ONLY QIKI significant  
 # Qikiqtaruk -----
 Qikiqtaruk <-  phenology_green_trim %>% filter (study_area == "Qikiqtaruk") 
+hist(Qikiqtaruk$mean.doy)
 lmer_Qiki <- lmer(mean.doy ~ I(year-1995) + (1|year), data =Qikiqtaruk ) 
 summary(lmer_Qiki)
 plot(lmer_Qiki)

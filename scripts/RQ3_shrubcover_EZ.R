@@ -161,12 +161,18 @@ dev.off()
 ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 
 # Model ----
+hist(ITEX_shrubs_sp_trim$genus_cover)
 
 # mixed effect model with year as random effects
 lmer_shrub_sp <- glmer.nb(genus_cover~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp)
-
+dispersion_glmer(lmer_shrub_sp)
 str(ITEX_shrubs_sp_trim)
+plot(lmer_shrub_sp)
+
+qqnorm(resid(lmer_shrub_sp))
+qqline(resid(lmer_shrub_sp)) 
+
 
 print(lmer_shrub_sp, correlation=TRUE)
 stargazer(lmer_shrub_sp, type = "text",
@@ -273,6 +279,7 @@ stargazer(salix_model, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
+hist(Salix$genus_cover)
 
 (salix_plot <- ggplot(Salix, aes(x = YEAR, y = genus_cover)) +
    geom_point()+
@@ -360,9 +367,9 @@ hist(Salix$genus_cover)
 # standardise lat and long
 ITEX_shrubs_mean_trim$LAT <-scale(ITEX_shrubs_mean_trim$LAT , center = TRUE, scale = TRUE)
 ITEX_shrubs_mean_trim$LONG <-scale(ITEX_shrubs_mean_trim$LONG , center = TRUE, scale = TRUE)
-
+hist(ITEX_shrubs_mean_trim$mean_cover)
 # Shrub cover vs latitude 
-shrub_lat <- lm(mean_cover ~ LAT, data = ITEX_shrubs_mean_trim)
+shrub_lat <- glm(mean_cover ~ LAT, data = ITEX_shrubs_mean_trim)
 summary(shrub_lat)
 
 # F-statistic: 55.18 on 1 and 143 DF,  p-value: 9.125e-12***
@@ -409,7 +416,7 @@ model_10_preds <- cbind(ITEX_shrubs_mean_trim, predictions_10)
 ggsave(file = "output/figures/plot_model_shrub_lat.png")
 
 # Shrub cover vs longitude
-shrub_long<- lm(mean_cover ~ LONG, data = ITEX_shrubs_mean_trim)
+shrub_long<- glm(mean_cover ~ LONG, data = ITEX_shrubs_mean_trim)
 summary(shrub_long)
 # F-statistic: 55.18 on 1 and 143 DF,  p-value: 9.123e-12***
 # -4.4189***
