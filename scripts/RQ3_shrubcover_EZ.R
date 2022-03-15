@@ -481,5 +481,16 @@ ggsave(panel_cover_latlong, file = "output/figures/panel_cover_latlong.png", hei
 
 ggsave(panel_cover_latlong_pred, file = "output/figures/panel_cover_latlong_pred.png", height = 10, width = 20)
 
+
+# LOGIC checks ----
+# checking correlations
+ITEX_shrubs_mean_trim_2 <- ITEX_shrubs_mean_trim %>% 
+  dplyr::select(LAT, LONG, YEAR, mean_cover)
+corrplot(cor(ITEX_shrubs_mean_trim_2))
+
+ITEX_shrubs_sp_trim_2 <- ITEX_shrubs_sp_trim %>% 
+  dplyr::select(YEAR, genus_cover)
+corrplot(cor(ITEX_shrubs_sp_trim_2))
+
 # END -----           
 

@@ -25,6 +25,9 @@ library(lme4)
 library(sjPlot)
 library(gridExtra)
 library(ggpubr)
+library(corrplot)
+library(Hmisc)
+
 
 # LOADING DATA ------
 temp <- raster("datasets/climate_data/CHELSA_bio10_10.tif") 
@@ -366,6 +369,14 @@ ggsave(file = "output/figures/biomass_vs_temp.png")
     theme_classic())
 
 # ASSUMPTION CHECK -----
+coord.chelsa.combo.e <- coord.chelsa.combo.c %>%
+  dplyr::select(CH_PrecipMeanSummer,CH_TempMeanSummer, longitude, latitude, biomass )
+
+# correlation heat map
+# only keeping significant relationships 
+corrplot(cor(coord.chelsa.combo.e, method="s"), sig.level = 0.05, insig = "blank")
+rcorr(as.matrix(coord.chelsa.combo.e))
+
 # standardise lat and long
 coord.chelsa.combo.c$latitude <-scale(coord.chelsa.combo.c$latitude, center = TRUE, scale = TRUE)
 coord.chelsa.combo.c$longitude<-scale(coord.chelsa.combo.c$longitude, center = TRUE, scale = TRUE)

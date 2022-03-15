@@ -31,6 +31,7 @@ library(dplyr)
 library(ggeffects)
 library(stargazer)
 library(factoextra)
+library(corrplot)
 
 
 ##  LOADING DATA -----
@@ -486,6 +487,7 @@ summary(model_long_low)
     theme_shrub() + theme(axis.title.y =element_text(size=12), 
                           axis.title.x = element_text(size=12)))
                           
+
 
 
 # Panel latlong levels -----
