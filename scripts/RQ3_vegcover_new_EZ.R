@@ -443,8 +443,28 @@ hist(ANWR_veg_fg_trim$mean_cover)
 
 # Model 11 ----
 # F.group fixed 
+lmer_all_0 <- glmer.nb(mean_cover~I(YEAR-1995) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+summary(lmer_all_0)
+
+
 lmer_all_2 <- glmer.nb(mean_cover~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all_2)
+
+lmer_all_3 <- glmer.nb(mean_cover~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+summary(lmer_all_3)
+
+# random slopes
+lmer_all_4 <- glmer.nb(mean_cover~I(YEAR-1995) + (1+YEAR|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+summary(lmer_all_4)
+predictions_rs_all <- ggpredict(lmer_all_4 , terms = c("YEAR", "FuncGroup"), type = "re")
+(groups_rand_slopes <- ggplot(predictions_rs_all, aes(x = x, y = predicted, colour = group)) +
+      stat_smooth(method = "lm", se = FALSE)  +
+      scale_colour_manual(values = c("green4", "green3", "red", "red4", "brown"), name = "Functional group")+
+      #scale_x_continuous(breaks=1997:2009)+
+      theme(legend.position = "bottom") +
+      labs(x = "\nYear", y = "Mean cover (%)\n")+
+      theme_shrub()+ 
+      theme(axis.text.x = element_text(angle = 45))) # really ugly 
 
 # mixed model with functional group as fixed effect
 lmer_all <- glmer.nb(mean_cover~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
@@ -459,9 +479,9 @@ summary(lmer_all_2)
 plot(lmer_all_2)
 qqnorm(resid(lmer_all_2))
 qqline(resid(lmer_all_2))  
-dispersion_glmer(lmer_all_2)# 1.477103
+dispersion_glmer(lmer_all_4)# 1.477103
 
-stargazer(lmer_all_2,
+stargazer(lmer_all_3,
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "", type= "text")
@@ -471,6 +491,8 @@ stargazer(lmer_all_2,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "", 
           type = "html", out = "output/tables/lmer_all.html")
+
+AIC(lmer_all, lmer_all_0, lmer_all_2, lmer_all_3, lmer_all_4)
 
 # Extracting model predictions 
 pred_lmer_all_1 <- ggpredict(lmer_all, terms = c("YEAR"))

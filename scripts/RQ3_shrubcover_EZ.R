@@ -167,23 +167,26 @@ ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 hist(ITEX_shrubs_sp_trim$genus_cover)
 
 lmer_shrub_sp_2 <- glmer.nb(genus_cover~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_3 <- glmer.nb(genus_cover~I(YEAR-1995) + (1|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_0 <- glmer.nb(genus_cover~I(YEAR-1995) + (1|YEAR), data = ITEX_shrubs_sp_trim)
 
 # mixed effect model with year as random effects
 lmer_shrub_sp <- glmer.nb(genus_cover~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
-summary(lmer_shrub_sp_2)
+summary(lmer_shrub_sp_0)
 dispersion_glmer(lmer_shrub_sp_2)
 str(ITEX_shrubs_sp_trim)
 plot(lmer_shrub_sp_2)
 
+AIC(lmer_shrub_sp, lmer_shrub_sp_2,lmer_shrub_sp_3, lmer_shrub_sp_rand)
 qqnorm(resid(lmer_shrub_sp))
 qqline(resid(lmer_shrub_sp)) 
 
 
 print(lmer_shrub_sp, correlation=TRUE)
-stargazer(lmer_shrub_sp_2, type = "text",
+stargazer(lmer_shrub_sp_3, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "") # DRYAS significant
+          digit.separator = "") 
 
 # Output table model 7 
 stargazer(lmer_shrub_sp,
@@ -249,8 +252,9 @@ predict_sp <- ggpredict(lmer_shrub_sp , terms = c("YEAR", "GENUS"), type = "re")
     labs(x = "\nYear", y = "Predicted mean % cover\n"))
 
 # Model with random slopes per genus
-lmer_shrub_sp_rand <- lmer(genus_cover~YEAR+ (1+YEAR|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_rand <- glmer(genus_cover~YEAR + (1+YEAR|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim) # doesnt converge with glmer.nb and with glmer we have overdispersion
 summary(lmer_shrub_sp_rand )
+dispersion_glmer(lmer_shrub_sp_rand) # 8.605041!!
 plot(lmer_shrub_sp_rand)
 qqnorm(resid(lmer_shrub_sp_rand))
 qqline(resid(lmer_shrub_sp_rand)) 
@@ -379,7 +383,9 @@ summary(shrub_lat)
 
 # Null deviance: 10098.6
 # Residual deviance:  7286.7 
-# goodness of fit = 10098.6-7286.7 = 2811.9
+# Pseudo R2 = 1-(7286.7 /10098.6)
+# [1] 0.2784445 latitude explains ~28 % in variation in shrub cover
+
 # mean shrub cover decreases with lat (-4.4189***)
 
 plot(shrub_lat)
@@ -391,10 +397,10 @@ stargazer(shrub_lat, type = "text",
 
 (cover_lat_scatter <- (ggplot(ITEX_shrubs_mean_trim))+
     geom_point(aes(x = LAT, y = mean_cover), colour= "green4", size = 1) +
-    geom_smooth(aes(x = LAT, y = mean_cover),colour = "black", method = "glm") + 
+    geom_smooth(aes(x = LAT, y = mean_cover),colour = "black", method = "glm", fill="yellow4") + 
     labs(y = "Mean shrub % cover\n", x = "\nLatitude") +
-    annotate(geom = "text", x = 1, y = 60, label="(a)", size = 10) +
-    annotate(geom = "text", x = 0.5, y = 20, label="slope = -4.419*** ", size = 6) +
+   # annotate(geom = "text", x = 1, y = 60, label="(a)", size = 10) +
+    annotate(geom = "text", x = 0.5, y = 20, label="slope = -0.44675*** ", size = 6) +
      theme_shrub())
 
 ggsave(file = "output/figures/cover_lat_scatter.png")

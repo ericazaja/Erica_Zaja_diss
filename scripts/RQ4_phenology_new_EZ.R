@@ -334,7 +334,7 @@ ggsave(file = "outputs/figures/slopes_pred_lmer_green.png")
 ## ONLY QIKI significant  
 # Qikiqtaruk -----
 Qikiqtaruk <-  phenology_green_trim %>% filter (study_area == "Qikiqtaruk") 
-hist(Qikiqtaruk$mean.doy)
+hist(Qikiqtaruk$mean.doy) 
 lmer_Qiki <- lmer(mean.doy ~ I(year-1995) + (1|year), data =Qikiqtaruk ) 
 summary(lmer_Qiki)
 plot(lmer_Qiki)
