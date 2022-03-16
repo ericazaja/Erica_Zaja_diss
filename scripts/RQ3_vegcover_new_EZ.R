@@ -18,6 +18,8 @@ library(lme4)
 library(ggeffects)
 library(sjPlot)  # to visualise model outputs
 library(stargazer)
+library(MuMIn)
+
 
 # LOADING DATA ----
 
@@ -445,17 +447,23 @@ hist(ANWR_veg_fg_trim$mean_cover)
 # F.group fixed 
 lmer_all_0 <- glmer.nb(mean_cover~I(YEAR-1995) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all_0)
-
+r.squaredGLMM(lmer_all_0)
 
 lmer_all_2 <- glmer.nb(mean_cover~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all_2)
+r.squaredGLMM(lmer_all_2)
+
 
 lmer_all_3 <- glmer.nb(mean_cover~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all_3)
+r.squaredGLMM(lmer_all_3)
+
 
 # random slopes
 lmer_all_4 <- glmer.nb(mean_cover~I(YEAR-1995) + (1+YEAR|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all_4)
+r.squaredGLMM(lmer_all_4)
+
 predictions_rs_all <- ggpredict(lmer_all_4 , terms = c("YEAR", "FuncGroup"), type = "re")
 (groups_rand_slopes <- ggplot(predictions_rs_all, aes(x = x, y = predicted, colour = group)) +
       stat_smooth(method = "lm", se = FALSE)  +
@@ -469,6 +477,9 @@ predictions_rs_all <- ggpredict(lmer_all_4 , terms = c("YEAR", "FuncGroup"), typ
 # mixed model with functional group as fixed effect
 lmer_all <- glmer.nb(mean_cover~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all)
+r.squaredGLMM(lmer_all)
+
+
 plot(lmer_all)
 qqnorm(resid(lmer_all))
 qqline(resid(lmer_all))  

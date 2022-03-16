@@ -169,10 +169,15 @@ hist(ITEX_shrubs_sp_trim$genus_cover)
 lmer_shrub_sp_2 <- glmer.nb(genus_cover~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_3 <- glmer.nb(genus_cover~I(YEAR-1995) + (1|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_0 <- glmer.nb(genus_cover~I(YEAR-1995) + (1|YEAR), data = ITEX_shrubs_sp_trim)
+r.squaredGLMM(lmer_shrub_sp_2 )
+r.squaredGLMM(lmer_shrub_sp_3 )
+r.squaredGLMM(lmer_shrub_sp_0)
+
 
 # mixed effect model with year as random effects
 lmer_shrub_sp <- glmer.nb(genus_cover~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp_0)
+r.squaredGLMM(lmer_shrub_sp)
 dispersion_glmer(lmer_shrub_sp_2)
 str(ITEX_shrubs_sp_trim)
 plot(lmer_shrub_sp_2)
@@ -380,6 +385,7 @@ hist(ITEX_shrubs_mean_trim$mean_cover)
 # Shrub cover vs latitude 
 shrub_lat <- glm(mean_cover ~ LAT, family = poisson, data = ITEX_shrubs_mean_trim)
 summary(shrub_lat)
+length(unique(ITEX_shrubs_mean_trim$SiteSubsitePlot ))
 
 # Null deviance: 10098.6
 # Residual deviance:  7286.7 
@@ -431,8 +437,6 @@ ggsave(file = "output/figures/plot_model_shrub_lat.png")
 # Shrub cover vs longitude
 shrub_long<- glm(mean_cover ~ LONG, family = poisson, data = ITEX_shrubs_mean_trim)
 summary(shrub_long)
-# F-statistic: 55.18 on 1 and 143 DF,  p-value: 9.123e-12***
-# -4.4189***
 
 plot(shrub_long)
 stargazer(shrub_long, type = "text",
