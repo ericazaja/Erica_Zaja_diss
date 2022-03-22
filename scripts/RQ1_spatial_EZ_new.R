@@ -85,7 +85,7 @@ res(r3_latlong)
 # factor chosen dividing climate cell resolution 0.008333333 x 0.008333333 by the resolution of the cropped shrub map (latlong)
 r3_latlong_agg <- aggregate(r3_latlong, fact=c(11.47842,30.8642), fun=mean, expand = TRUE) 
 # writeRaster(r3_latlong_agg, "datasets/berner_data/r3_latlong_agg.tif")
-# r3_latlong_agg <- raster("datasets/berner_data/r3_latlong_agg.tif") # loading raster
+r3_latlong_agg <- raster("datasets/berner_data/r3_latlong_agg.tif") # loading raster
 
 # checking new resolution
 res(r3_latlong_agg)
@@ -186,6 +186,11 @@ summary(model_1)
 # F-statistic:  2007 on 1 and 9577 DF,  p-value: < 2.2e-16***
 #slope =  -49.448
 
+# null model
+model_1_null <- lm(biomass~1, data = r3_rsample_00)
+AIC(model_1, model_1_null) # delta AIC 1820.3 (very different models)
+summary(model_1_null)
+
 # Quick scatter
 (scatter_lat <- ggplot(r3_rsample_00, aes(x = latitude, y = biomass))+
     geom_point(color="skyblue", size = 0.1) +
@@ -233,6 +238,11 @@ model_2 <- lm(biomass~longitude, data = r3_rsample_00)
 summary(model_2)
 # F-statistic: 247.6 on 1 and 9577 DF,  p-value: < 2.2e-16***
 # slope -18.858
+
+# null model
+model_2_null <- lm(biomass~1, data = r3_rsample_00)
+AIC(model_2, model_2_null) # delta AIC 242.5 (very different models)
+
 
 # Quick scatter
 (scatter_lon <- ggplot(r3_rsample_00, aes(x = longitude, y = biomass)) +
@@ -355,7 +365,7 @@ r3_rsample_categ$longitude <- scale(r3_rsample_categ$longitude, center = TRUE, s
 
 level_rs <- lmer(biomass ~ latitude + (1 + latitude|biomass_level), data = r3_rsample_categ)
 summary(level_rs)
-#  latitude estimate:  -14.87    
+#  latitude estimate:  -14.87   
 
 stargazer(level_rs, type = "text",
           digits = 3,
@@ -415,6 +425,10 @@ model_lat_high <- lm(biomass~latitude, data = r3_high_biomass )
 summary(model_lat_high)
 # F-statistic: 365.7 on 1 and 2393 DF,  p-value: < 2.2e-16***
 
+# null model 
+model_lat_high_null <- lm(biomass~1, data = r3_high_biomass )
+AIC(model_lat_high, model_lat_high_null)
+
 (scatter_high_lat <- ggplot(r3_high_biomass, aes(x = latitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
@@ -438,6 +452,11 @@ r3_med_biomass <- r3_rsample_categ %>% filter (biomass_level == "Medium")
 model_lat_med <- lm(biomass~latitude, data = r3_med_biomass )
 summary(model_lat_med)
 # F-statistic: 207.7 on 1 and 4787 DF,  p-value: < 2.2e-16***
+
+# null model
+model_lat_med_null <- lm(biomass~1, data = r3_med_biomass )
+AIC(model_lat_med, model_lat_med_null)
+
 (scatter_med_lat <- ggplot(r3_med_biomass, aes(x = latitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
@@ -461,6 +480,11 @@ r3_low_biomass <- r3_rsample_categ %>% filter (biomass_level == "Low")
 model_lat_low <- lm(biomass~latitude, data = r3_low_biomass )
 summary(model_lat_low)
 # F-statistic: 22.18 on 1 and 2393 DF,  p-value: 2.624e-06***
+
+# null model
+model_lat_low_null <- lm(biomass~1, data = r3_low_biomass )
+AIC(model_lat_low, model_lat_low_null)
+
 (scatter_low_lat <- ggplot(r3_low_biomass, aes(x = latitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
