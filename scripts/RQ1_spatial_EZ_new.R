@@ -32,6 +32,8 @@ library(ggeffects)
 library(stargazer)
 library(factoextra)
 library(corrplot)
+library(MuMIn)
+library(performance)
 
 
 ##  LOADING DATA -----
@@ -365,7 +367,13 @@ r3_rsample_categ$longitude <- scale(r3_rsample_categ$longitude, center = TRUE, s
 
 level_rs <- lmer(biomass ~ latitude + (1 + latitude|biomass_level), data = r3_rsample_categ)
 summary(level_rs)
-#  latitude estimate:  -14.87   
+#  latitude estimate:  -14.87 
+r.squaredGLMM(level_rs) # same as below
+r2_nakagawa(level_rs)
+
+# null model
+level_rs_null <- lm(biomass ~ 1, data = r3_rsample_categ)
+AIC(level_rs, level_rs_null)
 
 stargazer(level_rs, type = "text",
           digits = 3,
@@ -391,6 +399,12 @@ ggsave(levels_rand_slopes, file = "output/figures/levels_rand_slopes.png")
 level_rs_long <- lmer(biomass ~ longitude + (1 + longitude|biomass_level), data = r3_rsample_categ)
 summary(level_rs_long)
 # long  estimate:  4.666   (not sig)
+r.squaredGLMM(level_rs_long) # same as below
+r2_nakagawa(level_rs_long)
+
+# null model
+level_rs_long_null <- lm(biomass ~ 1, data = r3_rsample_categ)
+AIC(level_rs_long, level_rs_long_null)
 
 stargazer(level_rs_long, type = "text",
           digits = 3,
@@ -419,7 +433,7 @@ ggsave(levels_rand_slopes_long, file = "output/figures/levels_rand_slopes_long.p
 ggsave(panel_slopes_levels, file = "output/figures/panel_slopes_levels.png", height = 7, width=18)
 
 # Filter for high/medium/low biomass separately
-# 1. HIGH 
+# 1. HIGH  ----
 r3_high_biomass <- r3_rsample_categ %>% filter (biomass_level == "High")
 model_lat_high <- lm(biomass~latitude, data = r3_high_biomass )
 summary(model_lat_high)
@@ -440,6 +454,10 @@ model_long_high <- lm(biomass~longitude, data = r3_high_biomass )
 summary(model_long_high) 
 # F-statistic: 177.2 on 1 and 2393 DF,  p-value: < 2.2e-16***
 
+# null model 
+model_long_high_null <- lm(biomass~1, data = r3_high_biomass )
+AIC(model_long_high, model_long_high_null)
+
 (scatter_high_long <- ggplot(r3_high_biomass, aes(x = longitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
@@ -447,7 +465,7 @@ summary(model_long_high)
     theme_shrub() + theme(axis.title.y =element_text(size=12), 
                           axis.title.x = element_text(size=12)))
 
-# 2. MEDIUM
+# 2. MEDIUM -----
 r3_med_biomass <- r3_rsample_categ %>% filter (biomass_level == "Medium")
 model_lat_med <- lm(biomass~latitude, data = r3_med_biomass )
 summary(model_lat_med)
@@ -467,6 +485,11 @@ AIC(model_lat_med, model_lat_med_null)
 model_long_med <- lm(biomass~longitude, data = r3_med_biomass )
 summary(model_long_med) 
 #F-statistic: 358.1 on 1 and 4787 DF,  p-value: < 2.2e-16***
+
+# null model
+model_long_med_null <- lm(biomass~1, data = r3_med_biomass )
+AIC(model_long_med, model_long_med_null)
+
 (scatter_med_long <- ggplot(r3_med_biomass, aes(x = longitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
@@ -475,7 +498,7 @@ summary(model_long_med)
                           axis.title.x = element_text(size=12)))
 
 
-# 3. LOW 
+# 3. LOW -----
 r3_low_biomass <- r3_rsample_categ %>% filter (biomass_level == "Low")
 model_lat_low <- lm(biomass~latitude, data = r3_low_biomass )
 summary(model_lat_low)
@@ -495,6 +518,11 @@ AIC(model_lat_low, model_lat_low_null)
 model_long_low <- lm(biomass~longitude, data = r3_low_biomass )
 summary(model_long_low) 
 # F-statistic: 79.16 on 1 and 2393 DF,  p-value: < 2.2e-16***
+
+# null model
+model_long_low_null <- lm(biomass~1, data = r3_low_biomass )
+AIC(model_long_low, model_long_low_null)
+
 (scatter_low_long <- ggplot(r3_low_biomass, aes(x = longitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
