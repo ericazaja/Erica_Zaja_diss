@@ -19,6 +19,7 @@ library(ggeffects)
 library(sjPlot)  # to visualise model outputs
 library(stargazer)
 library(MuMIn)
+library(blmeco)
 
 
 # LOADING DATA ----
@@ -80,7 +81,7 @@ ANWR_veg$FuncGroup<- as.factor(as.character(ANWR_veg$FuncGroup))
 
 str(ANWR_veg)
 write.csv(ANWR_veg, file = "datasets/ITEX_data/ANWR_veg.csv")
-
+ANWR_veg <- read_csv("datasets/ITEX_data/ANWR_veg.csv")
 # Separate datasets per functional group ----
 # Filtering shrub only data
 ITEX_shrubs <-  ANWR_veg %>% filter (FuncGroup == "Shrub") 
@@ -126,10 +127,11 @@ ITEX_gram$PLOT <- as.factor(as.character(ITEX_gram$PLOT))
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_gram_mean_trim <- ITEX_gram_mean %>% 
    dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
-   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
+   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE) %>% 
+   mutate(mean_cover_prop = mean_cover/100)
 
 (graminoid_scatter <- (ggplot(ITEX_gram_mean_trim)+
-                          geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
+                          geom_point(aes(x = YEAR, y = mean_cover), size = 2) +
                           geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
                           labs(y = "Mean graminoid cover\n", x = "\nYear") +
                           scale_x_continuous(breaks=1997:2009)+
@@ -137,18 +139,14 @@ ITEX_gram_mean_trim <- ITEX_gram_mean %>%
                           theme(axis.text.x = element_text(angle = 45))))
 
 # Model 7 ----
-hist(ITEX_gram_mean_trim$mean_cover)
+hist(ITEX_gram_mean_trim$mean_cover_prop)
 # Graminoid cover over time 
 # mixed effect model with plot and year as random effects
-model_7 <- glmer.nb(mean_cover~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
+model_7 <- glmer.nb(mean_cover_prop~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
 summary(model_7)
-# total variance: 19.36 + 59.00 =78.36
-# variance for plot =  19.36
-# amount of variance explained by random effect:  19.36 /78.36 = 0.2470648= ~25%
-# I.e. differences between plots explain ~25% of the variance 
-# that’s “left over” after the variance explained by our fixed effect (year).
-# estimate for precip (exp variable = 0.0867)
-# not significant effect of year on gram cover 
+dispersion_glmer(model_7)
+
+model_7 <- glmer.nb(mean_cover~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
 
 # Checking model 7 assumptions 
 plot(model_7)
@@ -438,26 +436,51 @@ ANWR_veg_fg <- ANWR_veg %>%
 # Shrinking the dataframe to retain one row per plot etc.
 ANWR_veg_fg_trim <- ANWR_veg_fg %>% 
    dplyr::select(PLOT, YEAR, FuncGroup, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
-   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
+   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>% 
+   mutate(mean_cover_prop = mean_cover/100)
 
 ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup))
-hist(ANWR_veg_fg_trim$mean_cover)
+hist(ANWR_veg_fg_trim$mean_cover_prop)
 
 # Model 11 ----
-# F.group fixed 
-lmer_all_0 <- glmer.nb(mean_cover~I(YEAR-1995) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+# no functional group
+lmer_all_0 <- glmer(mean_cover_prop~I(YEAR-1995) + (1|YEAR) + (1|PLOT), family = "poisson", data = ANWR_veg_fg_trim)
 summary(lmer_all_0)
 r.squaredGLMM(lmer_all_0)
+dispersion_glmer(lmer_all_0)
+plot(lmer_all_0)
 
-lmer_all_2 <- glmer.nb(mean_cover~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
-summary(lmer_all_2)
+# functional group fixed effect with poisson glmer 
+lmer_all_2 <- glmer(mean_cover_prop~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT),family = "poisson", data = ANWR_veg_fg_trim)
+summary(lmer_all_2) 
 r.squaredGLMM(lmer_all_2)
+dispersion_glmer(lmer_all_2)
+plot(lmer_all_2)
+
+# functional group fixed effect with glmer.nb
+lmer_all_2a <- glmer.nb(mean_cover_prop~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+dispersion_glmer(lmer_all_2a)
+AIC(lmer_all_2, lmer_all_2a)
 
 
 lmer_all_3 <- glmer.nb(mean_cover~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all_3)
 r.squaredGLMM(lmer_all_3)
+dispersion_glmer(lmer_all_3) # 0.9388978
 
+lmer_all_3a <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+dispersion_glmer(lmer_all_3a) #0.1845308
+summary(lmer_all_3a)
+
+lmer_all_3b <- glmer(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), family = "poisson", data = ANWR_veg_fg_trim)
+dispersion_glmer(lmer_all_3b) # 0.1595953
+
+# null model
+lmer_all_null <- glm.nb(mean_cover_prop~1, data = ANWR_veg_fg_trim)
+
+AIC(lmer_all_null, lmer_all_0, lmer_all_2, lmer_all_2a, lmer_all_3, lmer_all_3a, lmer_all_3b)
+
+# BEST model is glmer.nb with fixed effect f group but AIC equivalent to null model
 
 # random slopes
 lmer_all_4 <- glmer.nb(mean_cover~I(YEAR-1995) + (1+YEAR|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
@@ -492,10 +515,11 @@ qqnorm(resid(lmer_all_2))
 qqline(resid(lmer_all_2))  
 dispersion_glmer(lmer_all_4)# 1.477103
 
-stargazer(lmer_all_3,
+stargazer(lmer_all_3a,
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "", type= "text")
+
 # Output table model 7 
 stargazer(lmer_all_2,
           digits = 3,

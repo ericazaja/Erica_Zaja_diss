@@ -59,20 +59,21 @@ ITEX_shrubs_mean <- ITEX_shrubs %>%
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>% 
   dplyr::select(PLOT, YEAR, LAT, LONG, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
-  distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
+  distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>% 
+  mutate(mean_cover_prop = mean_cover/100)
 
 str(ITEX_shrubs_mean_trim)
 ITEX_shrubs_mean_trim$PLOT <- as.factor(as.character(ITEX_shrubs_mean_trim$PLOT))
-hist(ITEX_shrubs_mean_trim$mean_cover)
+hist(ITEX_shrubs_mean_trim$mean_cover_prop)
 
 
 # Mean shrub cover change over time  
 (shrub_mean_change <- (ggplot(ITEX_shrubs_mean_trim)+
-                     geom_point(aes(x = YEAR, y = mean_cover), colour = "green4", size = 1) +
-                     geom_smooth(aes(x = YEAR, y = mean_cover), colour= "black", method = "lm") + 
+                     geom_point(aes(x = YEAR, y = mean_cover_prop), colour = "green4", size = 1) +
+                     geom_smooth(aes(x = YEAR, y = mean_cover_prop), colour= "black", method = "glm") + 
                      scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
                      labs(y = "Mean shrub % cover\n", x = "\nYear") + 
-                   annotate(geom = "text", x = 2007, y = 50, label="(a)", size = 10) +
+                  # annotate(geom = "text", x = 2007, y = 50, label="(a)", size = 10) +
                      theme_shrub()+
                      theme(axis.text.x = element_text(angle = 45))))
 
@@ -81,15 +82,31 @@ ggsave(shrub_mean_change, file = "output/figures/shrub_mean_change.png")
 # Model 6----
 # Shrub cover over time
 unique(ITEX_shrubs_mean_trim$YEAR)
+
 # Transform percentage cover to proportion (dividing by 100)
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean_trim %>% mutate(cover_prop = mean_cover/100)
 hist(ITEX_shrubs_mean_trim$mean_cover)
+
 # mixed effect model with plot and year as random effects
 model_6 <- glmer.nb(mean_cover ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6)
+dispersion_glmer(model_6)# 0.9665275
+
+model_6b <- glmer.nb(mean_cover_prop ~ I(YEAR-1995)  + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
+summary(model_6b)
+dispersion_glmer(model_6b)# 0.2243548
 
 model_6a <- glmer(mean_cover ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), family = poisson, data = ITEX_shrubs_mean_trim)
 summary(model_6a)
+dispersion_glmer(model_6a)# 1.579284 overdispersed
+
+model_6c <- glmer(mean_cover_prop ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), family = poisson, data = ITEX_shrubs_mean_trim)
+summary(model_6c)
+dispersion_glmer(model_6c)#0.1816644
+
+# null
+model_6_null <- glm.nb(mean_cover_prop ~1,  data = ITEX_shrubs_mean_trim)
+AIC(model_6_null, model_6,model_6a, model_6b, model_6c)
 
 # Checking model 6 assumptions 
 plot(model_6a)
@@ -142,7 +159,8 @@ ITEX_shrub_sp <- ITEX_shrubs %>%
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>% 
   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, GENUS, genus_cover) %>% 
-  distinct(SiteSubsitePlotYear, genus_cover, .keep_all = TRUE) 
+  distinct(SiteSubsitePlotYear, genus_cover, .keep_all = TRUE)  %>% 
+  mutate(genus_cover_prop = genus_cover/100)
 
 ITEX_shrubs_sp_trim$GENUS <- as.factor(as.character(ITEX_shrubs_sp_trim$GENUS ))
 hist(ITEX_shrubs_sp_trim$genus_cover)
@@ -166,13 +184,31 @@ ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 # Model ----
 hist(ITEX_shrubs_sp_trim$genus_cover)
 
-lmer_shrub_sp_2 <- glmer.nb(genus_cover~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp_3 <- glmer.nb(genus_cover~I(YEAR-1995) + (1|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp_0 <- glmer.nb(genus_cover~I(YEAR-1995) + (1|YEAR), data = ITEX_shrubs_sp_trim)
-r.squaredGLMM(lmer_shrub_sp_2 )
+lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_3 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_0 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|YEAR), data = ITEX_shrubs_sp_trim)
+dispersion_glmer(lmer_shrub_sp_2) #0.2425216
+dispersion_glmer(lmer_shrub_sp_3)#0.2723795
+dispersion_glmer(lmer_shrub_sp_0)# 0.2750381
+r.squaredGLMM(lmer_shrub_sp_2 ) 
 r.squaredGLMM(lmer_shrub_sp_3 )
 r.squaredGLMM(lmer_shrub_sp_0)
+summary(lmer_shrub_sp_0) 
 
+
+lmer_shrub_sp_2a <- glmer(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_3a <- glmer(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_0a <- glmer(genus_cover_prop~I(YEAR-1995) + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
+dispersion_glmer(lmer_shrub_sp_2a) #0.2316012
+dispersion_glmer(lmer_shrub_sp_3a)#0.2369076
+dispersion_glmer(lmer_shrub_sp_0a)#0.2512536
+
+# null model
+lmer_shrub_sp_null <- glm.nb(genus_cover_prop~1, data = ITEX_shrubs_sp_trim)
+
+AIC(lmer_shrub_sp_null, lmer_shrub_sp_2,lmer_shrub_sp_2a, lmer_shrub_sp_3,lmer_shrub_sp_3a, lmer_shrub_sp_0,lmer_shrub_sp_0a)
+
+## NB BEST model is lmer_shrub_sp_0 because lowest AIC (), but doesnt take genus as effect. SO next best is genus as random effect
 
 # mixed effect model with year as random effects
 lmer_shrub_sp <- glmer.nb(genus_cover~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
