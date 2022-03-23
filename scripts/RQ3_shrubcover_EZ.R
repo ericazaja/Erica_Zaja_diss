@@ -418,8 +418,9 @@ hist(Salix$genus_cover)
 ITEX_shrubs_mean_trim$LAT <-scale(ITEX_shrubs_mean_trim$LAT , center = TRUE, scale = TRUE)
 ITEX_shrubs_mean_trim$LONG <-scale(ITEX_shrubs_mean_trim$LONG , center = TRUE, scale = TRUE)
 hist(ITEX_shrubs_mean_trim$mean_cover)
+
 # Shrub cover vs latitude 
-shrub_lat <- glm(mean_cover ~ LAT, family = poisson, data = ITEX_shrubs_mean_trim)
+shrub_lat <- betareg(mean_cover_prop ~ LAT, data = ITEX_shrubs_mean_trim)
 summary(shrub_lat)
 length(unique(ITEX_shrubs_mean_trim$SiteSubsitePlot ))
 

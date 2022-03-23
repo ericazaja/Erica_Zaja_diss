@@ -94,6 +94,7 @@ unique(phenology_green$year)
 phenology_green$plot <- as.factor(as.character(phenology_green$plot))
 
 # EARLY VS LATE GREENING -----
+phenology_green <- read_csv("datasets/phenology_data/phenology_green.csv")
 
 # Classifying early vs late greening plots
 range(phenology_green$DOY) # range of DOY of onset of greening
@@ -215,6 +216,11 @@ unique(prop_greening_plots$year)
 glm_early <- glmer(prop_early ~  I(year-1995) + (1|year), family = binomial, data = prop_greening_plots)
 summary(glm_early)
 
+#Null model
+glm_early_null <- glm(prop_early ~  1, family = binomial, data = prop_greening_plots)
+
+AIC(glm_early, glm_early_null)
+
 plot(glm_early)
 dispersion_glmer(glm_early)# 0.7259031
 qqnorm(resid(glm_early))
@@ -249,6 +255,11 @@ dispersion_glmer(glm_late)# 0.7259028
 qqnorm(resid(glm_late))
 qqline(resid(glm_late))
 
+# null
+glm_late_null <- glm(prop_late ~  1, family = binomial, data = prop_greening_plots)
+
+AIC(glm_late, glm_late_null)
+
 stargazer(glm_late, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -271,6 +282,10 @@ str(phenology_green_trim)
 hist(phenology_green_trim$mean.doy) # normal distribution
 lmer_green <- lmer(mean.doy ~ I(year-1995) + (1 |study_area) + (1|year), data = phenology_green_trim ) 
 summary(lmer_green)
+
+# null
+lmer_green_null <- lm(mean.doy ~ 1, data = phenology_green_trim ) 
+AIC(lmer_green, lmer_green_null)
 
 stargazer(lmer_green, type = "text",
           digits = 3,
@@ -338,6 +353,10 @@ hist(Qikiqtaruk$mean.doy)
 lmer_Qiki <- lmer(mean.doy ~ I(year-1995) + (1|year), data =Qikiqtaruk ) 
 summary(lmer_Qiki)
 plot(lmer_Qiki)
+
+lm_Qiki_null <- lm(mean.doy ~ 1, data =Qikiqtaruk ) 
+AIC(lmer_Qiki, lm_Qiki_null)
+
 stargazer(lmer_Qiki, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -360,6 +379,10 @@ Atqasuk <-  phenology_green_trim %>% filter (study_area == "Atqasuk")
 lmer_Atqasuk <- lmer(mean.doy ~ year + (1|year), data =Atqasuk ) 
 summary(lmer_Atqasuk)
 plot(lmer_Atqasuk)
+
+lm_Atqasuk_null <- lm(mean.doy ~ 1, data = Atqasuk) 
+AIC(lmer_Atqasuk, lm_Atqasuk_null)
+
 stargazer(lmer_Atqasuk, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -378,6 +401,10 @@ Toolik <-  phenology_green_trim %>% filter (study_area == "Toolik Lake")
 lmer_Toolik <- lmer(mean.doy ~ year + (1|year), data =Toolik) 
 summary(lmer_Toolik)
 plot(lmer_Toolik)
+
+lm_Toolik_null <- lm(mean.doy ~ 1, data = Toolik) 
+AIC(lmer_Toolik, lm_Toolik_null)
+
 stargazer(lmer_Toolik, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -397,6 +424,10 @@ Utqiagvik<-  phenology_green_trim %>% filter (study_area == "Utqiagvik")
 lmer_Utqiagvik <- lmer(mean.doy ~ year + (1|year), data =Utqiagvik) 
 summary(lmer_Toolik)
 plot(lmer_Utqiagvik)
+
+lm_Utqiagvik_null <- lm(mean.doy ~ 1, data = Utqiagvik) 
+AIC(lmer_Utqiagvik, lm_Utqiagvik_null)
+
 stargazer(lmer_Utqiagvik, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),

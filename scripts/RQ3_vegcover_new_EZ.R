@@ -20,7 +20,10 @@ library(sjPlot)  # to visualise model outputs
 library(stargazer)
 library(MuMIn)
 library(blmeco)
-
+library(betareg)
+library(emmeans)
+library(lmtest)
+library(sandwich)
 
 # LOADING DATA ----
 
@@ -443,6 +446,17 @@ ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup)
 hist(ANWR_veg_fg_trim$mean_cover_prop)
 
 # Model 11 ----
+# beta regression ----
+lmer_all_beta <- betareg(mean_cover_prop~I(YEAR-1995) + 1|FuncGroup, data = ANWR_veg_fg_trim)
+summary(lmer_all_beta)
+coeftest(lmer_all_beta, vcov = sandwich)
+ANWR_veg_fg_trim$Prediction <- predict(lmer_all_beta, ANWR_veg_fg_trim)
+ggplot(ANWR_veg_fg_trim, aes(x=YEAR, y=Prediction)) + geom_point() + geom_smooth(method="lm")
+
+plot(lmer_all_beta)
+qqnorm(resid(lmer_all_beta))
+qqline(resid(lmer_all_beta))  
+
 # no functional group
 lmer_all_0 <- glmer(mean_cover_prop~I(YEAR-1995) + (1|YEAR) + (1|PLOT), family = "poisson", data = ANWR_veg_fg_trim)
 summary(lmer_all_0)
@@ -477,7 +491,7 @@ dispersion_glmer(lmer_all_3b) # 0.1595953
 
 # null model
 lmer_all_null <- glm.nb(mean_cover_prop~1, data = ANWR_veg_fg_trim)
-
+glimpse(ANWR_veg_fg_trim)
 AIC(lmer_all_null, lmer_all_0, lmer_all_2, lmer_all_2a, lmer_all_3, lmer_all_3a, lmer_all_3b)
 
 # BEST model is glmer.nb with fixed effect f group but AIC equivalent to null model
