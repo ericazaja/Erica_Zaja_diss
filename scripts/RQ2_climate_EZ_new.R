@@ -50,7 +50,7 @@ temp_raster <- levelplot(temp)
 
 # EXTRACTION ------
 # Loading the coordinates of the cropped shrub map
-coords <- read.csv("datasets/berner_data/r3_rsample_001.csv") %>% 
+coords <- read.csv("datasets/berner_data/r3_rsample_002.csv") %>% 
   dplyr::select(longitude, latitude) # keeping lat and long
 
 # Creating SpatialPoints (sp) object of unique coordinates
@@ -74,7 +74,7 @@ coord.df$ID <- as.numeric(coord.df$ID) # Make numeric
 coord.chelsa.combo <- left_join(chelsa.extract, coord.df, by = c("ID" = "ID"))
 
 # Loading the shrub biomass df
-biomass.df <- read.csv("datasets/berner_data/r3_rsample_001.csv") %>%
+biomass.df <- read.csv("datasets/berner_data/r3_rsample_002.csv") %>%
   rename(ID = X) %>%
   dplyr::select(ID, biomass, gridcell)
 
@@ -162,7 +162,7 @@ model_3_preds <- cbind(coord.chelsa.combo.c, predictions_3)
                                   geom_line(aes(y=upr), color = "grey", linetype = "dashed")+
                                    annotate(geom = "text", x = 2.5, y = 1200, label="(a)", size = 10) +
                                    annotate(geom = "text", x = 0, y = 800, label="slope = 36.433*** ", size = 6) +
-                                  labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n")+ 
+                                  labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (g/m2)\n")+ 
                                   theme_shrub()))
 
 
@@ -174,7 +174,7 @@ ggsave(file = "output/figures/predictions_biomass_vs_temp.png")
     geom_smooth(method = "lm", color = "black") +
     annotate(geom = "text", x = 2.5, y = 1200, label="(a)", size = 10) +
     annotate(geom = "text", x = 0, y = 800, label="slope = 36.433*** ", size = 6) +
-    labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (kg/m2)\n") + 
+    labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (g/m2)\n") + 
          # title = "Shrub biomass increases with temperature\n") + 
     theme_shrub())
 
@@ -214,7 +214,7 @@ model_4_preds <- cbind(coord.chelsa.combo.c, predictions_4)
                                    geom_line(aes(y=upr), color = "grey", linetype = "dashed")+
                                      annotate(geom = "text", x = 4, y = 1000, label="(b)", size = 10) +
                                      annotate(geom = "text", x = 3, y = 700, label="slope =  46.655*** ", size = 6) +
-                                   labs(x = "\nMean summer precipitation (kg/m2) ", y = "Shrub biomass (kg/m2)\n")+ 
+                                   labs(x = "\nMean summer precipitation (g/m2) ", y = "Shrub biomass (kg/m2)\n")+ 
                                    theme_shrub()))
 
 
@@ -227,7 +227,7 @@ ggsave(file = "output/figures/predictions_biomass_vs_precip.png")
     geom_smooth(method = "lm", color = "black") +
     annotate(geom = "text", x = 4, y = 1000, label="(b)", size = 10) +
     annotate(geom = "text", x = 3, y = 700, label="slope =  46.655*** ", size = 6) +
-    labs(x = "\nMean summer precipitation (kg/m2)", y = "Shrub biomass (kg/m2)\n") +
+    labs(x = "\nMean summer precipitation (g/m2)", y = "Shrub biomass (kg/m2)\n") +
          # title = "Shrub biomass increases with precipiation\n") + 
     theme_shrub())
 
@@ -267,9 +267,9 @@ mean(coord.chelsa.combo.c$CH_PrecipMeanSummer)
 # 86.44856
 
 coord.chelsa.combo.d <- coord.chelsa.combo.c %>% 
-  mutate(moisture = case_when(CH_PrecipMeanSummer < -0.70752311 ~ "dry",
-                              CH_PrecipMeanSummer >= -0.70752311 & CH_PrecipMeanSummer < 0.54864855 ~ "moist",
-                              CH_PrecipMeanSummer >= 0.54864855 ~ "wet"))
+  mutate(moisture = case_when(CH_PrecipMeanSummer < -0.71467025~ "dry",
+                              CH_PrecipMeanSummer >= -0.71467025 & CH_PrecipMeanSummer < 0.56418805  ~ "moist",
+                              CH_PrecipMeanSummer >= 0.56418805  ~ "wet"))
 
 
 
@@ -302,7 +302,7 @@ model_5_preds <- cbind(coord.chelsa.combo.d, predictions_5)
                                    stat_smooth(method=lm, aes(colour = moisture))+
                                   geom_line(aes(y=lwr,  color = moisture), linetype = "dashed")+
                                    geom_line(aes(y=upr, color = moisture), linetype = "dashed")+
-                                   labs(x = "\nMean summer temperature (°C) ", y = "Shrub biomass (kg/m2)\n")+ 
+                                   labs(x = "\nMean summer temperature (°C) ", y = "Shrub biomass (g/m2)\n")+ 
                                    theme_shrub()+ theme(legend.text = element_text(size= 12),
                                                         legend.title = element_text(size=15))))
 

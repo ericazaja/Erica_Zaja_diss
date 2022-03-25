@@ -125,6 +125,11 @@ r3_rsample_0 <- as.data.frame(sampleRandom(r3_latlong_agg, 4792, buffer = 1414.2
 hist(r3_rsample_0$r3_latlong_agg) # checking distribution
 mean(r3_rsample_0$r3_latlong_agg) #266.2826
 
+r3_rsample_1 <- as.data.frame(sampleRandom(r3_latlong_agg, 3195, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
+                                           cells=TRUE, rowcol=FALSE, xy = TRUE)) 
+hist(r3_rsample_1$r3_latlong_agg) # checking distribution
+mean(r3_rsample_1$r3_latlong_agg) #266.2826
+
 # logic checks 
 # trying to sample 30000 pixels to see if the distribution is different 
 r3_rsample_0_try <- as.data.frame(sampleRandom(r3_latlong_agg, 30000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
@@ -135,8 +140,8 @@ mean(r3_rsample_0_try$r3_latlong_agg) #267.4842
 
 
 # calculating distance between points (x and y coordinates)
-r3_rsample_01 <- r3_rsample_0  %>% 
-  mutate(r3_rsample_0, Distance = distHaversine(cbind(x, y),
+r3_rsample_01 <- r3_rsample_1  %>% 
+  mutate(r3_rsample_1, Distance = distHaversine(cbind(x, y),
                                                    cbind(lag(x), lag(y))))
 
 # If distance between points > buffer distance, buffer works
@@ -158,8 +163,10 @@ r3_rsample_001  <- r3_rsample_01 %>%
   mutate(gridcell = paste0("_", lat, "_", long))  %>%
   dplyr::select(cell_ID, latitude, longitude, long, lat, biomass, gridcell)
 
-# write.csv(r3_rsample_00, file= "datasets/berner_data/r3_rsample_00.csv")
-# write.csv(r3_rsample_001, file= "datasets/berner_data/r3_rsample_001.csv")
+# write.csv(r3_rsample_00, file= "datasets/berner_data/r3_rsample_00.csv") # with 9000 points
+# write.csv(r3_rsample_001, file= "datasets/berner_data/r3_rsample_001.csv") # with 9000/2
+# write.csv(r3_rsample_001, file= "datasets/berner_data/r3_rsample_002.csv") # with 9000/3
+
 
 # THEME ----
 
@@ -198,7 +205,7 @@ AIC(model_1, model_1_null) # delta AIC 1820.3 (very different models)
 summary(model_1_null)
 
 # Quick scatter
-(scatter_lat <- ggplot(r3_rsample_00, aes(x = latitude, y = biomass))+
+(scatter_lat <- ggplot(r3_rsample_001, aes(x = latitude, y = biomass))+
     geom_point(color="skyblue", size = 0.1) +
     geom_smooth(method = lm, color ='black', fill = "grey", se=TRUE)+
     labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n") +
@@ -232,7 +239,7 @@ model_1_lat <- cbind(r3_rsample_001, predictions_1)
                       geom_line(aes(y=upr), color = "grey", linetype = "dashed")+
                         annotate(geom = "text", x = 2, y = 1200, label="(a)", size = 10) +
                         annotate(geom = "text", x = 1, y = 900, label="slope =  -49.448*** ", size = 6) +
-        labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n")+ 
+        labs(x = "\nLatitude", y = "Shrub biomass (g/m2)\n")+ 
                    theme_shrub()))
 
 ggsave(file = "output/figures/predictions_biomass_vs_lat.png")
@@ -285,7 +292,7 @@ model_2_long <- cbind(r3_rsample_001, predictions_2)
                       geom_line(aes(y=upr), color = "grey", linetype = "dashed")+
                         annotate(geom = "text", x = 2, y = 1200, label="(b)", size = 10) +
                         annotate(geom = "text", x = 1, y = 900, label="slope = -18.858*** ", size = 6) +
-                        labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n")+ 
+                        labs(x = "\nLongitude", y = "Shrub biomass (g/m2)\n")+ 
                       theme_shrub())) 
                         
 
@@ -331,9 +338,9 @@ quantile(r3_rsample_001$biomass)
 # 5.062256  171.268829  258.787537  345.954544 1144.706055 
 
 r3_rsample_categ <- r3_rsample_001 %>%
-  mutate(biomass_level = case_when (biomass < 168.314499    ~ 'Low', # lower than mean biomass
-                                    biomass >= 168.314499   & biomass < 345.954544~ 'Medium', 
-                                    biomass >= 345.954544~ 'High')) %>% 
+  mutate(biomass_level = case_when (biomass < 170.630482     ~ 'Low', # lower than mean biomass
+                                    biomass >= 170.630482    & biomass < 347.062210 ~ 'Medium', 
+                                    biomass >= 347.062210 ~ 'High')) %>% 
   mutate(biomass_level_0 = case_when (biomass_level == 'Low' ~ 1, # 1 = low level
                                     biomass_level == 'Medium' ~ 2, # 2 = medium level
                                     biomass_level == 'High'~ 3)) %>% # 3 = high level
@@ -352,11 +359,11 @@ r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels=c
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
     geom_vline(aes(xintercept = mean(biomass)),            
                colour = "red", linetype = "dashed", size = 1) +
-    annotate(geom = "text", x = 450, y = 600, label="mean = 267.4422", size = 6) +
-    geom_curve(aes(x = 470, y = 630, xend = mean(biomass) + 2, yend = 630),
+    annotate(geom = "text", x = 450, y = 400, label="mean = 267.4422", size = 6) +
+    geom_curve(aes(x = 470, y = 430, xend = mean(biomass) + 2, yend = 430),
                arrow = arrow(length = unit(0.07, "inch")), size = 0.7,
                color = "grey30", curvature = 0.3) +
-    labs(x = "\nShrub biomass (kg/m2)", y = "Frequency\n") +
+    labs(x = "\nShrub biomass (g/m2)", y = "Frequency\n") +
     scale_fill_manual(name = "Biomass level", values=c( "tan", "yellow3", "green4")) +
     theme(legend.text = element_text(size=12),
           legend.title = element_text(size=15)) +
