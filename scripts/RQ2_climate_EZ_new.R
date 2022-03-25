@@ -50,7 +50,7 @@ temp_raster <- levelplot(temp)
 
 # EXTRACTION ------
 # Loading the coordinates of the cropped shrub map
-coords <- read.csv("datasets/berner_data/r3_rsample_00.csv") %>% 
+coords <- read.csv("datasets/berner_data/r3_rsample_001.csv") %>% 
   dplyr::select(longitude, latitude) # keeping lat and long
 
 # Creating SpatialPoints (sp) object of unique coordinates
@@ -74,7 +74,7 @@ coord.df$ID <- as.numeric(coord.df$ID) # Make numeric
 coord.chelsa.combo <- left_join(chelsa.extract, coord.df, by = c("ID" = "ID"))
 
 # Loading the shrub biomass df
-biomass.df <- read.csv("datasets/berner_data/r3_rsample_00.csv") %>%
+biomass.df <- read.csv("datasets/berner_data/r3_rsample_001.csv") %>%
   rename(ID = X) %>%
   dplyr::select(ID, biomass, gridcell)
 
@@ -100,9 +100,9 @@ write.csv(coord.chelsa.combo.c, "datasets/climate_data/coord_chelsa_combo_new.cs
 # THEME ----
 
 theme_shrub <- function(){ theme(legend.position = "right",
-                                 axis.title.x = element_text(face="bold", size=18),
-                                 axis.text.x  = element_text(vjust=0.5, size=15, colour = "black"), 
-                                 axis.title.y = element_text(face="bold", size=18),
+                                 axis.title.x = element_text(face="bold", size=20),
+                                 axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
+                                 axis.title.y = element_text(face="bold", size=20),
                                  axis.text.y  = element_text(vjust=0.5, size=15, colour = "black"),
                                  panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
                                  panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
@@ -135,6 +135,7 @@ summary(model_3)
 
 model_3_null<- lm(biomass ~1, data = coord.chelsa.combo.c)
 AIC(model_3, model_3_null)
+
 
 # Checking model 3 assumptions
 plot(model_3)

@@ -219,7 +219,8 @@ ITEX_forb_mean$PLOT <- as.factor(as.character(ITEX_forb_mean$PLOT))
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_forb_mean_trim <- ITEX_forb_mean %>% 
    dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
-   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
+   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE) %>% 
+   mutate(mean_cover_prop = mean_cover/100)
 
 (forb_scatter <- (ggplot(ITEX_forb_mean_trim)+
    geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
@@ -285,7 +286,8 @@ ITEX_moss_mean$PLOT <- as.factor(as.character(ITEX_moss_mean$PLOT))
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_moss_mean_trim <- ITEX_moss_mean %>% 
    dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
-   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
+   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>%
+mutate(mean_cover_prop = mean_cover/100)
 
 (moss_scatter <- (ggplot(ITEX_moss_mean_trim)+
     geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT),size = 2) +
@@ -350,7 +352,8 @@ ITEX_lich_mean$PLOT <- as.factor(as.character(ITEX_lich_mean$PLOT))
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_lich_mean_trim <- ITEX_lich_mean %>% 
    dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
-   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)
+   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>%
+   mutate(mean_cover_prop = mean_cover/100)
 
 
 (lichen_scatter <- (ggplot(ITEX_lich_mean_trim))+
@@ -446,7 +449,7 @@ ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup)
 hist(ANWR_veg_fg_trim$mean_cover_prop)
 
 # Model 11 ----
-# beta regression ----
+# Beta regression ----
 lmer_all_beta <- betareg(mean_cover_prop~I(YEAR-1995) + 1|FuncGroup, data = ANWR_veg_fg_trim)
 summary(lmer_all_beta)
 coeftest(lmer_all_beta, vcov = sandwich)
