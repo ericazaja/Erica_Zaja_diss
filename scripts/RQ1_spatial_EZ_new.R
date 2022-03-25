@@ -171,10 +171,10 @@ r3_rsample_001  <- r3_rsample_01 %>%
 # THEME ----
 
 theme_shrub <- function(){ theme(legend.position = "right", 
-                                 axis.title.x = element_text(face="bold", size=20),
-                                 axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
-                                 axis.title.y = element_text(face="bold", size=20),
-                                 axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
+                                 axis.title.x = element_text(size=25),
+                                 axis.text.x  = element_text(vjust=0.5, size=20, colour = "black"), 
+                                 axis.title.y = element_text(size=25),
+                                 axis.text.y  = element_text(vjust=0.5, size=20, colour = "black"),
                                  panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
                                  panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
                                  panel.background = element_blank(), axis.line = element_line(colour = "black"), 
@@ -188,7 +188,8 @@ r3_rsample_00 <- read_csv("datasets/berner_data/r3_rsample_00.csv")
 
 hist(r3_rsample_001$biomass) # distribution 
 str(r3_rsample_001) # lat and long and biomass numeric
-range(r3_rsample_001$biomass)
+range(r3_rsample_001$biomass) # 9.820163 1003.684387
+
 # Standardising lat and long (explanatory variables)
 r3_rsample_001$latitude <- scale(r3_rsample_001$latitude, center = TRUE, scale = TRUE)
 r3_rsample_001$longitude <- scale(r3_rsample_001$longitude, center = TRUE, scale = TRUE)
@@ -196,21 +197,20 @@ r3_rsample_001$longitude <- scale(r3_rsample_001$longitude, center = TRUE, scale
 # Model 1. biomass vs lat ----
 model_1 <- lm(biomass~latitude, data = r3_rsample_001)
 summary(model_1)
-# F-statistic:  2007 on 1 and 9577 DF,  p-value: < 2.2e-16***
-#slope =  -49.448
+# F-statistic: 639.3 on 1 and 3190 DF,  p-value: < 2.2e-16
+# slope =  -49.079***
 
 # null model
 model_1_null <- lm(biomass~1, data = r3_rsample_001)
-AIC(model_1, model_1_null) # delta AIC 1820.3 (very different models)
-summary(model_1_null)
+AIC(model_1, model_1_null) # delta AIC indicates very diff models
 
 # Quick scatter
 (scatter_lat <- ggplot(r3_rsample_001, aes(x = latitude, y = biomass))+
     geom_point(color="skyblue", size = 0.1) +
     geom_smooth(method = lm, color ='black', fill = "grey", se=TRUE)+
-    labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n") +
-   annotate(geom = "text", x = 2, y = 1250, label="(a)", size = 10) +
-   annotate(geom = "text", x = 1, y = 900, label="slope =  -49.448*** ", size = 6) +
+    labs(x = "\nLatitude", y = "Shrub biomass (g/m2)\n") +
+   annotate(geom = "text", x = 2, y = 1100, label="(a)", size = 10) +
+   annotate(geom = "text", x = 1, y = 800, label="slope =  -49.079*** ", size = 6) +
          # title = "Shrub biomass decreases with latitude\n") + 
     theme_shrub())
 
@@ -235,12 +235,13 @@ model_1_lat <- cbind(r3_rsample_001, predictions_1)
 (predictions_biomass_vs_lat <- (ggplot(model_1_lat, aes(latitude, fit)) + 
                       geom_point(data = model_1_lat, aes(x = latitude, y = biomass), colour = "green4", size = 0.1) +
                       stat_smooth(method=lm, colour = "black")+
-                      geom_line(aes(y=lwr),  color = "grey", linetype = "dashed")+
-                      geom_line(aes(y=upr), color = "grey", linetype = "dashed")+
-                        annotate(geom = "text", x = 2, y = 1200, label="(a)", size = 10) +
-                        annotate(geom = "text", x = 1, y = 900, label="slope =  -49.448*** ", size = 6) +
-        labs(x = "\nLatitude", y = "Shrub biomass (g/m2)\n")+ 
-                   theme_shrub()))
+                      geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
+                      geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+                        annotate(geom = "text", x = 2, y = 1100, label="(a)", size = 15) +
+                        annotate(geom = "text", x = 1, y = 800, label="slope =  -49.079*** ", size = 10) +
+                      xlab("\nLatitude") +
+                      ylab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
+                      theme_shrub()))
 
 ggsave(file = "output/figures/predictions_biomass_vs_lat.png")
 
@@ -249,12 +250,12 @@ dev.off()
 # Model 2. biomass vs long ----
 model_2 <- lm(biomass~longitude, data = r3_rsample_001)
 summary(model_2)
-# F-statistic: 247.6 on 1 and 9577 DF,  p-value: < 2.2e-16***
-# slope -18.858
+# F-statistic: 110.9 on 1 and 3190 DF,  p-value: < 2.2e-16***
+# slope -22.021
 
 # null model
 model_2_null <- lm(biomass~1, data = r3_rsample_001)
-AIC(model_2, model_2_null) # delta AIC 242.5 (very different models)
+AIC(model_2, model_2_null) # delta AIC indicates very different models
 
 
 # Quick scatter
@@ -262,8 +263,8 @@ AIC(model_2, model_2_null) # delta AIC 242.5 (very different models)
     geom_point(color="skyblue", size = 0.01) +
     geom_smooth(method = lm, colour='black') +
     labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n") +  
-   annotate(geom = "text", x = 2, y = 1250, label="(b)", size = 10) +
-  annotate(geom = "text", x = 1, y = 900, label="slope = -18.858*** ", size = 6) +
+   annotate(geom = "text", x = 2, y = 1250, label="(b)", size = 15) +
+  annotate(geom = "text", x = 1, y = 900, label="slope = -22.021*** ", size = 10) +
          # title = "Shrub biomass decreases with longitude\n") + 
     theme_shrub())
 
@@ -288,11 +289,12 @@ model_2_long <- cbind(r3_rsample_001, predictions_2)
 (predictions_biomass_vs_long <- (ggplot(model_2_long, aes(longitude, fit)) + 
                       geom_point(data = model_2_long, aes(x= longitude, y = biomass), colour = "green4", size = 0.1) +
                       stat_smooth(method=lm, colour = "black")+
-                      geom_line(aes(y=lwr),  color = "grey", linetype = "dashed")+
-                      geom_line(aes(y=upr), color = "grey", linetype = "dashed")+
-                        annotate(geom = "text", x = 2, y = 1200, label="(b)", size = 10) +
-                        annotate(geom = "text", x = 1, y = 900, label="slope = -18.858*** ", size = 6) +
-                        labs(x = "\nLongitude", y = "Shrub biomass (g/m2)\n")+ 
+                      geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
+                      geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+                        annotate(geom = "text", x = 2, y = 1100, label="(b)", size = 15) +
+                        annotate(geom = "text", x = 1, y = 800, label="slope = -22.021*** ", size = 10) +
+                        xlab("\nLongitude") +
+                        ylab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
                       theme_shrub())) 
                         
 
