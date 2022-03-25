@@ -7,6 +7,8 @@
 
 ## RQ1: How is shrub biomass distributed in the focal study area?
 
+# Colour palette credit: David Nichols 
+
 # LOADING LIBRARIES -----
 
 library(sp)
@@ -33,7 +35,8 @@ library(factoextra)
 library(corrplot)
 library(MuMIn)
 library(performance)
-
+library(png)
+library(patchwork)
 
 ##  LOADING DATA -----
 
@@ -206,7 +209,7 @@ AIC(model_1, model_1_null) # delta AIC indicates very diff models
 
 # Quick scatter
 (scatter_lat <- ggplot(r3_rsample_001, aes(x = latitude, y = biomass))+
-    geom_point(color="skyblue", size = 0.1) +
+    geom_point(color="#70B1A6", size = 0.1) +
     geom_smooth(method = lm, color ='black', fill = "grey", se=TRUE)+
     labs(x = "\nLatitude", y = "Shrub biomass (g/m2)\n") +
    annotate(geom = "text", x = 2, y = 1100, label="(a)", size = 10) +
@@ -233,13 +236,13 @@ model_1_lat <- cbind(r3_rsample_001, predictions_1)
 
 # Plot the predictions 
 (predictions_biomass_vs_lat <- (ggplot(model_1_lat, aes(latitude, fit)) + 
-                      geom_point(data = model_1_lat, aes(x = latitude, y = biomass), colour = "green4", size = 0.1) +
-                      stat_smooth(method=lm, colour = "black")+
-                      geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
-                      geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+                      geom_point(data = model_1_lat, aes(x = latitude, y = biomass), colour = "#518279", size = 0.5) +
+                      stat_smooth(method=lm, colour = "black", size = 1.5)+
+                      geom_line(aes(y=lwr),  color = "#D2004C", linetype = "dashed", size = 0.5)+
+                      geom_line(aes(y=upr), color = "#D2004C", linetype = "dashed", size = 0.5)+
                         annotate(geom = "text", x = 2, y = 1100, label="(a)", size = 15) +
                         annotate(geom = "text", x = 1, y = 800, label="slope =  -49.079*** ", size = 10) +
-                      xlab("\nLatitude") +
+                      xlab("\nScaled latitude") +
                       ylab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
                       theme_shrub()))
 
@@ -287,13 +290,13 @@ model_2_long <- cbind(r3_rsample_001, predictions_2)
 
 # Plot the predictions 
 (predictions_biomass_vs_long <- (ggplot(model_2_long, aes(longitude, fit)) + 
-                      geom_point(data = model_2_long, aes(x= longitude, y = biomass), colour = "green4", size = 0.1) +
-                      stat_smooth(method=lm, colour = "black")+
-                      geom_line(aes(y=lwr),  color = "red", linetype = "dashed")+
-                      geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+                      geom_point(data = model_2_long, aes(x= longitude, y = biomass), colour = "#518279", size = 0.5) +
+                      stat_smooth(method=lm, colour = "black", size = 1.5)+
+                      geom_line(aes(y=lwr),  color = "#D2004C", linetype = "dashed", size = 0.5)+
+                      geom_line(aes(y=upr), color = "#D2004C", linetype = "dashed", size = 0.5)+
                         annotate(geom = "text", x = 2, y = 1100, label="(b)", size = 15) +
                         annotate(geom = "text", x = 1, y = 800, label="slope = -22.021*** ", size = 10) +
-                        xlab("\nLongitude") +
+                        xlab("\nScaled longitude") +
                         ylab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
                       theme_shrub())) 
                         
@@ -332,17 +335,17 @@ cor.test( r3_rsample_00$latitude,r3_rsample_00$longitude, method = "pearson")
 
 # Categorising into high-medium-low level
 mean(r3_rsample_001$biomass) 
-#  267.4422 kg/m2 mean biomass
+#  267.5807 g/m2 mean biomass
 range(r3_rsample_001$biomass)
-#   5.062256 1144.706055
+#  9.820163 1003.684387
 quantile(r3_rsample_001$biomass)
 # 0%         25%         50%         75%        100% 
-# 5.062256  171.268829  258.787537  345.954544 1144.706055 
+#  9.820163  170.630482  257.406342  347.062210 1003.684387 
 
 r3_rsample_categ <- r3_rsample_001 %>%
   mutate(biomass_level = case_when (biomass < 170.630482     ~ 'Low', # lower than mean biomass
-                                    biomass >= 170.630482    & biomass < 347.062210 ~ 'Medium', 
-                                    biomass >= 347.062210 ~ 'High')) %>% 
+                                    biomass > 170.630482    & biomass < 347.062210 ~ 'Medium', 
+                                    biomass > 347.062210 ~ 'High')) %>% 
   mutate(biomass_level_0 = case_when (biomass_level == 'Low' ~ 1, # 1 = low level
                                     biomass_level == 'Medium' ~ 2, # 2 = medium level
                                     biomass_level == 'High'~ 3)) %>% # 3 = high level
@@ -355,23 +358,30 @@ r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels=c
                           labels = c("Low", "Medium", "High"),
                           ordered = T)
 
+shrub_logo <- readPNG("team_shrub_logo.png")
+
 # Histogram of biomass level
 (hist_high_medium_low <- r3_rsample_categ %>%
     ggplot(aes(x = biomass, fill = biomass_level)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
     geom_vline(aes(xintercept = mean(biomass)),            
-               colour = "red", linetype = "dashed", size = 1) +
-    annotate(geom = "text", x = 450, y = 400, label="mean = 267.4422", size = 6) +
-    geom_curve(aes(x = 470, y = 430, xend = mean(biomass) + 2, yend = 430),
+               colour = "#D2004C", linetype = "dashed", size = 1) +
+    annotate(geom = "text", x = 450, y = 200, label="mean = 267.6", size = 8) +
+    geom_curve(aes(x = 470, y = 210, xend = mean(biomass) + 2, yend = 210),
                arrow = arrow(length = unit(0.07, "inch")), size = 0.7,
                color = "grey30", curvature = 0.3) +
-    labs(x = "\nShrub biomass (g/m2)", y = "Frequency\n") +
-    scale_fill_manual(name = "Biomass level", values=c( "tan", "yellow3", "green4")) +
-    theme(legend.text = element_text(size=12),
-          legend.title = element_text(size=15)) +
+    ylab("Frequency\n") +
+    xlab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
+    scale_fill_manual(name = "Biomass level", values=c( "#B5A1A8", "#EFB404", "#3A635B")) +
+    theme(legend.text = element_text(size=15),
+          legend.title = element_text(size=20)) +
     theme_shrub())
 
 ggsave(file = "output/figures/hist_high_medium_low.png")
+
+raster_logo <- as.raster(shrub_logo)
+histogram <- hist_high_medium_low + annotation_raster(raster_logo, 850, 1000, 150, 200)
+ggsave(file = "output/figures/histogram.png")
 
 # Random slope and intercept biomass level across latitudes ----
 # Standardising explanatory variables
@@ -396,14 +406,15 @@ stargazer(level_rs, type = "text",
 # Random intercepts and slopes 
 predict_levels <- ggpredict(level_rs , terms = c("latitude", "biomass_level"), type = "re") 
 (levels_rand_slopes <- ggplot(predict_levels, aes(x = x, y = predicted, colour = group)) +
-    stat_smooth(method = "lm", se = FALSE)  +
-    scale_colour_manual(values=c("tan", "yellow3", "green4"), name = "Biomass level") + 
+    stat_smooth(method = "lm", se = FALSE, size=1.5)  +
+    scale_colour_manual(values=c("#B5A1A8", "#EFB404", "#3A635B"), name = "Biomass level") + 
     theme(legend.position = "bottom") +
-    annotate(geom = "text", x = 2, y = 510, label="(a)", size = 10) +
-    labs(x = "\nLatitude", y = "Shrub biomass (kg/m2)\n")+
+    annotate(geom = "text", x = 2, y = 510, label="(a)", size = 15) +
+    xlab("\nScaled latitude") +
+    ylab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
     theme_shrub()+ 
-    theme(legend.text=element_text(size=12),
-          legend.title=element_text(size=15)))
+    theme(legend.text=element_text(size=25),
+          legend.title=element_text(size=30)))
 
 ggsave(levels_rand_slopes, file = "output/figures/levels_rand_slopes.png")
 
@@ -427,23 +438,26 @@ stargazer(level_rs_long, type = "text",
 
 # Random intercepts and slopes 
 predict_levels_long <- ggpredict(level_rs_long , terms = c("longitude", "biomass_level"), type = "re") 
+
 (levels_rand_slopes_long <- ggplot(predict_levels_long, aes(x = x, y = predicted, colour = group)) +
-    stat_smooth(method = "lm", se = FALSE)  +
-    scale_colour_manual(values=c("tan", "yellow3", "green4"), name = "Biomass level") + 
+    stat_smooth(method = "lm", se = FALSE, size = 1.5)  +
+    scale_colour_manual(values=c("#B5A1A8", "#EFB404", "#3A635B"), name = "Biomass level") + 
     theme(legend.position = "bottom") +
-    labs(x = "\nLongitude", y = "Shrub biomass (kg/m2) \n")+
-    annotate(geom = "text", x = 2, y = 510, label="(b)", size = 10) +
+    xlab("\nScaled longitude") +
+    ylab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
+    annotate(geom = "text", x = 2, y = 510, label="(b)", size = 15) +
     theme_shrub()+ 
-    theme(legend.text=element_text(size=12),
-          legend.title=element_text(size=15)))
+    theme(legend.text=element_text(size=25),
+          legend.title=element_text(size=30)))
+          
 
 ggsave(levels_rand_slopes_long, file = "output/figures/levels_rand_slopes_long.png")
 
-(panel_slopes_levels <- grid.arrange(arrangeGrob(levels_rand_slopes, levels_rand_slopes_long,
-                                                  ncol = 2))) # Sets number of panel columns
+(panel_slopes_levels <- ggarrange(levels_rand_slopes, levels_rand_slopes_long,
+                                                  ncol = 2, common.legend = TRUE, legend="bottom"))# Sets number of panel columns
 
 
-ggsave(panel_slopes_levels, file = "output/figures/panel_slopes_levels.png", height = 7, width=18)
+ggsave(panel_slopes_levels, file = "output/figures/panel_slopes_levels.png", height = 10, width=18)
 
 # Filter for high/medium/low biomass separately
 # 1. HIGH  ----
