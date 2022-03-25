@@ -174,7 +174,7 @@ ggsave("output/figures/r3_cropped_viridis.png")
     ylab("Latitude\n") +
     xlim(-147.5, -140)+
     ylim(69,70.5)+
-    theme(plot.title = element_text(hjust = 0.5),             # centres plot title
+    theme(plot.title = element_text(hjust = 0.5),      # centres plot title
           text = element_text(size=20),		       	    # font size
           axis.text.x = element_text(angle = 30, hjust = 1)))  # rotates x axis text
 
