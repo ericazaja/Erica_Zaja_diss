@@ -164,19 +164,18 @@ ggsave("output/figures/r3_cropped_viridis.png")
 (r3_cropped_my_palette <- gplot(r3_latlong_agg) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
-    scale_fill_gradient(low = "#FFFF6B", high = "green4", 
+    scale_fill_gradient(low = "#FFFF6B", high = "#3A635B", 
                         rescaler = function(x, to = c(0, 1), from = NULL) {
-                          ifelse(x<267, scales::rescale(x, to = to,from = c(min(x, na.rm = TRUE), 267)),
-                                 1)}, na.value="white", name = "Biomass (kg/m2)") +
+                          ifelse(x<347, scales::rescale(x, to = to,from = c(min(x, na.rm = TRUE), 347)),
+                                 1)}, na.value="white", name = "Shrub biomass (g/m^2)") +
     coord_quickmap()+
     theme_shrub() +  # Remove ugly grey background
     xlab("\nLongitude") +
     ylab("Latitude\n") +
     xlim(-147.5, -140)+
     ylim(69,70.5)+
-   # ggtitle("Shrub biomass cover (kg/m2) of the PCH alaskan range") +
     theme(plot.title = element_text(hjust = 0.5),             # centres plot title
-          text = element_text(size=15),		       	    # font size
+          text = element_text(size=20),		       	    # font size
           axis.text.x = element_text(angle = 30, hjust = 1)))  # rotates x axis text
 
 ggsave("output/figures/r3_cropped_my_palette.png")

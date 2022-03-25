@@ -358,7 +358,6 @@ r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels=c
                           labels = c("Low", "Medium", "High"),
                           ordered = T)
 
-shrub_logo <- readPNG("team_shrub_logo.png")
 
 # Histogram of biomass level
 (hist_high_medium_low <- r3_rsample_categ %>%
@@ -379,6 +378,8 @@ shrub_logo <- readPNG("team_shrub_logo.png")
 
 ggsave(file = "output/figures/hist_high_medium_low.png")
 
+# adding shrub logo
+shrub_logo <- readPNG("team_shrub_logo.png")
 raster_logo <- as.raster(shrub_logo)
 histogram <- hist_high_medium_low + annotation_raster(raster_logo, 850, 1000, 150, 200)
 ggsave(file = "output/figures/histogram.png")

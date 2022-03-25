@@ -99,11 +99,11 @@ write.csv(coord.chelsa.combo.c, "datasets/climate_data/coord_chelsa_combo_new.cs
 
 # THEME ----
 
-theme_shrub <- function(){ theme(legend.position = "right",
-                                 axis.title.x = element_text(face="bold", size=20),
-                                 axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
-                                 axis.title.y = element_text(face="bold", size=20),
-                                 axis.text.y  = element_text(vjust=0.5, size=15, colour = "black"),
+theme_shrub <- function(){ theme(legend.position = "right", 
+                                 axis.title.x = element_text(size=25),
+                                 axis.text.x  = element_text(vjust=0.5, size=20, colour = "black"), 
+                                 axis.title.y = element_text(size=25),
+                                 axis.text.y  = element_text(vjust=0.5, size=20, colour = "black"),
                                  panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
                                  panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
                                  panel.background = element_blank(), axis.line = element_line(colour = "black"), 
@@ -130,8 +130,8 @@ coord.chelsa.combo.c$CH_PrecipMeanSummer <-scale(coord.chelsa.combo.c$CH_PrecipM
 # biomass ~ temp 
 model_3 <- lm(biomass ~ CH_TempMeanSummer, data = coord.chelsa.combo.c)
 summary(model_3)
-# F-statistic: 993.7 on 1 and 9573 DF,  p-value: < 2.2e-16
-# slope = 36.433***
+# F-statistic: 355.5 on 1 and 3190 DF,  p-value: < 2.2e-16
+# slope =  38.033  ***
 
 model_3_null<- lm(biomass ~1, data = coord.chelsa.combo.c)
 AIC(model_3, model_3_null)
@@ -156,17 +156,26 @@ model_3_preds <- cbind(coord.chelsa.combo.c, predictions_3)
 
 # Plot the predictions 
 (predictions_biomass_vs_temp <- (ggplot(model_3_preds, aes(CH_TempMeanSummer, fit)) + 
-                                  geom_point(data = model_3_preds, aes(x= CH_TempMeanSummer, y =biomass), colour = "green4", size= 0.1 ) +
-                                  stat_smooth(method=lm, colour = "black")+
-                                  geom_line(aes(y=lwr),  color = "grey", linetype = "dashed")+
-                                  geom_line(aes(y=upr), color = "grey", linetype = "dashed")+
-                                   annotate(geom = "text", x = 2.5, y = 1200, label="(a)", size = 10) +
-                                   annotate(geom = "text", x = 0, y = 800, label="slope = 36.433*** ", size = 6) +
-                                  labs(x = "\nMean summer temperature (°C)", y = "Shrub biomass (g/m2)\n")+ 
-                                  theme_shrub()))
+                                  geom_point(data = model_3_preds, aes(x= CH_TempMeanSummer, y =biomass), colour = "#518279", size = 0.5) +
+                                  stat_smooth(method=lm, colour = "black", size = 1.5)+
+                                  geom_line(aes(y=lwr),  color = "#D2004C", linetype = "dashed", size = 0.5)+
+                                  geom_line(aes(y=upr), color = "#D2004C", linetype = "dashed", size = 0.5)+
+                                   annotate(geom = "text", x = 2.5, y = 1100, label="(a)", size = 15) +
+                                   annotate(geom = "text", x = 0, y = 800, label="slope = 38.033*** ", size = 10) +
+                                  xlab("Scaled mean summer temperature (°C)") +
+                                  ylab(bquote("Shrub biomass "*(g~m^-2)*"")) + 
+                                         theme_shrub()))
 
 
 ggsave(file = "output/figures/predictions_biomass_vs_temp.png")
+
+# adding temp logo
+temp_logo <- readPNG("temp_logo.png")
+raster_temp_logo <- as.raster(temp_logo)
+(predictions_biomass_vs_temp <- predictions_biomass_vs_temp + annotation_raster(raster_temp_logo, -4.5, -2.3, 900, 1150))
+ggsave(file = "output/figures/predictions_biomass_vs_temp.png")
+
+
 
 # Quick scatter: biomass ~ temp
 (scatter_temp <- ggplot(coord.chelsa.combo.c, aes(x = CH_TempMeanSummer, y = biomass)) +
@@ -208,16 +217,23 @@ model_4_preds <- cbind(coord.chelsa.combo.c, predictions_4)
 
 # Plot the predictions 
 (predictions_biomass_vs_precip <- (ggplot(model_4_preds, aes(CH_PrecipMeanSummer, fit)) + 
-                                   geom_point(data = model_4_preds, aes( x= CH_PrecipMeanSummer, y = biomass), colour = "green4", size = 0.1) +
-                                   stat_smooth(method=lm, colour = "black")+
-                                   geom_line(aes(y=lwr),  color = "grey", linetype = "dashed")+
-                                   geom_line(aes(y=upr), color = "grey", linetype = "dashed")+
-                                     annotate(geom = "text", x = 4, y = 1000, label="(b)", size = 10) +
-                                     annotate(geom = "text", x = 3, y = 700, label="slope =  46.655*** ", size = 6) +
-                                   labs(x = "\nMean summer precipitation (g/m2) ", y = "Shrub biomass (kg/m2)\n")+ 
-                                   theme_shrub()))
+                                   geom_point(data = model_4_preds, aes( x= CH_PrecipMeanSummer, y = biomass),colour = "#518279", size = 0.5) +
+                                   stat_smooth(method=lm, colour = "black", size = 1.5)+
+                                     geom_line(aes(y=lwr),  color = "#D2004C", linetype = "dashed", size = 0.5)+
+                                     geom_line(aes(y=upr), color = "#D2004C", linetype = "dashed", size = 0.5)+
+                                     annotate(geom = "text", x = 4, y = 1000, label="(b)", size = 15) +
+                                     annotate(geom = "text", x = 3, y = 700, label="slope = 47.290*** ", size = 10) +
+                                    xlab(bquote("Scaled mean summer precipitation "*(g~m^-2)*""))+
+                                    ylab(bquote("Shrub biomass "*(g~m^-2)*""))+
+                                    theme_shrub()))
 
+                                     
+ggsave(file = "output/figures/predictions_biomass_vs_precip.png")
 
+# adding rain logo
+rain_logo <- readPNG("rain_logo.png")
+raster_rain_logo <- as.raster(rain_logo)
+(predictions_biomass_vs_precip <- predictions_biomass_vs_precip + annotation_raster(raster_rain_logo, -2, 0, 750, 1000))
 ggsave(file = "output/figures/predictions_biomass_vs_precip.png")
 
 
@@ -248,7 +264,7 @@ ggsave(panel_scatter, file = "output/figures/panel_scatter.png", width = 18, hei
 (panel_model_pred<- grid.arrange(arrangeGrob(predictions_biomass_vs_temp, predictions_biomass_vs_precip,
                                           ncol = 2)))# Sets number of panel columns
                               
-ggsave(panel_model_pred, file = "output/figures/panel_model_pred.png", width = 18, height = 9)
+ggsave(panel_model_pred, file = "output/figures/panel_model_pred.png", width = 20, height = 10)
 
 
 # Model 5 ----
