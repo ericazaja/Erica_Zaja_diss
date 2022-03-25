@@ -153,13 +153,14 @@ stargazer(model_3, type = "text",
 # Extracting model predictions 
 predictions_3 <- as.data.frame(predict(model_3, newdata = coord.chelsa.combo.c, interval = "confidence")) # this gives overall predictions for the model
 model_3_preds <- cbind(coord.chelsa.combo.c, predictions_3)
+cols <- colors_wong
 
 # Plot the predictions 
 (predictions_biomass_vs_temp <- (ggplot(model_3_preds, aes(CH_TempMeanSummer, fit)) + 
-                                  geom_point(data = model_3_preds, aes(x= CH_TempMeanSummer, y =biomass), colour = "#518279", size = 0.5) +
-                                  stat_smooth(method=lm, colour = "black", size = 1.5)+
-                                  geom_line(aes(y=lwr),  color = "#D2004C", linetype = "dashed", size = 0.5)+
-                                  geom_line(aes(y=upr), color = "#D2004C", linetype = "dashed", size = 0.5)+
+                                  geom_point(data = model_3_preds, aes(x= CH_TempMeanSummer, y =biomass), colour = "#006146", size = 0.5) +
+                                  stat_smooth(method=lm, colour = "black", size = 2)+
+                                  geom_line(aes(y=lwr),  color = "#F96E00", linetype = "dashed", size = 0.5)+
+                                  geom_line(aes(y=upr), color = "#F96E00", linetype = "dashed", size = 0.5)+
                                    annotate(geom = "text", x = 2.5, y = 1100, label="(a)", size = 15) +
                                    annotate(geom = "text", x = 0, y = 800, label="slope = 38.033*** ", size = 10) +
                                   xlab("Scaled mean summer temperature (°C)") +
@@ -217,10 +218,10 @@ model_4_preds <- cbind(coord.chelsa.combo.c, predictions_4)
 
 # Plot the predictions 
 (predictions_biomass_vs_precip <- (ggplot(model_4_preds, aes(CH_PrecipMeanSummer, fit)) + 
-                                   geom_point(data = model_4_preds, aes( x= CH_PrecipMeanSummer, y = biomass),colour = "#518279", size = 0.5) +
-                                   stat_smooth(method=lm, colour = "black", size = 1.5)+
-                                     geom_line(aes(y=lwr),  color = "#D2004C", linetype = "dashed", size = 0.5)+
-                                     geom_line(aes(y=upr), color = "#D2004C", linetype = "dashed", size = 0.5)+
+                                   geom_point(data = model_4_preds, aes( x= CH_PrecipMeanSummer, y = biomass),colour = "#006146", size = 0.5) +
+                                   stat_smooth(method=lm, colour = "black", size = 2)+
+                                     geom_line(aes(y=lwr),  color = "#F96E00", linetype = "dashed", size = 0.5)+
+                                     geom_line(aes(y=upr), color = "#F96E00", linetype = "dashed", size = 0.5)+
                                      annotate(geom = "text", x = 4, y = 1000, label="(b)", size = 15) +
                                      annotate(geom = "text", x = 3, y = 700, label="slope = 47.290*** ", size = 10) +
                                     xlab(bquote("Scaled mean summer precipitation "*(g~m^-2)*""))+
@@ -298,9 +299,11 @@ write.csv(coord.chelsa.combo.d, file = "datasets/climate_data/coord.chelsa.combo
 # Model 5a: biomass Vs temp*moisture
 model_5a <- lm(biomass ~ CH_TempMeanSummer*moisture , data = coord.chelsa.combo.d)
 summary(model_5a)
-# F-statistic: 529 on 5 and 9569 DF,  p-value: < 2.2e-16
+# F-statistic: 174.6 on 5 and 3186 DF,  p-value: < 2.2e-16
+
 model_5a_null <- lm(biomass ~ 1, data = coord.chelsa.combo.d)
-AIC(model_5a, model_5a_null)
+AIC(model_3, model_4, model_5a, model_5a_null)
+
 # model 5a output table 
 stargazer(model_5a, type = "text",
           digits = 3,
@@ -313,16 +316,26 @@ model_5_preds <- cbind(coord.chelsa.combo.d, predictions_5)
 
 # Plot the predictions 
 (predictions_interaction<- (ggplot(model_5_preds, aes(CH_TempMeanSummer, fit, group = moisture)) + 
-                                   geom_point(aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size =0.1) +
-                              scale_colour_manual(values = c("brown", "green4", "blue4"), name = "Moisture level")+
-                                   stat_smooth(method=lm, aes(colour = moisture))+
-                                  geom_line(aes(y=lwr,  color = moisture), linetype = "dashed")+
-                                   geom_line(aes(y=upr, color = moisture), linetype = "dashed")+
-                                   labs(x = "\nMean summer temperature (°C) ", y = "Shrub biomass (g/m2)\n")+ 
-                                   theme_shrub()+ theme(legend.text = element_text(size= 12),
-                                                        legend.title = element_text(size=15))))
+                                   geom_point(aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size =0.5) +
+                              scale_colour_manual(values = c("#DC9902", "#46AAE2", "#003654"), name = "Moisture level")+
+                                   stat_smooth(method=lm, aes(colour = moisture), size=1.5)+
+                                  geom_line(aes(y=lwr,  color = moisture), linetype = "dashed", size=0.5)+
+                                   geom_line(aes(y=upr, color = moisture), linetype = "dashed",  size=0.5)+
+                              xlab("Scaled mean summer temperature (°C)") +
+                              ylab(bquote("Shrub biomass "*(g~m^-2)*"")) + 
+                                   theme_shrub()+ theme(legend.text = element_text(size= 20),
+                                                        legend.title = element_text(size=25))))
 
 ggsave(filename = "output/figures/predictions_interaction.png")
+
+# adding rain logo
+(predictions_interaction <- predictions_interaction+ annotation_raster(raster_rain_logo, -4.3, -2.3, 750, 1000))
+(predictions_interaction <- predictions_interaction+ annotation_raster(raster_temp_logo, -2.3, -1, 750, 1000))
+
+ggsave(filename = "output/figures/predictions_interaction.png")
+
+
+
 
 # this BELOW is to plot scatter with interaction: Need NOT standardised climate variables
 # Extracting model predictions 

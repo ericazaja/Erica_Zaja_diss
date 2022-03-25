@@ -164,7 +164,7 @@ ggsave("output/figures/r3_cropped_viridis.png")
 (r3_cropped_my_palette <- gplot(r3_latlong_agg) +
     geom_raster(aes(x = x, y = y, fill = value)) +
     # value is the specific value (of reflectance) each pixel is associated with
-    scale_fill_gradient(low = "#FFFF6B", high = "#3A635B", 
+    scale_fill_gradient(low = "#F0E442", high = "#009E73", 
                         rescaler = function(x, to = c(0, 1), from = NULL) {
                           ifelse(x<347, scales::rescale(x, to = to,from = c(min(x, na.rm = TRUE), 347)),
                                  1)}, na.value="white", name = "Shrub biomass (g/m^2)") +
