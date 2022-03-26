@@ -392,6 +392,12 @@ stargazer(lmer_Qiki, type = "text",
 
 ggsave(Qiki_DOY, filename = "output/figures/Qiki_DOY.png")
 
+# adding logo
+
+(Qiki_DOY <- Qiki_DOY + annotation_raster(raster_early_logo, 2012, 2016, 180, 200))
+ggsave(file = "output/figures/Qiki_DOY.png")
+
+
 # Atqasuk -----
 Atqasuk <-  phenology_green_trim %>% filter (study_area == "Atqasuk") 
 lmer_Atqasuk <- lmer(mean.doy ~ year + (1|year), data =Atqasuk ) 
