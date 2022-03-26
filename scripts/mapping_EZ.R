@@ -176,9 +176,20 @@ ggsave("output/figures/r3_cropped_viridis.png")
     ylim(69,70.5)+
     theme(plot.title = element_text(hjust = 0.5),      # centres plot title
           text = element_text(size=20),		       	    # font size
-          axis.text.x = element_text(angle = 30, hjust = 1)))  # rotates x axis text
+          axis.text.x = element_text(angle = 30, hjust = 1),
+          legend.text = element_text(size=20),
+          legend.title = element_text(size=25)))  # rotates x axis text
 
 ggsave("output/figures/r3_cropped_my_palette.png")
+
+# adding temp logo
+caribou_logo <- readPNG("caribou_icon.png")
+raster_caribou_logo <- as.raster(caribou_logo)
+(r3_cropped_my_palette <- r3_cropped_my_palette + annotation_raster(raster_caribou_logo, -142, -140, 69.8, 70.5))
+ggsave(file = "output/figures/r3_cropped_my_palette.png")
+
+
+
 
 # Cropped map with personalised colour palette (low-mid-high) 
 (r3_cropped_my_palette_2 <- gplot(r3_latlong_agg) +

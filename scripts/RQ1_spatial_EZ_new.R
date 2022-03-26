@@ -248,6 +248,13 @@ model_1_lat <- cbind(r3_rsample_001, predictions_1)
 
 ggsave(file = "output/figures/predictions_biomass_vs_lat.png")
 
+# adding icon
+lat_logo <- readPNG("lat_icon.png")
+raster_lat_logo <- as.raster(lat_logo)
+(predictions_biomass_vs_lat <- predictions_biomass_vs_lat + annotation_raster(raster_lat_logo, 0.5, 1.5, 800, 1200))
+ggsave(file = "output/figures/predictions_biomass_vs_temp.png")
+
+
 dev.off()
 
 # Model 2. biomass vs long ----
@@ -303,6 +310,13 @@ model_2_long <- cbind(r3_rsample_001, predictions_2)
 
 
 ggsave(file = "output/figures/predictions_biomass_vs_long.png")
+
+# adding icon
+long_logo <- readPNG("long_icon.png")
+raster_long_logo <- as.raster(long_logo)
+(predictions_biomass_vs_long <- predictions_biomass_vs_long + annotation_raster(raster_long_logo, 0, 2, 900, 1150))
+ggsave(file = "output/figures/predictions_biomass_vs_temp.png")
+
 
 # Panel latlong ----
 # Panel of scatters 

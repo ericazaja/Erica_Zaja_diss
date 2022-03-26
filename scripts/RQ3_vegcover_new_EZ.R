@@ -423,12 +423,12 @@ unique(ANWR_veg$FuncGroup)  # checking I have all functional groups
       ggplot(aes(x = RelCover, fill = FuncGroup)) +
       geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 30) +
       geom_vline(aes(xintercept = mean(RelCover)),            
-                 colour = "red", linetype = "dashed", size = 1) +
+                 colour = "black", linetype = "dashed", size = 1) +
       labs(x = "\nCover (%)", y = "Frequency\n") +
-      scale_fill_manual(values=c( "brown", "green4", "blue3", "yellow3", "red2"), name = "Functional group")+
+      scale_fill_manual(values=c( "#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"), name = "Plant functional type (PFT)")+
       theme_shrub() +
-      theme(legend.text = element_text(size=12),
-            legend.title = element_text(size=15)) )
+      theme(legend.text = element_text(size=20),
+            legend.title = element_text(size=25)) )
 
 ggsave(file = "output/figures/hist_all_veg.png")
 
@@ -597,10 +597,10 @@ predict <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"), type = "re")
                        geom_smooth(method = "lm") + 
                     facet_wrap(~FuncGroup, scales = "free_y") +
                        scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
-                       scale_colour_manual(values = c("green4", "red", "red4", "brown", "blue4"))+
+                       scale_colour_manual(values = c("#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"))+
                        labs(y = "Mean vegetation cover\n", x = "\nYear") +
                        theme_shrub() +
-                       theme(axis.text.x  = element_text(vjust=0.5, size=10, angle= 45, colour = "black"))))
+                       theme(axis.text.x  = element_text(vjust=0.5, size=12, angle= 45, colour = "black"))))
             
 
 ggsave(file = "output/figures/scatter_fgroups.png")
