@@ -169,14 +169,17 @@ str(ITEX_shrubs_sp_trim)
 
 (facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover))+
                                  geom_point(size = 0.6, aes( colour = GENUS)) +
-                                 scale_colour_manual(values = c("green4", "green3", "red", "red4", "brown", "blue4", 'blue3' ))+
+                                 scale_colour_manual(values = c("#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
                                  geom_smooth(method = lm, aes(colour = GENUS))+
                                  #scale_fill_manual(values = c("green4", "green3", "red", "red4", "brown", "blue4", 'blue3' ))+ 
                                  facet_wrap(~ GENUS, scales = "free_y") +
                                  scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
                                  labs(y = "Mean cover (%) \n", x = "\nYear") +
                                  theme_shrub()+
-                                 theme(axis.text.x  = element_text(vjust=0.5, size=10, angle= 45, colour = "black"))))
+                                 theme(axis.text.x  = element_text(vjust=0.5, size=12, angle= 45, 
+                                                                   colour = "black"), 
+                                       legend.position = "none",
+                                       strip.text.x = element_text(size = 20, face = "italic" ))))
 
 dev.off()
 ggsave(file = "output/figures/facet_scatter_shrub_genus.png")

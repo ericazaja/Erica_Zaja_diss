@@ -598,9 +598,11 @@ predict <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"), type = "re")
                     facet_wrap(~FuncGroup, scales = "free_y") +
                        scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
                        scale_colour_manual(values = c("#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"))+
-                       labs(y = "Mean vegetation cover\n", x = "\nYear") +
+                       labs(y = "Mean cover (%) \n", x = "\nYear") +
                        theme_shrub() +
-                       theme(axis.text.x  = element_text(vjust=0.5, size=12, angle= 45, colour = "black"))))
+                       theme(axis.text.x  = element_text(vjust=0.5, size=12, angle= 45, colour = "black"),
+                             legend.position = "none",
+                           strip.text.x = element_text(size = 20))))
             
 
 ggsave(file = "output/figures/scatter_fgroups.png")

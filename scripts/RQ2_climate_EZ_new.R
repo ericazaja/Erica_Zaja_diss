@@ -329,8 +329,8 @@ model_5_preds <- cbind(coord.chelsa.combo.d, predictions_5)
 ggsave(filename = "output/figures/predictions_interaction.png")
 
 # adding rain logo
-(predictions_interaction <- predictions_interaction+ annotation_raster(raster_rain_logo, -4.3, -2.3, 750, 1000))
-(predictions_interaction <- predictions_interaction+ annotation_raster(raster_temp_logo, -2.3, -1, 750, 1000))
+(predictions_interaction <- predictions_interaction+ annotation_raster(raster_rain_logo, -3.8, -2, 750, 1000))
+(predictions_interaction <- predictions_interaction+ annotation_raster(raster_temp_logo, -3.2, -1, 750, 1000))
 
 ggsave(filename = "output/figures/predictions_interaction.png")
 
