@@ -197,17 +197,25 @@ hist(prop_greening_plots$prop_late)# not normal
 # DATA VISUALISATION ----
 # 1. EARLY GREENING  -----
 (early_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_early)) +
-    geom_point(size = 3, colour = "green4") +
-    geom_smooth(method = "lm", colour = "black",  fill ="yellow4")+
+    geom_point(size = 3, colour = "#009E73") +
+    geom_smooth(method = "lm", colour = "black",  fill ="#009E73", size = 2)+
    scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
-   annotate(geom = "text", x = 2020, y = 1, label="(a)", size = 10) +
+   annotate(geom = "text", x = 2020, y = 1, label="(a)", size = 15) +
     labs(x = "\nYear", y = "Proportion of early greening plots\n") +
          #title = "Proportion of early greening plots increasing\n") +
     theme_shrub() +
-   theme(axis.text.x = element_text(size= 10, angle = 45)))
+   theme(axis.text.x = element_text(size= 15, angle = 45)))
 
 
 ggsave(file = "output/figures/early_greening_plots.png")
+
+# adding logo
+early_logo <- readPNG("early.png")
+raster_early_logo <- as.raster(early_logo)
+(early_greening_plots <- early_greening_plots + annotation_raster(raster_early_logo, 2011, 2019, 0.70, 1))
+ggsave(file = "output/figures/early_greening_plots.png")
+
+
 
 unique(prop_greening_plots$year)
 
@@ -235,15 +243,21 @@ stargazer(glm_early, type = "text",
 
 # 2. LATE GREENING -----
 (late_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_late)) +
-    geom_point(size = 3, colour = "green4") +
-    geom_smooth(method = "lm", colour = "black", fill ="yellow4")+
+    geom_point(size = 3, colour = "#009E73") +
+    geom_smooth(method = "lm", colour = "black", fill ="#009E73", size = 2)+
    scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
-   annotate(geom = "text", x = 2020, y = 1, label="(b)", size = 10) +
+   annotate(geom = "text", x = 2020, y = 1, label="(b)", size = 15) +
    labs(x = "\nYear", y = "Proportion of late greening plots\n") +
    #title = "Proportion of early greening plots increasing\n") +
     theme_shrub() +
-   theme(axis.text.x = element_text(size= 10, angle = 45)))
+   theme(axis.text.x = element_text(size= 15, angle = 45)))
 
+ggsave(file = "output/figures/late_greening_plots.png")
+
+# adding logo
+late_logo <- readPNG("late.png")
+raster_late_logo <- as.raster(late_logo)
+(late_greening_plots <- late_greening_plots + annotation_raster(raster_late_logo, 2012, 2019, 0, 0.25))
 ggsave(file = "output/figures/late_greening_plots.png")
 
 # Model ----
@@ -324,16 +338,19 @@ pred_lmer_green <- ggpredict(lmer_green , terms = c("year", "study_area"), type 
 
  ggsave(file = "output/figures/greening_model.png")
  
- (all_sites_greening<- (ggplot(phenology_green_trim, aes(x = year, y = mean.doy)) +
+(all_sites_greening<- (ggplot(phenology_green_trim, aes(x = year, y = mean.doy)) +
                        geom_point(size = 1, aes(colour = study_area))+
-                       scale_colour_manual(values = c("brown", "green4", "blue4", "yellow4"), name = "Study area"))+
+                       scale_colour_manual(values = c("#CC79A7", "#000000", "#D55E00", "#009E73"), name = "Study area"))+
                        geom_smooth(method = lm, aes(colour= study_area, fill =study_area), show.legend = FALSE)+ 
-    # scale_fill_manual(values = c("brown", "green4", "blue4", "yellow4"))+
+    scale_fill_manual(values = c("#CC79A7", "#000000", "#D55E00", "#009E73"))+
      scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
      labs(x = "\nYear", y = "Mean greening DOY\n")+ 
-                       theme_shrub() +  theme(axis.text.x = element_text(size= 10, angle = 45)
-                                              ))
- 
+    theme_shrub() +  
+    theme(axis.text.x = element_text(size= 15, angle = 45), legend.text = element_text(size= 18),
+    legend.title = element_text(size=25)) +
+    guides(color = guide_legend(override.aes = list(size = 3))))
+
+                                  
  ggsave(file = "output/figures/all_sites_greening.png")
  
 # I might want random slopes/intercepts?
@@ -361,16 +378,17 @@ stargazer(lmer_Qiki, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "") # Mean DOY does decrease in Qiki
+
 (Qiki_DOY <- ggplot(Qikiqtaruk, aes(x = year, y =mean.doy)) +
-    geom_point(size = 2, colour = "green4") +
-    geom_smooth(method = "lm", colour = "black", fill = "yellow4")+
+    geom_point(size = 2, colour = "#009E73") +
+    geom_smooth(method = "lm", colour = "black", fill = "#009E73", size =2)+
     scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
     #annotate(geom = "text", x = 2015, y = 190, label="(a)", size = 10) +
-    annotate(geom = "text", x = 2005, y = 145, label="slope = -0.982** ", size = 6) +
+    annotate(geom = "text", x = 2005, y = 145, label="slope = -0.982** ", size = 10) +
     labs(x = "\nYear", y = "Mean greening DOY\n") +
     #title = "Proportion of early greening plots increasing\n") +
     theme_shrub() +
-    theme(axis.text.x = element_text(size = 10, angle=45)))
+    theme(axis.text.x = element_text(size = 15, angle=45)))
 
 ggsave(Qiki_DOY, filename = "output/figures/Qiki_DOY.png")
 

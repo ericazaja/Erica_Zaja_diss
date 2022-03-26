@@ -182,7 +182,7 @@ ggsave("output/figures/r3_cropped_viridis.png")
 
 ggsave("output/figures/r3_cropped_my_palette.png")
 
-# adding temp logo
+# adding logo
 caribou_logo <- readPNG("caribou_icon.png")
 raster_caribou_logo <- as.raster(caribou_logo)
 (r3_cropped_my_palette <- r3_cropped_my_palette + annotation_raster(raster_caribou_logo, -142, -140, 69.8, 70.5))

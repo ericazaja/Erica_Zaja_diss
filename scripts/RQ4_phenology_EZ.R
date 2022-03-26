@@ -196,12 +196,5 @@ str(phenology_green)
     labs(x = "greening type (count)", y = "proportion") +
     theme_shrub())
 
-# TO DO 
-# NB check I have same number of points per year? —> if not proportion of plots greening early. 
-# Count of number of early years
-# Barplot of count of number of early years (x = year [1998-2020], y = count of number of early years)
-# lmer(count_no_early_years ~ years + (1 | SUBSITE))
-## Year (x) VS DOY of greening (y) —> negative trned 
-# lmer(DOY ~ YEAR  + (1|subsite)) 
 
 

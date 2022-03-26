@@ -169,7 +169,7 @@ str(ITEX_shrubs_sp_trim)
 
 (facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover))+
                                  geom_point(size = 0.6, aes( colour = GENUS)) +
-                                 scale_colour_manual(values = c("#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
+                                 scale_colour_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
                                  geom_smooth(method = lm, aes(colour = GENUS))+
                                  #scale_fill_manual(values = c("green4", "green3", "red", "red4", "brown", "blue4", 'blue3' ))+ 
                                  facet_wrap(~ GENUS, scales = "free_y") +
@@ -423,16 +423,16 @@ ITEX_shrubs_mean_trim$LONG <-scale(ITEX_shrubs_mean_trim$LONG , center = TRUE, s
 hist(ITEX_shrubs_mean_trim$mean_cover)
 
 # Shrub cover vs latitude 
-shrub_lat <- betareg(mean_cover_prop ~ LAT, data = ITEX_shrubs_mean_trim)
+shrub_lat <- glm(mean_cover ~ LAT, family ="poisson", data = ITEX_shrubs_mean_trim)
 summary(shrub_lat)
 length(unique(ITEX_shrubs_mean_trim$SiteSubsitePlot ))
 
-# Null deviance: 10098.6
-# Residual deviance:  7286.7 
-# Pseudo R2 = 1-(7286.7 /10098.6)
-# [1] 0.2784445 latitude explains ~28 % in variation in shrub cover
+# Null deviance: 737.11
+# Residual deviance:  468.75
+# Pseudo R2 = 1-(468.75/737.11)
+# [1] 0.3640705 latitude explains ~36 % in variation in shrub cover
 
-# mean shrub cover decreases with lat (-4.4189***)
+# mean shrub cover decreases with lat ( -0.44675 ***)
 
 plot(shrub_lat)
 
@@ -442,15 +442,20 @@ stargazer(shrub_lat, type = "text",
           digit.separator = "")
 
 (cover_lat_scatter <- (ggplot(ITEX_shrubs_mean_trim))+
-    geom_point(aes(x = LAT, y = mean_cover), colour= "green4", size = 1) +
-    geom_smooth(aes(x = LAT, y = mean_cover),colour = "black", method = "glm", fill="yellow4") + 
-    labs(y = "Mean shrub % cover\n", x = "\nLatitude") +
+    geom_point(aes(x = LAT, y = mean_cover), colour= "#009E73", size = 1) +
+    geom_smooth(aes(x = LAT, y = mean_cover),colour = "black", method = "glm", fill="#009E73", size = 2) + 
+    labs(y = "Mean shrub % cover\n", x = "\nScaled latitude") +
    # annotate(geom = "text", x = 1, y = 60, label="(a)", size = 10) +
-    annotate(geom = "text", x = 0.5, y = 20, label="slope = -0.44675*** ", size = 6) +
+    annotate(geom = "text", x = 0.5, y = 20, label="slope = -0.447*** ", size = 10) +
      theme_shrub())
 
 ggsave(file = "output/figures/cover_lat_scatter.png")
 
+# adding icon
+lat_logo <- readPNG("lat_icon.png")
+raster_lat_logo <- as.raster(lat_logo)
+(cover_lat_scatter <- cover_lat_scatter + annotation_raster(raster_lat_logo, 0.5, 1, 30, 60))
+ggsave(file = "output/figures/cover_lat_scatter.png")
 
 # Extracting model predictions 
 predictions_10 <- as.data.frame(predict(shrub_lat, newdata = ITEX_shrubs_mean_trim, interval = "confidence")) # this gives overall predictions for the model
