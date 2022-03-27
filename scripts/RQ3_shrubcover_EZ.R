@@ -187,6 +187,9 @@ ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 # Model ----
 hist(ITEX_shrubs_sp_trim$genus_cover)
 
+lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS), data = ITEX_shrubs_sp_trim)
+summary(lmer_shrub_sp_2)
+
 lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_3 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_0 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|YEAR), data = ITEX_shrubs_sp_trim)
@@ -197,6 +200,10 @@ r.squaredGLMM(lmer_shrub_sp_2 )
 r.squaredGLMM(lmer_shrub_sp_3 )
 r.squaredGLMM(lmer_shrub_sp_0)
 summary(lmer_shrub_sp_0) 
+
+tab_model(lmer_shrub_sp_3, file = "output/tables/lmer_shrub_sp_3.html")
+webshot("output/tables/lmer_shrub_sp_3.html", "output/tables/lmer_shrub_sp_3.html")
+
 
 
 lmer_shrub_sp_2a <- glmer(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
@@ -421,16 +428,19 @@ hist(Salix$genus_cover)
 ITEX_shrubs_mean_trim$LAT <-scale(ITEX_shrubs_mean_trim$LAT , center = TRUE, scale = TRUE)
 ITEX_shrubs_mean_trim$LONG <-scale(ITEX_shrubs_mean_trim$LONG , center = TRUE, scale = TRUE)
 hist(ITEX_shrubs_mean_trim$mean_cover)
+glimpse(ITEX_shrubs_mean_trim$mean_cover_prop)
 
 # Shrub cover vs latitude 
-shrub_lat <- glm(mean_cover ~ LAT, family ="poisson", data = ITEX_shrubs_mean_trim)
+shrub_lat <- glm.nb(mean_cover ~ LAT, data = ITEX_shrubs_mean_trim)
 summary(shrub_lat)
 length(unique(ITEX_shrubs_mean_trim$SiteSubsitePlot ))
 
-# Null deviance: 737.11
-# Residual deviance:  468.75
-# Pseudo R2 = 1-(468.75/737.11)
-# [1] 0.3640705 latitude explains ~36 % in variation in shrub cover
+shrub_lat_null <- glm.nb(mean_cover ~ 1, data = ITEX_shrubs_mean_trim)
+AIC(shrub_lat, shrub_lat_null, shrub_long)
+# Null deviance: 230.24 
+# Residual deviance:  136.82 
+# Pseudo R2 = 1-(136.82 /230.24)
+# [1] 0.4057505 latitude explains ~40 % in variation in shrub cover
 
 # mean shrub cover decreases with lat ( -0.44675 ***)
 
@@ -480,7 +490,7 @@ model_10_preds <- cbind(ITEX_shrubs_mean_trim, predictions_10)
 ggsave(file = "output/figures/plot_model_shrub_lat.png")
 
 # Shrub cover vs longitude
-shrub_long<- glm(mean_cover ~ LONG, family = poisson, data = ITEX_shrubs_mean_trim)
+shrub_long<- glm.nb(mean_cover ~ LONG, data = ITEX_shrubs_mean_trim)
 summary(shrub_long)
 
 plot(shrub_long)

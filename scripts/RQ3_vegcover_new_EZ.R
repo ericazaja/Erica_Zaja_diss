@@ -16,7 +16,7 @@ library(viridis)
 library(ggtern)
 library(lme4)
 library(ggeffects)
-library(sjPlot)  # to visualise model outputs
+library(sjPlot) 
 library(stargazer)
 library(MuMIn)
 library(blmeco)
@@ -24,7 +24,7 @@ library(betareg)
 library(emmeans)
 library(lmtest)
 library(sandwich)
-
+library(webshot)
 # LOADING DATA ----
 
 load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_EZ_diss.RData")
@@ -148,8 +148,8 @@ hist(ITEX_gram_mean_trim$mean_cover_prop)
 model_7 <- glmer.nb(mean_cover_prop~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
 summary(model_7)
 dispersion_glmer(model_7)
-
-model_7 <- glmer.nb(mean_cover~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
+tab_model(model_7a)
+model_7a <- glm.nb(mean_cover_prop~ I(YEAR-1995), data = ITEX_gram_mean_trim)
 
 # Checking model 7 assumptions 
 plot(model_7)
@@ -234,8 +234,11 @@ ITEX_forb_mean_trim <- ITEX_forb_mean %>%
 # Model 8 ----
 # Forb cover over time 
 # mixed effect model with plot and year as random effects
-model_8 <- glmer.nb(mean_cover~I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_forb_mean_trim)
+model_8 <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_forb_mean_trim)
 summary(model_8)
+
+model_8a <- glm.nb(mean_cover_prop~I(YEAR-1995), data = ITEX_forb_mean_trim)
+tab_model(model_8a)
 # total variance: 5.687 + 13.076   =18.763
 # variance for plot =   5.687 
 # amount of variance explained by random effect:  5.687  /18.763 = 0.3030965= ~30%
@@ -477,17 +480,28 @@ plot(lmer_all_2)
 # functional group fixed effect with glmer.nb
 lmer_all_2a <- glmer.nb(mean_cover_prop~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 dispersion_glmer(lmer_all_2a)
+summary(lmer_all_2a)
 AIC(lmer_all_2, lmer_all_2a)
+r.squaredGLMM(lmer_all_2a)
 
+#BEST model without year and plot random effects 
+lmer_all_2a_try <- glm.nb(mean_cover_prop~I(YEAR-1995) + FuncGroup, data = ANWR_veg_fg_trim)
+summary(lmer_all_2a_try)
 
-lmer_all_3 <- glmer.nb(mean_cover~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
-summary(lmer_all_3)
-r.squaredGLMM(lmer_all_3)
-dispersion_glmer(lmer_all_3) # 0.9388978
+lmer_all_3_try <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup), data = ANWR_veg_fg_trim)
+summary(lmer_all_3_try)
+
+# model 5a output table 
+tab_model(lmer_all_2a, file = "output/tables/lmer_2a.html")
+webshot("output/tables/lmer_2a.html", "output/tables/lmer_2a.png")
+
+tab_model(lmer_all_2a_try, file = "output/tables/lmer_2a_try.html")
+webshot("output/tables/lmer_2a_try.html", "output/tables/lmer_2a_try.png")
 
 lmer_all_3a <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 dispersion_glmer(lmer_all_3a) #0.1845308
 summary(lmer_all_3a)
+r.squaredGLMM(lmer_all_3a)
 
 lmer_all_3b <- glmer(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), family = "poisson", data = ANWR_veg_fg_trim)
 dispersion_glmer(lmer_all_3b) # 0.1595953
@@ -500,7 +514,7 @@ AIC(lmer_all_null, lmer_all_0, lmer_all_2, lmer_all_2a, lmer_all_3, lmer_all_3a,
 # BEST model is glmer.nb with fixed effect f group but AIC equivalent to null model
 
 # random slopes
-lmer_all_4 <- glmer.nb(mean_cover~I(YEAR-1995) + (1+YEAR|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+lmer_all_4 <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1+YEAR|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all_4)
 r.squaredGLMM(lmer_all_4)
 
@@ -515,9 +529,10 @@ predictions_rs_all <- ggpredict(lmer_all_4 , terms = c("YEAR", "FuncGroup"), typ
       theme(axis.text.x = element_text(angle = 45))) # really ugly 
 
 # mixed model with functional group as fixed effect
-lmer_all <- glmer.nb(mean_cover~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+lmer_all <- glmer.nb(mean_cover_prop~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 summary(lmer_all)
 r.squaredGLMM(lmer_all)
+AIC(lmer_all, lmer_all_null, lmer_all_4)
 
 
 plot(lmer_all)
