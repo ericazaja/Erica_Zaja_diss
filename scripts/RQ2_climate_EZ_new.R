@@ -195,7 +195,7 @@ ggsave(file = "output/figures/scatter_temp.png")
 model_4 <- lm(biomass ~ CH_PrecipMeanSummer, data = coord.chelsa.combo.c)
 summary(model_4)
 # F-statistic:  1746 on 1 and 9573 DF,  p-value: < 2.2e-16
-# slope = 46.655***
+# slope = 47.290***
 
 AIC(model_4, model_3_null)
 
@@ -305,10 +305,10 @@ model_5a_null <- lm(biomass ~ 1, data = coord.chelsa.combo.d)
 AIC(model_3, model_4, model_5a, model_5a_null)
 
 # model 5a output table 
-stargazer(model_5a, type = "text",
+stargazer(model_5a, type = "html",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
+          digit.separator = "", out = "output/tables/interaction.htm")
 
 # Extract predictions
 predictions_5 <- as.data.frame(predict(model_5a, newdata = coord.chelsa.combo.d, interval = "confidence")) # this gives overall predictions for the model
@@ -410,7 +410,7 @@ coord.chelsa.combo.e <- coord.chelsa.combo.c %>%
 
 # correlation heat map
 # only keeping significant relationships 
-corrplot(cor(coord.chelsa.combo.e, method="s"), sig.level = 0.05, insig = "blank")
+corrplot(cor(coord.chelsa.combo.e, method="s"), sig.level = 0.05, insig = "blank") 
 rcorr(as.matrix(coord.chelsa.combo.e))
 
 # standardise lat and long

@@ -406,7 +406,7 @@ r3_rsample_categ$longitude <- scale(r3_rsample_categ$longitude, center = TRUE, s
 
 level_rs <- lmer(biomass ~ latitude + (1 + latitude|biomass_level), data = r3_rsample_categ)
 summary(level_rs)
-#  latitude estimate:  -14.87 
+#  latitude estimate:  -16.298    
 r.squaredGLMM(level_rs) # same as below
 r2_nakagawa(level_rs)
 
@@ -438,7 +438,7 @@ ggsave(levels_rand_slopes, file = "output/figures/levels_rand_slopes.png")
 # Random slope and intercept biomass level across longitudes ----
 level_rs_long <- lmer(biomass ~ longitude + (1 + longitude|biomass_level), data = r3_rsample_categ)
 summary(level_rs_long)
-# long  estimate:  4.666   (not sig)
+# long  estimate:  3.245  (not sig)
 r.squaredGLMM(level_rs_long) # same as below
 r2_nakagawa(level_rs_long)
 
@@ -479,7 +479,7 @@ ggsave(panel_slopes_levels, file = "output/figures/panel_slopes_levels.png", hei
 r3_high_biomass <- r3_rsample_categ %>% filter (biomass_level == "High")
 model_lat_high <- lm(biomass~latitude, data = r3_high_biomass )
 summary(model_lat_high)
-# F-statistic: 365.7 on 1 and 2393 DF,  p-value: < 2.2e-16***
+# F-statistic: 119.7 on 1 and 796 DF,  p-value: < 2.2e-16***
 
 # null model 
 model_lat_high_null <- lm(biomass~1, data = r3_high_biomass )
@@ -488,7 +488,7 @@ AIC(model_lat_high, model_lat_high_null)
 (scatter_high_lat <- ggplot(r3_high_biomass, aes(x = latitude, y = biomass)) +
     geom_point(color='#8DCCB8', size = 0.1) +
     geom_smooth(method = "lm", colour='black') +
-    labs(x = "\nLatitude", y = "High biomass (kg/m2)\n") + 
+    labs(x = "\nLatitude", y = "High biomass (g/m2)\n") + 
     theme_shrub() + theme(axis.title.y =element_text(size=12), 
                           axis.title.x = element_text(size=12)))
 
