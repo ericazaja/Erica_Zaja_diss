@@ -379,15 +379,19 @@ r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels=c
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
     geom_vline(aes(xintercept = mean(biomass)),            
                colour = "black", linetype = "dashed", size = 1) +
-    annotate(geom = "text", x = 450, y = 200, label="mean = 267.6", size = 8) +
+    annotate(geom = "text", x = 450, y = 200, label="mean = 267.6", size = 14) +
     geom_curve(aes(x = 470, y = 210, xend = mean(biomass) + 2, yend = 210),
-               arrow = arrow(length = unit(0.07, "inch")), size = 0.7,
+               arrow = arrow(length = unit(0.07, "inch")), size = 1,
                color = "grey30", curvature = 0.3) +
     ylab("Frequency\n") +
     xlab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
     scale_fill_manual(name = "Biomass level", values=c( "#F0E442", "#E69F00", "#009E73")) +
     theme_shrub()+
-    theme(legend.text = element_text(size=20),
+    theme( axis.title.x =element_text(size=25),
+           axis.title.y =element_text(size=25),
+           axis.text.x = element_text(size=25, hjust = 1),
+           axis.text.y = element_text(size=25, hjust = 1),
+      legend.text = element_text(size=20),
           legend.title = element_text(size=25),
           legend.position = "bottom"))
 
