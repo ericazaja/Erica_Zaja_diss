@@ -168,18 +168,21 @@ ITEX_shrubs_sp_trim$YEAR <- as.numeric(ITEX_shrubs_sp_trim$YEAR)
 str(ITEX_shrubs_sp_trim)
 
 (facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover))+
-                                 geom_point(size = 0.6, aes( colour = GENUS)) +
+                                 geom_point(size = 0.6, aes(colour=GENUS)) +
                                  scale_colour_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
-                                 geom_smooth(method = lm, aes(colour = GENUS))+
-                                 #scale_fill_manual(values = c("green4", "green3", "red", "red4", "brown", "blue4", 'blue3' ))+ 
+                                 geom_smooth(method = lm, aes(colour= GENUS, fill = GENUS), show.legend = FALSE))+
+    scale_fill_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
+    #scale_fill_manual(values = c("green4", "green3", "red", "red4", "brown", "blue4", 'blue3' ))+ 
                                  facet_wrap(~ GENUS, scales = "free_y") +
                                  scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
                                  labs(y = "Mean cover (%) \n", x = "\nYear") +
                                  theme_shrub()+
-                                 theme(axis.text.x  = element_text(vjust=0.5, size=12, angle= 45, 
+                                 theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 45, 
                                                                    colour = "black"), 
                                        legend.position = "none",
-                                       strip.text.x = element_text(size = 20, face = "italic" ))))
+                                       axis.title.x = element_text(size=25),
+                                       axis.title.y = element_text(size=25),
+                                       strip.text.x = element_text(size = 25, face = "italic" )))
 
 dev.off()
 ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
@@ -187,8 +190,10 @@ ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 # Model ----
 hist(ITEX_shrubs_sp_trim$genus_cover)
 
-lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|PLOT), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp_2)
+AIC(lmer_shrub_sp_null, lmer_shrub_sp_2)
+
 lmer_shrub_sp_4 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
 
 lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)

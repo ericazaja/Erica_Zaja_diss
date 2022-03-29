@@ -428,7 +428,7 @@ unique(ANWR_veg$FuncGroup)  # checking I have all functional groups
       geom_vline(aes(xintercept = mean(RelCover)),            
                  colour = "black", linetype = "dashed", size = 1) +
       labs(x = "\nCover (%)", y = "Frequency\n") +
-      scale_fill_manual(values=c( "#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"), name = "Plant functional type (PFT)")+
+      scale_fill_manual(values=c( "#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"), name = "Plant functional group")+
       theme_shrub() +
       theme(legend.text = element_text(size=20),
             legend.title = element_text(size=25)) )
@@ -481,8 +481,9 @@ plot(lmer_all_2)
 lmer_all_2a <- glmer.nb(mean_cover_prop~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 dispersion_glmer(lmer_all_2a)
 summary(lmer_all_2a)
-AIC(lmer_all_2, lmer_all_2a)
+AIC(lmer_all_2a, lmer_all_null)
 r.squaredGLMM(lmer_all_2a)
+
 
 #BEST model without year and plot random effects 
 lmer_all_2a_try <- glm.nb(mean_cover_prop~I(YEAR-1995) + FuncGroup, data = ANWR_veg_fg_trim)
@@ -518,7 +519,7 @@ lmer_all_4 <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1+YEAR|FuncGroup) + (1|YE
 summary(lmer_all_4)
 r.squaredGLMM(lmer_all_4)
 
-predictions_rs_all <- ggpredict(lmer_all_4 , terms = c("YEAR", "FuncGroup"), type = "re")
+predictions_rs_all <- ggpredict(lmer_all_2a  , terms = c("YEAR", "FuncGroup"))
 (groups_rand_slopes <- ggplot(predictions_rs_all, aes(x = x, y = predicted, colour = group)) +
       stat_smooth(method = "lm", se = FALSE)  +
       scale_colour_manual(values = c("green4", "green3", "red", "red4", "brown"), name = "Functional group")+
@@ -562,11 +563,11 @@ stargazer(lmer_all_2,
 AIC(lmer_all, lmer_all_0, lmer_all_2, lmer_all_3, lmer_all_4)
 
 # Extracting model predictions 
-pred_lmer_all_1 <- ggpredict(lmer_all, terms = c("YEAR"))
-pred_lmer_all_2 <- ggpredict(lmer_all, terms = c("FuncGroup"))  # this gives overall predictions for the model
+pred_lmer_all_1 <- ggpredict(lmer_all_2a , terms = c("YEAR"))
+pred_lmer_all_2 <- ggpredict(lmer_all_2a , terms = c("FuncGroup"))  # this gives overall predictions for the model
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
-predics <- ggpredict(lmer_all, terms = c("YEAR", "FuncGroup"), type = "re")
+predics <- ggpredict(lmer_all_2a, terms = c("YEAR", "FuncGroup"), type = "re")
 (pred_plot2 <- ggplot(predics, aes(x = x, y = predicted, colour = group)) +
       stat_smooth(method = "lm", se = FALSE)  +
       scale_y_continuous(limits = c(0, 35)) +
@@ -574,7 +575,7 @@ predics <- ggpredict(lmer_all, terms = c("YEAR", "FuncGroup"), type = "re")
       labs(x = "\nYear", y = "Cover\n"))
 
 # trying diff graph
-ANWR_veg_fg_trim$Predicted <- predict(lmer_all, ANWR_veg_fg_trim)
+ANWR_veg_fg_trim$Predicted <- predict(lmer_all_2a, ANWR_veg_fg_trim)
 
 # plot predicted values
 ggplot(ANWR_veg_fg_trim, aes(YEAR, Predicted)) +
@@ -588,13 +589,13 @@ ggplot(ANWR_veg_fg_trim, aes(YEAR, Predicted)) +
 
 
 # extracting model predictions
-pred.mm <- ggpredict(lmer_all_rand, terms = c("YEAR"))
+pred.mm <- ggpredict(lmer_all_2a, terms = c("YEAR"))
 
 # Plotting fixed effects
-(fe.effects <- plot_model(lmer_all_rand, show.values = TRUE))
+(fe.effects <- plot_model(lmer_all_2a, show.values = TRUE))
 
 # Plotting random effects
-(re.effects <- plot_model(lmer_all_rand, type = "re", show.values = TRUE))
+(re.effects <- plot_model(lmer_all_2a, type = "re", show.values = TRUE))
 
 # Random slopes 
 predict <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"), type = "re") 
@@ -609,15 +610,20 @@ predict <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"), type = "re")
 
 (scatter_fgroups <- (ggplot(ANWR_veg_fg_trim, aes(x = YEAR, y = mean_cover, colour = FuncGroup))+
                        geom_point(size = 0.5) +
-                       geom_smooth(method = "lm") + 
+                       geom_smooth(method = "lm", aes(colour= FuncGroup, fill = FuncGroup), show.legend = FALSE)) + 
                     facet_wrap(~FuncGroup, scales = "free_y") +
                        scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
                        scale_colour_manual(values = c("#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"))+
+                        scale_fill_manual(values = c("#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"))+
                        labs(y = "Mean cover (%) \n", x = "\nYear") +
                        theme_shrub() +
-                       theme(axis.text.x  = element_text(vjust=0.5, size=12, angle= 45, colour = "black"),
+                       theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 45, colour = "black"),
                              legend.position = "none",
-                           strip.text.x = element_text(size = 20))))
+                           strip.text.x = element_text(size = 20),
+                         axis.title.x = element_text(size=25),
+                                 axis.title.y = element_text(size=25),
+                                 axis.text.y = element_text(size=25, hjust = 1)))
+
             
 
 ggsave(file = "output/figures/scatter_fgroups.png")
@@ -642,6 +648,7 @@ predictions_fgroup_slopes <- ggpredict(lmer_fgroup_rand , terms = c("YEAR", "Fun
       labs(x = "\nYear", y = "Mean shrub genus cover (%)\n")+
       theme_shrub()+ 
       theme(axis.text.x = element_text(angle = 45)))
+
 
 # END -----
 
