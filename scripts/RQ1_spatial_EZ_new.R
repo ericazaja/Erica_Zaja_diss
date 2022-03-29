@@ -240,11 +240,15 @@ model_1_lat <- cbind(r3_rsample_001, predictions_1)
                       stat_smooth(method=lm, colour = "black", size = 2)+
                       geom_line(aes(y=lwr),  color = "#F96E00", linetype = "dashed", size = 0.5)+
                       geom_line(aes(y=upr), color = "#F96E00", linetype = "dashed", size = 0.5)+
-                        annotate(geom = "text", x = 2, y = 1100, label="(a)", size = 15) +
+                       # annotate(geom = "text", x = 2, y = 1100, label="(a)", size = 15) +
                         annotate(geom = "text", x = 1, y = 800, label="slope =  -49.079*** ", size = 10) +
                       xlab("\nScaled latitude") +
                       ylab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
-                      theme_shrub()))
+                      theme_shrub()+
+                      theme(axis.title.x =element_text(size=25),
+                              axis.title.y =element_text(size=25),
+                              axis.text.x = element_text(size=25, hjust = 1),
+                              axis.text.y = element_text(size=25, hjust = 1) )) )
 
 ggsave(file = "output/figures/predictions_biomass_vs_lat.png")
 
@@ -301,13 +305,15 @@ model_2_long <- cbind(r3_rsample_001, predictions_2)
                       stat_smooth(method=lm, colour = "black", size = 2)+
                       geom_line(aes(y=lwr),  color = "#F96E00", linetype = "dashed", size = 0.5)+
                       geom_line(aes(y=upr), color = "#F96E00", linetype = "dashed", size = 0.5)+
-                        annotate(geom = "text", x = 2, y = 1100, label="(b)", size = 15) +
+                       # annotate(geom = "text", x = 2, y = 1100, label="(b)", size = 15) +
                         annotate(geom = "text", x = 1, y = 800, label="slope = -22.021*** ", size = 10) +
                         xlab("\nScaled longitude") +
                         ylab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
-                      theme_shrub())) 
-                        
-
+                        theme_shrub()+
+                        theme(axis.title.x =element_text(size=25),
+                              axis.title.y =element_text(size=25),
+                              axis.text.x = element_text(size=25, hjust = 1),
+                              axis.text.y = element_text(size=25, hjust = 1) )) )
 
 ggsave(file = "output/figures/predictions_biomass_vs_long.png")
 

@@ -161,11 +161,16 @@ cols <- colors_wong
                                   stat_smooth(method=lm, colour = "black", size = 2)+
                                   geom_line(aes(y=lwr),  color = "#F96E00", linetype = "dashed", size = 0.5)+
                                   geom_line(aes(y=upr), color = "#F96E00", linetype = "dashed", size = 0.5)+
-                                   annotate(geom = "text", x = 2.5, y = 1100, label="(a)", size = 15) +
+                                   #annotate(geom = "text", x = 2.5, y = 1100, label="(a)", size = 15) +
                                    annotate(geom = "text", x = 0, y = 800, label="slope = 38.033*** ", size = 10) +
                                   xlab("Scaled mean summer temperature (°C)") +
                                   ylab(bquote("Shrub biomass "*(g~m^-2)*"")) + 
-                                         theme_shrub()))
+                                         theme_shrub()+
+                                   theme(axis.title.x =element_text(size=25, face = "plain"),
+                                         axis.title.y =element_text(size=25),
+                                         axis.text.x = element_text(size=25, hjust = 1),
+                                         axis.text.y = element_text(size=25, hjust = 1) )) )
+
 
 
 ggsave(file = "output/figures/predictions_biomass_vs_temp.png")
@@ -222,11 +227,16 @@ model_4_preds <- cbind(coord.chelsa.combo.c, predictions_4)
                                    stat_smooth(method=lm, colour = "black", size = 2)+
                                      geom_line(aes(y=lwr),  color = "#F96E00", linetype = "dashed", size = 0.5)+
                                      geom_line(aes(y=upr), color = "#F96E00", linetype = "dashed", size = 0.5)+
-                                     annotate(geom = "text", x = 4, y = 1000, label="(b)", size = 15) +
+                                     #annotate(geom = "text", x = 4, y = 1000, label="(b)", size = 15) +
                                      annotate(geom = "text", x = 3, y = 700, label="slope = 47.290*** ", size = 10) +
-                                    xlab(bquote("Scaled mean summer precipitation "*(g~m^-2)*""))+
+                                    xlab(bquote("\nScaled mean summer precipitation "*(g~m^-2)*""))+
                                     ylab(bquote("Shrub biomass "*(g~m^-2)*""))+
-                                    theme_shrub()))
+                                    theme_shrub()+
+                                     theme(axis.title.x =element_text(size=25),
+                                           axis.title.y =element_text(size=25),
+                                           axis.text.x = element_text(size=25, hjust = 1),
+                                           axis.text.y = element_text(size=25, hjust = 1) )) )
+
 
                                      
 ggsave(file = "output/figures/predictions_biomass_vs_precip.png")
@@ -284,22 +294,27 @@ mean(coord.chelsa.combo.c$CH_PrecipMeanSummer)
 # 86.44856
 
 coord.chelsa.combo.d <- coord.chelsa.combo.c %>% 
-  mutate(moisture = case_when(CH_PrecipMeanSummer < -0.71467025~ "dry",
-                              CH_PrecipMeanSummer >= -0.71467025 & CH_PrecipMeanSummer < 0.56418805  ~ "moist",
-                              CH_PrecipMeanSummer >= 0.56418805  ~ "wet"))
+  mutate(precip_level = case_when(CH_PrecipMeanSummer < -0.71467025~ "Low",
+                              CH_PrecipMeanSummer >= -0.71467025 & CH_PrecipMeanSummer < 0.56418805  ~ "Medium",
+                              CH_PrecipMeanSummer >= 0.56418805  ~ "High"))
 
 
 
-unique(coord.chelsa.combo.d$moisture)
-coord.chelsa.combo.d$moisture <- as.factor(as.character(coord.chelsa.combo.d$moisture)) # moisture as factor
+unique(coord.chelsa.combo.d$precip_level)
+coord.chelsa.combo.d$precip_level <- as.factor(as.character(coord.chelsa.combo.d$precip_level)) # moisture as factor
 str(coord.chelsa.combo.d)
 
 write.csv(coord.chelsa.combo.d, file = "datasets/climate_data/coord.chelsa.combo.d.csv")
 
 # Model 5a: biomass Vs temp*moisture
-model_5a <- lm(biomass ~ CH_TempMeanSummer*moisture , data = coord.chelsa.combo.d)
+model_5a <- lm(biomass ~ CH_TempMeanSummer*precip_level, data = coord.chelsa.combo.d)
 summary(model_5a)
 # F-statistic: 174.6 on 5 and 3186 DF,  p-value: < 2.2e-16
+
+# reordeing factor levels 
+coord.chelsa.combo.d$precip_level <- factor(coord.chelsa.combo.d$precip_level,levels=c("Low", "Medium", "High"),
+                                         labels = c("Low", "Medium", "High"),
+                                         ordered = T)
 
 model_5a_null <- lm(biomass ~ 1, data = coord.chelsa.combo.d)
 AIC(model_3, model_4, model_5a, model_5a_null)
@@ -314,17 +329,20 @@ stargazer(model_5a, type = "html",
 predictions_5 <- as.data.frame(predict(model_5a, newdata = coord.chelsa.combo.d, interval = "confidence")) # this gives overall predictions for the model
 model_5_preds <- cbind(coord.chelsa.combo.d, predictions_5)
 
+
 # Plot the predictions 
-(predictions_interaction<- (ggplot(model_5_preds, aes(CH_TempMeanSummer, fit, group = moisture)) + 
-                                   geom_point(aes(x = CH_TempMeanSummer, y = biomass, colour = moisture), size =0.5) +
-                              scale_colour_manual(values = c("#DC9902", "#46AAE2", "#003654"), name = "Moisture level")+
-                                   stat_smooth(method=lm, aes(colour = moisture), size=1.5)+
-                                  geom_line(aes(y=lwr,  color = moisture), linetype = "dashed", size=0.5)+
-                                   geom_line(aes(y=upr, color = moisture), linetype = "dashed",  size=0.5)+
-                              xlab("Scaled mean summer temperature (°C)") +
+(predictions_interaction<- (ggplot(model_5_preds, aes(CH_TempMeanSummer, fit, group = precip_level)) + 
+                                   geom_point(aes(x = CH_TempMeanSummer, y = biomass, colour = precip_level), size =0.5) +
+                              scale_colour_manual(values = c("#DC9902", "#46AAE2", "#003654"), name = "Precipitation level")+
+                                   stat_smooth(method=lm, aes(colour = precip_level), size=1.5)+
+                                  geom_line(aes(y=lwr,  color = precip_level), linetype = "dashed", size=0.5)+
+                                   geom_line(aes(y=upr, color = precip_level), linetype = "dashed",  size=0.5)+
+                              xlab("\nScaled mean summer temperature (°C)") +
                               ylab(bquote("Shrub biomass "*(g~m^-2)*"")) + 
+                              #annotate(geom = "text", x = 2, y = 1000, label="(c)", size = 15) +
                                    theme_shrub()+ theme(legend.text = element_text(size= 20),
-                                                        legend.title = element_text(size=25))))
+                                                        legend.title = element_text(size=25), 
+                                                        legend.position = "none")))
 
 ggsave(filename = "output/figures/predictions_interaction.png")
 
