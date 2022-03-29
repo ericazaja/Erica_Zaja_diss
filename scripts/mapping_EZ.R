@@ -160,6 +160,37 @@ r3_latlong_agg <- raster("datasets/berner_data/r3_latlong_agg.tif")
 
 ggsave("output/figures/r3_cropped_viridis.png")
 
+r3_latlong_agg_df <- as.data.frame(r3_latlong_agg, xy=TRUE, 
+                                   na.rm=TRUE)
+
+# MAPPING with new color palette ----
+r3_latlong_agg_df <- r3_latlong_agg_df %>%
+  mutate(biomass_level = case_when (r3_latlong_agg < 170.630482     ~ 'Low', # lower than mean biomass
+                                    r3_latlong_agg> 170.630482    & r3_latlong_agg < 347.062210 ~ 'Medium', 
+                                    r3_latlong_agg > 347.062210 ~ 'High'))
+
+r3_latlong_agg_df$biomass_level <- factor(r3_latlong_agg_df$biomass_level,levels=c("Low", "Medium", "High"),
+                                         labels = c("Low", "Medium", "High"),
+                                         ordered = T)
+raster_my_palette_new <- ggplot(r3_latlong_agg_df) + 
+  geom_tile(aes(x=x,y=y,fill=biomass_level)) + 
+  scale_fill_manual(name = "Biomass level", values=c( "#F0E442", "#E69F00", "#009E73")) +
+  coord_quickmap()+
+  theme_shrub() +  # Remove ugly grey background
+  xlab("\nLongitude") +
+  ylab("Latitude\n") +
+ xlim(-147.5, -140)+
+ ylim(69,70.5)+ 
+  theme(plot.title = element_text(hjust = 0.5),      # centres plot title
+                       text = element_text(size=20),		       	    # font size
+                       axis.text.x = element_text( hjust = 1),
+                       legend.text = element_text(size=20),
+                       legend.title = element_text(size=25))  # rotates x axis text
+(raster_my_palette_new <- raster_my_palette_new + annotation_raster(raster_caribou_logo, -142, -140, 69.8, 70.5))
+ggsave(file = "output/figures/r3_cropped_my_palette.png")
+
+
+
 # Cropped map with personalised colour palette (low-mid)
 (r3_cropped_my_palette <- gplot(r3_latlong_agg) +
     geom_raster(aes(x = x, y = y, fill = value)) +

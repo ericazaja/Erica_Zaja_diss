@@ -223,11 +223,17 @@ unique(prop_greening_plots$year)
 # Generalised linear mixed model model family binomial 
 glm_early <- glmer(prop_early ~  I(year-1995) + (1|year), family = binomial, data = prop_greening_plots)
 summary(glm_early)
+tab_model(glm_early, file = "output/tables/glm_early.html")
+webshot("output/tables/glm_early.html", "output/tables/glm_early.png")
+
+
+glm_early_2 <- glm(prop_early ~  I(year-1995) , family = binomial, data = prop_greening_plots)
+summary(glm_early_2)
 
 #Null model
 glm_early_null <- glm(prop_early ~  1, family = binomial, data = prop_greening_plots)
 
-AIC(glm_early, glm_early_null)
+AICc(glm_early, glm_early_null, glm_early_2)
 
 plot(glm_early)
 dispersion_glmer(glm_early)# 0.7259031
@@ -269,6 +275,9 @@ dispersion_glmer(glm_late)# 0.7259028
 qqnorm(resid(glm_late))
 qqline(resid(glm_late))
 
+glm_late_2 <- glm(prop_late ~ I(year-1995), family = binomial, data = prop_greening_plots)
+summary(glm_late_2)
+AIC(glm_late_null)
 # null
 glm_late_null <- glm(prop_late ~  1, family = binomial, data = prop_greening_plots)
 
@@ -296,6 +305,11 @@ str(phenology_green_trim)
 hist(phenology_green_trim$mean.doy) # normal distribution
 lmer_green <- lmer(mean.doy ~ I(year-1995) + (1 |study_area) + (1|year), data = phenology_green_trim ) 
 summary(lmer_green)
+r2_nakagawa(lmer_green)
+
+tab_model(lmer_green, file = "output/tables/lmer_green.html")
+webshot("output/tables/lmer_green.html", "output/tables/lmer_green.png")
+
 
 # null
 lmer_green_null <- lm(mean.doy ~ 1, data = phenology_green_trim ) 
@@ -370,6 +384,10 @@ hist(Qikiqtaruk$mean.doy)
 lmer_Qiki <- lmer(mean.doy ~ I(year-1995) + (1|year), data =Qikiqtaruk ) 
 summary(lmer_Qiki)
 plot(lmer_Qiki)
+tab_model(lmer_Qiki, file = "output/tables/lmer_Qiki.html")
+webshot("output/tables/lmer_Qiki.html", "output/tables/lmer_Qiki.png")
+
+r2_nakagawa(lmer_Qiki)
 
 lm_Qiki_null <- lm(mean.doy ~ 1, data =Qikiqtaruk ) 
 AIC(lmer_Qiki, lm_Qiki_null)
@@ -407,6 +425,8 @@ plot(lmer_Atqasuk)
 lm_Atqasuk_null <- lm(mean.doy ~ 1, data = Atqasuk) 
 AIC(lmer_Atqasuk, lm_Atqasuk_null)
 
+r2_nakagawa(lmer_Atqasuk)
+
 stargazer(lmer_Atqasuk, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -428,6 +448,8 @@ plot(lmer_Toolik)
 
 lm_Toolik_null <- lm(mean.doy ~ 1, data = Toolik) 
 AIC(lmer_Toolik, lm_Toolik_null)
+
+r2_nakagawa(lmer_Toolik)
 
 stargazer(lmer_Toolik, type = "text",
           digits = 3,
@@ -451,6 +473,8 @@ plot(lmer_Utqiagvik)
 
 lm_Utqiagvik_null <- lm(mean.doy ~ 1, data = Utqiagvik) 
 AIC(lmer_Utqiagvik, lm_Utqiagvik_null)
+
+r2_nakagawa(lmer_Utqiagvik)
 
 stargazer(lmer_Utqiagvik, type = "text",
           digits = 3,

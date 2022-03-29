@@ -189,6 +189,7 @@ hist(ITEX_shrubs_sp_trim$genus_cover)
 
 lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp_2)
+lmer_shrub_sp_4 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
 
 lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_3 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
@@ -196,15 +197,21 @@ lmer_shrub_sp_0 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|YEAR), data = ITE
 dispersion_glmer(lmer_shrub_sp_2) #0.2425216
 dispersion_glmer(lmer_shrub_sp_3)#0.2723795
 dispersion_glmer(lmer_shrub_sp_0)# 0.2750381
-r.squaredGLMM(lmer_shrub_sp_2 ) 
-r.squaredGLMM(lmer_shrub_sp_3 )
+r.squaredGLMM(lmer_shrub_sp_2) 
+r.squaredGLMM(lmer_shrub_sp_3)
 r.squaredGLMM(lmer_shrub_sp_0)
 summary(lmer_shrub_sp_0) 
 
 tab_model(lmer_shrub_sp_3, file = "output/tables/lmer_shrub_sp_3.html")
-webshot("output/tables/lmer_shrub_sp_3.html", "output/tables/lmer_shrub_sp_3.html")
+webshot("output/tables/lmer_shrub_sp_3.html", "output/tables/lmer_shrub_sp_3.png")
 
+# best model below:
+lmer_shrub_sp_0 <- glmer.nb(genus_cover_prop~I(YEAR-1995)+ (1|GENUS), data = ITEX_shrubs_sp_trim)
+summary(lmer_shrub_sp_0)
+r.squaredGLMM(lmer_shrub_sp_0)
 
+tab_model(lmer_shrub_sp_0, file = "output/tables/lmer_shrub_sp_0.html")
+webshot("output/tables/lmer_shrub_sp_0.html", "output/tables/lmer_shrub_sp_0.png")
 
 lmer_shrub_sp_2a <- glmer(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_3a <- glmer(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
@@ -216,13 +223,13 @@ dispersion_glmer(lmer_shrub_sp_0a)#0.2512536
 # null model
 lmer_shrub_sp_null <- glm.nb(genus_cover_prop~1, data = ITEX_shrubs_sp_trim)
 
-AIC(lmer_shrub_sp_null, lmer_shrub_sp_2,lmer_shrub_sp_2a, lmer_shrub_sp_3,lmer_shrub_sp_3a, lmer_shrub_sp_0,lmer_shrub_sp_0a)
+AIC(lmer_shrub_sp_null, lmer_shrub_sp_2,lmer_shrub_sp_2a, lmer_shrub_sp_3,lmer_shrub_sp_3a, lmer_shrub_sp_0,lmer_shrub_sp_0a, lmer_shrub_sp)
 
 ## NB BEST model is lmer_shrub_sp_0 because lowest AIC (), but doesnt take genus as effect. SO next best is genus as random effect
 
 # mixed effect model with year as random effects
-lmer_shrub_sp <- glmer.nb(genus_cover~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
-summary(lmer_shrub_sp_0)
+lmer_shrub_sp <- glmer.nb(genus_cover_prop~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
+summary(lmer_shrub_sp)
 r.squaredGLMM(lmer_shrub_sp)
 dispersion_glmer(lmer_shrub_sp_2)
 str(ITEX_shrubs_sp_trim)
