@@ -18,6 +18,8 @@ library(sjPlot)  # to visualise model outputs
 library(stargazer)
 library(blmeco)
 
+# colour palette by Wong 
+# https://davidmathlogic.com/colorblind/#%23000000-%23E69F00-%2356B4E9-%23009E73-%23F7EA40-%230072B2-%23D55E00-%23CC79A7 
 # LOADING DATA ----
 
 load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_EZ_diss.RData")
