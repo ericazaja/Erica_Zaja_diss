@@ -1,29 +1,35 @@
-## Honours Dissertation Repository 
+## Honours Dissertation Repository by Erica Zaja
 ### Ecological and Environmental Sciences with Management 
-### Erica Zaja - last update: 22/10/21
+###  Last update: 04/04/22
 *******
 
 ### Research Title: Shrubification in the Western Arctic and its Effects on the Porcupine Caribou Herd Habitat
 
+#### Repository Structure
+
 Repository includes: datasets, figures, R scripts, statistical output, Markdown structure, backup material, project organisation. 
 
-#### Repository Structure
-- #### [datasets](https://github.com/ericazaja/dissertation/tree/main/datasets):
+- #### [datasets](https://github.com/ericazaja/dissertation/tree/main/datasets)
 
-  - [PCH_data](https://github.com/ericazaja/dissertation/tree/main/datasets/PCH_data): PCH summer range (Data.gov, 2013)
+  - [PCH_Core_Range_2016](https://github.com/ericazaja/Erica_Zaja_diss/tree/main/datasets/PCH_Core_Range_2016): PCH core range data (Porcupine Caribou Management Board, 2016)
 
-  - [berner_data](https://github.com/ericazaja/dissertation/tree/main/datasets/berner_data): North Slope of Alaska shrub map (Berner et al, 2021)
+  - [berner_data](https://github.com/ericazaja/dissertation/tree/main/datasets/berner_data): Shrub map of North Slope of Alaska (Berner et al, 2021)
 
-  - [ITEX_data](https://github.com/ericazaja/dissertation/tree/main/datasets/ITEX_data): vegetation cover plot-based data 
+  - [ITEX_data](https://github.com/ericazaja/dissertation/tree/main/datasets/ITEX_data): plot-based vegetation cover data 
 
-  - [phenology_data](https://github.com/ericazaja/dissertation/tree/main/datasets/phenology_data): phenology data (Prevéy et al, 2021)
+  - [phenology_data](https://github.com/ericazaja/dissertation/tree/main/datasets/phenology_data): ITEX phenology data (Prevéy et al, 2021)
 
   - [climate_data](): CHELSA temperature and precipitation data 
 
   - [anna_data](https://github.com/ericazaja/dissertation/tree/main/datasets/anna_data): data used for model RMarkdown dissertation - **NOT** actual data I need 
 
-- #### [scripts](https://github.com/ericazaja/dissertation/tree/main/scripts):
-  - for now contains experimental analyses (rubbish), please ignore
+- #### [scripts](https://github.com/ericazaja/dissertation/tree/main/scripts): 
+  - [mapping_EZ.R]()
+  - [RQ1_spatial_EZ.R]()
+  - [RQ2_climate_EZ.R]()
+  - [RQ3_vegcover_EZ.R]()
+  - [RQ3_shrubcover_EZ.R]()
+  - [RQ4_phenology_EZ.R]()
 
 - #### [img](https://github.com/ericazaja/dissertation/tree/main/img):
   - figures produced 
@@ -32,26 +38,20 @@ Repository includes: datasets, figures, R scripts, statistical output, Markdown 
   - separate Rmd sections of dissertation report
   
 - #### [documents](https://github.com/ericazaja/dissertation/tree/main/documents): 
-  - safety and ethics signed forms, 
-  - title proposal, 
-  - outline plan, 
-  - budget form
+  - safety and ethics signed forms, title proposal, outline plan, budget form
   
 - #### [proposals](https://github.com/ericazaja/dissertation/tree/main/proposals): 
-  - one page outline, 
-  - full thesis plan and 
-  - proposed methods
+  - one page outline, full thesis plan and proposed methods
 
 #### Requirements
 - `RStudio` version 1.2.5001 or greater
 - packages `rgdal`, `sp`, `raster`, `ggplot2` 
 
 #### My Learning Objectives
-- Familiarising myself with GIS techniques
+- Familiarising with GIS techniques
 - Learning spatial analysis
 - Working with large datasets and data wrangling
 - Using data to answer ecological questions
-
 
 #### Feedback Etiquette
 
