@@ -66,6 +66,7 @@ ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>%
   mutate(mean_cover_prop = mean_cover/100)
 
 str(ITEX_shrubs_mean_trim)
+
 # making plot categorical
 ITEX_shrubs_mean_trim$PLOT <- as.factor(as.character(ITEX_shrubs_mean_trim$PLOT))
 hist(ITEX_shrubs_mean_trim$mean_cover_prop) # right skewed
@@ -82,7 +83,7 @@ hist(ITEX_shrubs_mean_trim$mean_cover_prop) # right skewed
 
 # ggsave(shrub_mean_change, file = "output/figures/shrub_mean_change.png")          
 
-# Model 6----
+# Model 12 ----
 # Shrub cover over time
 unique(ITEX_shrubs_mean_trim$YEAR)
 
@@ -186,35 +187,41 @@ str(ITEX_shrubs_sp_trim)
 dev.off()
 # ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 
-# Model ----
+# MODEL(s) 13 ----
 lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|PLOT), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp_2)
+dispersion_glmer(lmer_shrub_sp_2) # 0.2425216
+r.squaredGLMM(lmer_shrub_sp_2) 
 AIC(lmer_shrub_sp_null, lmer_shrub_sp_2)
 
+# Comparing different models:
 lmer_shrub_sp_4 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
-
 lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_3 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_0 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|YEAR), data = ITEX_shrubs_sp_trim)
-dispersion_glmer(lmer_shrub_sp_2) #0.2425216
-dispersion_glmer(lmer_shrub_sp_3)#0.2723795
+lmer_shrub_sp_1 <- glmer.nb(genus_cover_prop~I(YEAR-1995)+ (1|GENUS), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp <- glmer.nb(genus_cover_prop~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
+dispersion_glmer(lmer_shrub_sp_3) #0.2723795
 dispersion_glmer(lmer_shrub_sp_0)# 0.2750381
-r.squaredGLMM(lmer_shrub_sp_2) 
 r.squaredGLMM(lmer_shrub_sp_3)
 r.squaredGLMM(lmer_shrub_sp_0)
 summary(lmer_shrub_sp_0) 
 
+# Output tables
 tab_model(lmer_shrub_sp_3, file = "output/tables/lmer_shrub_sp_3.html")
 webshot("output/tables/lmer_shrub_sp_3.html", "output/tables/lmer_shrub_sp_3.png")
-
-# best model below:
-lmer_shrub_sp_0 <- glmer.nb(genus_cover_prop~I(YEAR-1995)+ (1|GENUS), data = ITEX_shrubs_sp_trim)
-summary(lmer_shrub_sp_0)
-r.squaredGLMM(lmer_shrub_sp_0)
 
 tab_model(lmer_shrub_sp_0, file = "output/tables/lmer_shrub_sp_0.html")
 webshot("output/tables/lmer_shrub_sp_0.html", "output/tables/lmer_shrub_sp_0.png")
 
+# Output table 
+stargazer(lmer_shrub_sp,
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "", 
+          type = "html", out = "output/tables/lmer_shrub_sp.html")
+
+# Trying models with poisson distribution
 lmer_shrub_sp_2a <- glmer(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_3a <- glmer(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_0a <- glmer(genus_cover_prop~I(YEAR-1995) + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
@@ -222,78 +229,17 @@ dispersion_glmer(lmer_shrub_sp_2a) #0.2316012
 dispersion_glmer(lmer_shrub_sp_3a)#0.2369076
 dispersion_glmer(lmer_shrub_sp_0a)#0.2512536
 
+# Trying model with random intercepts/slopes
+lmer_shrub_sp_rand <- glmer.nb(genus_cover~YEAR + (1+YEAR|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim) 
+# NB. doesn't converge with glmer.nb and with glmer we have overdispersion
+
 # null model
 lmer_shrub_sp_null <- glm.nb(genus_cover_prop~1, data = ITEX_shrubs_sp_trim)
 
+# comparing AIC values
 AIC(lmer_shrub_sp_null, lmer_shrub_sp_2,lmer_shrub_sp_2a, lmer_shrub_sp_3,lmer_shrub_sp_3a, lmer_shrub_sp_0,lmer_shrub_sp_0a, lmer_shrub_sp)
 
-## NB BEST model is lmer_shrub_sp_0 because lowest AIC (), but doesnt take genus as effect. SO next best is genus as random effect
-
-# mixed effect model with year as random effects
-lmer_shrub_sp <- glmer.nb(genus_cover_prop~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
-summary(lmer_shrub_sp)
-r.squaredGLMM(lmer_shrub_sp)
-dispersion_glmer(lmer_shrub_sp_2)
-str(ITEX_shrubs_sp_trim)
-plot(lmer_shrub_sp_2)
-
-AIC(lmer_shrub_sp, lmer_shrub_sp_2,lmer_shrub_sp_3, lmer_shrub_sp_rand)
-qqnorm(resid(lmer_shrub_sp))
-qqline(resid(lmer_shrub_sp)) 
-
-
-print(lmer_shrub_sp, correlation=TRUE)
-stargazer(lmer_shrub_sp_3, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "") 
-
-# Output table model 7 
-stargazer(lmer_shrub_sp,
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "", 
-          type = "html", out = "output/tables/lmer_shrub_sp.html")
-
-# Extracting model predictions 
-pred_model_shrub_sp <- ggpredict(lmer_shrub_sp, terms = c("YEAR", "GENUS"))  # this gives overall predictions for the model
-# write.csv(pred_model_9, file = "datasets/pred_model_9.csv")
-pred_model_shrub_sp_1 <- ggpredict(lmer_shrub_sp, terms = "YEAR")
-pred_model_shrub_sp_2 <- ggpredict(lmer_shrub_sp, terms = "GENUS")
-str(ITEX_shrub_sp)
-
-# assumptions
-plot(lmer_shrub_sp)
-qqnorm(resid(lmer_shrub_sp))
-qqline(resid(lmer_shrub_sp)) 
-dispersion_glmer(lmer_shrub_sp) #1.019987
-
-
-
-# Plot the predictions 
-(plot_model_shrub_sp <- (ggplot(pred_model_shrub_sp) + 
-                           geom_line(aes(x = x, y = predicted, colour = group) +          # slope
-                                       #geom_ribbon(aes(ymin = predicted - std.error, ymax = predicted + std.error), 
-                                       #fill = "lightgrey", alpha = 0.5) +  # error band
-                                       geom_point(data = ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover), size = 0.5) + 
-                                       facet_wrap(~GENUS) +
-                                       labs(x = "Year", y = "Shrub species cover (%)", 
-                                            title = "Shrub species cover (%) in the ANWR") + 
-                                       theme_shrub())))
-# wrong
-
-# trying diff graph
-ITEX_shrubs_sp_trim$Predicted <- predict(lmer_shrub_sp, ITEX_shrubs_sp_trim)
-
-# plot predicted values
-ggplot(ITEX_shrubs_sp_trim, aes(YEAR, Predicted)) +
-  facet_wrap(~GENUS) +
-  geom_point(aes(x = YEAR, y = genus_cover, colour= GENUS), size = .5) +
-  geom_smooth(aes(y = Predicted, colour = GENUS), linetype = "solid", 
-              se = T, method = "lm") +
-  guides(color=guide_legend(override.aes=list(fill=NA))) +  
-  theme_shrub() + 
-  xlab("Year")
+## N.B BEST model fit is lmer_shrub_sp_0 because lowest AIC (), but doesnt take genus as effect. SO next best is genus as random effect
 
 
 # Plotting fixed effects
@@ -301,135 +247,6 @@ ggplot(ITEX_shrubs_sp_trim, aes(YEAR, Predicted)) +
 
 # Plotting random effects
 (re.effects <- plot_model(lmer_shrub_sp , type = "re", show.values = TRUE))
-
-# Random slopes ----
-predict_sp <- ggpredict(lmer_shrub_sp , terms = c("YEAR", "GENUS"), type = "re") 
-
-(pred_plot2 <- ggplot(predict_sp, aes(x = x, y = predicted, colour = group)) +
-    stat_smooth(method = "lm", se = FALSE)  +
-    # scale_y_continuous(limits = c(0, )) +
-    theme(legend.position = "bottom") +
-    labs(x = "\nYear", y = "Predicted mean % cover\n"))
-
-# Model with random slopes per genus
-lmer_shrub_sp_rand <- glmer(genus_cover~YEAR + (1+YEAR|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim) # doesnt converge with glmer.nb and with glmer we have overdispersion
-summary(lmer_shrub_sp_rand )
-dispersion_glmer(lmer_shrub_sp_rand) # 8.605041!!
-plot(lmer_shrub_sp_rand)
-qqnorm(resid(lmer_shrub_sp_rand))
-qqline(resid(lmer_shrub_sp_rand)) 
-
-predictions_rs_ri <- ggpredict(lmer_shrub_sp_rand , terms = c("YEAR", "GENUS"), type = "re")
-(genus_rand_slopes <- ggplot(predictions_rs_ri, aes(x = x, y = predicted, colour = group)) +
-    stat_smooth(method = "lm", se = FALSE)  +
-    scale_colour_manual(values = c("green4", "green3", "red", "red4", "brown", "blue4", 'blue3'), name = "Shrub genus")+
-    scale_x_continuous(breaks=1997:2009)+
-  theme(legend.position = "bottom") +
-    labs(x = "\nYear", y = "Mean shrub genus cover (%)\n")+
-    theme_shrub()+ 
-    theme(axis.text.x = element_text(angle = 45)))
-
-stargazer(lmer_shrub_sp_rand, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-
-ggsave(file = "output/figures/genus_rand_slopes.png")
-
-# SEPARATE models per genus ----
-# NB. none significant 
-# They are same as  facet but separate 
-
-# Salix sp.
-Salix <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Salix") 
-salix_model <- glmer.nb(genus_cover ~ I(YEAR-1995)+ (1|YEAR), data = Salix)
-summary(salix_model) # not sig
-stargazer(salix_model, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-hist(Salix$genus_cover)
-
-(salix_plot <- ggplot(Salix, aes(x = YEAR, y = genus_cover)) +
-   geom_point()+
-    stat_smooth(method = "lm")  +
-    theme(legend.position = "bottom") +
-    labs(x = "\nYear", y = "Genus % cover\n")) 
-
-# Dryas sp.
-Dryas <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Dryas") 
-dryas_model <- glmer.nb(genus_cover ~ I(YEAR-1995) + (1|YEAR), data = Dryas)
-summary(dryas_model)# not sig
-
-stargazer(dryas_model, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-
-(dryas_plot <- ggplot(Dryas, aes(x = YEAR, y = genus_cover)) +
-    geom_point(colour = "green4", size = 1)+
-    stat_smooth(method = "lm", colour = 'black', fill = 'yellow4')  +
-    scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
-    labs(x = "\nYear", y = "Dryas % cover\n")+ 
-    theme_shrub()+
-    theme(legend.position = "bottom") +
-    theme(axis.text.x = element_text(angle = 45)))
-
-  
-# Vaccinium sp.
-Vaccinium <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Vaccinium") 
-hist(Vaccinium$genus_cover)
-vacc_model <- glmer.nb(genus_cover ~ YEAR + (1|YEAR), data = Vaccinium)
-summary(vacc_model)# not sig
-(vacc_plot <- ggplot(Vaccinium, aes(x = YEAR, y = genus_cover)) +
-    geom_point()+
-    stat_smooth(method = "lm")  +
-    theme(legend.position = "bottom") +
-    labs(x = "\nYear", y = "Genus % cover\n"))
-
-# Arctostaphylos sp.
-Arctostaphylos <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Arctostaphylos") 
-arcto_model <- glmer.nb(genus_cover ~ YEAR + (1|YEAR), data = Arctostaphylos)
-summary(arcto_model)# not sig
-(arcto_plot <- ggplot(Arctostaphylos, aes(x = YEAR, y = genus_cover)) +
-    geom_point()+
-    stat_smooth(method = "lm")  +
-    theme(legend.position = "bottom") +
-    labs(x = "\nYear", y = "Genus % cover\n"))
-
-# Betula sp.
-Betula <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Betula") 
-betula_model <- glmer.nb(genus_cover ~ YEAR + (1|YEAR), data = Betula)
-summary(betula_model)# not sig
-(betula_plot <- ggplot(Betula, aes(x = YEAR, y = genus_cover)) +
-    geom_point()+
-    stat_smooth(method = "lm")  +
-    theme(legend.position = "bottom") +
-    labs(x = "\nYear", y = "Genus % cover\n"))
-
-# Cassiope sp.
-Cassiope<-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Cassiope") 
-cassiope_model <- glmer.nb(genus_cover ~ YEAR + (1|YEAR), data = Cassiope)
-summary(cassiope_model)# not sig
-(cassiope_plot <- ggplot(Cassiope, aes(x = YEAR, y = genus_cover)) +
-    geom_point()+
-    stat_smooth(method = "lm")  +
-    theme(legend.position = "bottom") +
-    labs(x = "\nYear", y = "Genus % cover\n"))
-
-# Ledum sp.
-Ledum <-  ITEX_shrubs_sp_trim %>% filter (GENUS == "Ledum") 
-ledum_model <- glmer.nb(genus_cover ~ YEAR + (1|YEAR), data = Ledum)
-summary(ledum_model)# not sig
-(ledum_plot <- ggplot(Ledum, aes(x = YEAR, y = genus_cover)) +
-    geom_point()+
-    stat_smooth(method = "lm")  +
-    theme(legend.position = "bottom") +
-    labs(x = "\nYear", y = "Genus % cover\n"))
-
-# Vary genus name to visualise distributions
-hist(Salix$genus_cover)
-
 
 
 # 3. SHRUB COVER IN SPACE  ----
