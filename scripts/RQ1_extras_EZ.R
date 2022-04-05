@@ -5,6 +5,9 @@
 #                                                          #
 ##%######################################################%##
 
+### DISCLAIMER: None of this was used in the final product and some doesn't work
+
+# 1. EXTRA MODELLING ----
 
 # Extra model:  biomass vs long*lat  (not used in final diss)
 model_2a <- lm(biomass~longitude*latitude, data = r3_rsample_002)
@@ -92,7 +95,7 @@ ggsave(levels_rand_slopes_long, file = "output/figures/levels_rand_slopes_long.p
 ggsave(panel_slopes_levels, file = "output/figures/panel_slopes_levels.png", height = 10, width=18)
 
 # Filter for high/medium/low biomass separately
-# 1. HIGH  ----
+# a. HIGH  ----
 r3_high_biomass <- r3_rsample_categ %>% filter (biomass_level == "High")
 model_lat_high <- lm(biomass~latitude, data = r3_high_biomass )
 summary(model_lat_high)
@@ -124,7 +127,7 @@ AIC(model_long_high, model_long_high_null)
     theme_shrub() + theme(axis.title.y =element_text(size=12), 
                           axis.title.x = element_text(size=12)))
 
-# 2. MEDIUM -----
+# b. MEDIUM -----
 r3_med_biomass <- r3_rsample_categ %>% filter (biomass_level == "Medium")
 model_lat_med <- lm(biomass~latitude, data = r3_med_biomass )
 summary(model_lat_med)
@@ -157,7 +160,7 @@ AIC(model_long_med, model_long_med_null)
                           axis.title.x = element_text(size=12)))
 
 
-# 3. LOW -----
+# c. LOW -----
 r3_low_biomass <- r3_rsample_categ %>% filter (biomass_level == "Low")
 model_lat_low <- lm(biomass~latitude, data = r3_low_biomass )
 summary(model_lat_low)
@@ -201,7 +204,7 @@ AIC(model_long_low, model_long_low_null)
 
 
 
-# Panel latlong levels -----
+# Panel latlong levels 
 (panel_latlong_levels <- grid.arrange(arrangeGrob(scatter_low_lat, scatter_low_long,
                                                   scatter_med_lat, scatter_med_long,
                                                   scatter_high_lat, scatter_high_long,
@@ -271,11 +274,12 @@ copy_raster <- r3_latlong_agg
 copy_raster[] <- clusters$cluster
 plot(copy_raster, main = "Kmeans", col = viridis_pal(option = "D")(3))
 
-# 3. Map overlay ----
+## 2. EXTRA MAPPING 
+# Map overlay ----
 plot(shrub_agb_p50, xlim = c(-540475.3,  921674.7), ylim = c(1933928.1,2380628.1)) # plotting shrub raster
 plot(st_geometry(PCH_core_range), xlim = c(165444.3, 1049222.0), add = TRUE) # adding PCH polygon
 
-# 4. Base map ----
+# Base map ----
 # Full map of canada
 canada <- raster::getData("GADM", country = "CAN", level = 1)
 plot(canada)
