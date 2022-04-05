@@ -35,6 +35,7 @@ ITEX_gram_mean <- ITEX_gram %>%
   mutate(mean_cover = mean(RelCover)) %>%
   ungroup()
 
+# making plot categorical
 ITEX_gram$PLOT <- as.factor(as.character(ITEX_gram$PLOT))
 
 # Shrinking the dataframe to retain one row per plot etc.
@@ -43,6 +44,7 @@ ITEX_gram_mean_trim <- ITEX_gram_mean %>%
   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE) %>% 
   mutate(mean_cover_prop = mean_cover/100)
 
+# scatter
 (graminoid_scatter <- (ggplot(ITEX_gram_mean_trim)+
                          geom_point(aes(x = YEAR, y = mean_cover), size = 2) +
                          geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
@@ -52,9 +54,9 @@ ITEX_gram_mean_trim <- ITEX_gram_mean %>%
                          theme(axis.text.x = element_text(angle = 45))))
 
 # Model 7 ----
-hist(ITEX_gram_mean_trim$mean_cover_prop)
+hist(ITEX_gram_mean_trim$mean_cover_prop) # right skewed
 # Graminoid cover over time 
-# mixed effect model with plot and year as random effects
+# glmer.nb, with plot and year as random effects
 model_7 <- glmer.nb(mean_cover_prop~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
 summary(model_7)
 dispersion_glmer(model_7)
@@ -124,6 +126,7 @@ ITEX_forb_mean <- ITEX_forbs %>%
   mutate(mean_cover = mean(RelCover)) %>%
   ungroup()
 
+# making plot categorical
 ITEX_forb_mean$PLOT <- as.factor(as.character(ITEX_forb_mean$PLOT))
 
 # Shrinking the dataframe to retain one row per plot etc.
@@ -132,6 +135,7 @@ ITEX_forb_mean_trim <- ITEX_forb_mean %>%
   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE) %>% 
   mutate(mean_cover_prop = mean_cover/100)
 
+# scatter 
 (forb_scatter <- (ggplot(ITEX_forb_mean_trim)+
                     geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
                     geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
@@ -139,23 +143,16 @@ ITEX_forb_mean_trim <- ITEX_forb_mean %>%
                     scale_x_continuous(breaks=1997:2009)+
                     theme_shrub() +
                     theme(axis.text.x = element_text(angle = 45))))
-# Forb cover decreasing
 
 # Model 8 ----
 # Forb cover over time 
-# mixed effect model with plot and year as random effects
+# glmer.nb, with plot and year as random effects
 model_8 <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_forb_mean_trim)
 summary(model_8)
 
+# trying model without random effects
 model_8a <- glm.nb(mean_cover_prop~I(YEAR-1995), data = ITEX_forb_mean_trim)
 tab_model(model_8a)
-# total variance: 5.687 + 13.076   =18.763
-# variance for plot =   5.687 
-# amount of variance explained by random effect:  5.687  /18.763 = 0.3030965= ~30%
-# I.e. differences between plots explain ~30% of the variance 
-# that’s “left over” after the variance explained by our fixed effect (year).
-# estimate for year (exp variable = -0.201*** ) i.e. year negatively impats forb cover
-# significant effect of year on forb cover  = -0.201***        
 
 # Checking model 8 assumptions 
 plot(model_8)
@@ -167,7 +164,6 @@ stargazer(model_8, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
-# significant effect of year
 
 # Extracting model predictions 
 pred_model_8 <- ggpredict(model_8, terms = c("YEAR"))  # this gives overall predictions for the model
@@ -185,7 +181,7 @@ pred_model_8 <- ggpredict(model_8, terms = c("YEAR"))  # this gives overall pred
                        theme_shrub()
 ))
 
-ggsave( file = "output/figures/forb_cover_ANWR.png")
+# ggsave( file = "output/figures/forb_cover_ANWR.png")
 
 # 3. MOSS COVER  ----
 # Mean moss cover per plot per year
@@ -194,6 +190,7 @@ ITEX_moss_mean <- ITEX_moss %>%
   mutate(mean_cover = mean(RelCover)) %>%
   ungroup()
 
+# making plot categorical
 ITEX_moss_mean$PLOT <- as.factor(as.character(ITEX_moss_mean$PLOT))
 
 # Shrinking the dataframe to retain one row per plot etc.
@@ -202,25 +199,18 @@ ITEX_moss_mean_trim <- ITEX_moss_mean %>%
   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>%
   mutate(mean_cover_prop = mean_cover/100)
 
+# scatter
 (moss_scatter <- (ggplot(ITEX_moss_mean_trim)+
                     geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT),size = 2) +
                     geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
                     labs(y = "Mean moss cover\n", x = "\nYear") +
                     theme_shrub()))
-# Moss cover increasing 
 
 # Model 9 ----
 # Moss cover over time
-# mixed effect model with plot and year as random effects
+
 model_9 <- glmer.nb(mean_cover~I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_moss_mean_trim)
 summary(model_9)
-# total variance: 15.09    + 61.07   =76.16
-# variance for plot =   15.09
-# amount of variance explained by random effect:  15.09  /76.16=0.1981355= ~20%
-# I.e. differences between plots explain ~20% of the variance 
-# that’s “left over” after the variance explained by our fixed effect (year).
-# estimate for year (exp variable = 6.353e-01***  ) year positively impacts moss cover 
-# significant effect of year on moss cover  = 0.635***        
 
 # Checking model 9 assumptions 
 plot(model_9)
@@ -232,7 +222,6 @@ stargazer(model_9, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
-# year significant
 
 # Extracting model predictions 
 pred_model_9 <- ggpredict(model_9, terms = c("YEAR"))  # this gives overall predictions for the model
@@ -260,6 +249,7 @@ ITEX_lich_mean<- ITEX_lich %>%
   mutate(mean_cover = mean(RelCover)) %>%
   ungroup()
 
+# making plot categorical
 ITEX_lich_mean$PLOT <- as.factor(as.character(ITEX_lich_mean$PLOT))
 
 # Shrinking the dataframe to retain one row per plot etc.
@@ -268,26 +258,17 @@ ITEX_lich_mean_trim <- ITEX_lich_mean %>%
   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>%
   mutate(mean_cover_prop = mean_cover/100)
 
-
+# scatter
 (lichen_scatter <- (ggplot(ITEX_lich_mean_trim))+
     geom_point(aes(x = YEAR, y = mean_cover, colour = PLOT), size = 2) +
     geom_smooth(aes(x = YEAR, y = mean_cover), method = "lm") + 
     labs(y = "Mean lichen cover\n", x = "\nYear") +
     theme_shrub())
-## Lichen cover increasing
 
 # Model 10 ----
 # Lichen cover over time 
-# mixed effect model with plot and year as random effects
 model_10 <- glmer.nb(mean_cover~I(YEAR-1995)+ (1|PLOT) + (1|YEAR), data = ITEX_lich_mean_trim)
 summary(model_10)
-# total variance: 99.37     + 260.29  = 359.66
-# variance for plot =   99.37
-# amount of variance explained by random effect:  99.37  /359.66=0.2762887= ~28%
-# I.e. differences between plots explain ~28% of the variance 
-# that’s “left over” after the variance explained by our fixed effect (year).
-# estimate for year (exp variable =  0.445** ) year positively impacts moss cover 
-# significant effect of year on lichen cover  = 0.445**         
 
 # Checking model 9 assumptions 
 plot(model_10)
@@ -299,7 +280,6 @@ stargazer(model_10, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
-# year significant
 
 # Extracting model predictions 
 pred_model_10 <- ggpredict(model_10, terms = c("YEAR"))  # this gives overall predictions for the model
@@ -327,3 +307,5 @@ library(ggpubr)  # For data visualisation formatting
                                        gram_cover_ANWR,nrow = 2)))
 
 dev.off()
+
+########################################################## END ----

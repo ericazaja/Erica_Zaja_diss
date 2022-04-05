@@ -229,7 +229,8 @@ glimpse(ANWR_veg_fg_trim)
 # Model selection ----
 # comparing AIC values 
 AIC(lmer_all_null, lmer_all, lmer_all_0, lmer_all_2, lmer_all_2a, lmer_all_3, lmer_all_3a, lmer_all_3b, lmer_all_4)
-# model selected: glmer.nb with fixed effect f group and year and plot random, but AIC equivalent to null model
+
+# Model selected: glmer.nb with fixed effect f group and year and plot random, but AIC equivalent to null model
 
 
 # DATA VISUALSATION -----
@@ -279,7 +280,7 @@ pred.mm <- ggpredict(lmer_all_2a, terms = c("YEAR"))
 (re.effects <- plot_model(lmer_all_2a, type = "re", show.values = TRUE))
 
 
-# END -----
+############################################################ END -----
 
 
 
