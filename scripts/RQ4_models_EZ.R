@@ -12,7 +12,7 @@ library(tidyverse)
 
 # LOADING DATA  -----
 phenology_data <- read_csv("datasets/phenology_data/CCIN13215_20210302_tundra_phenology_database.csv")
-
+prop_greening_plots <- read_csv("datasets/phenology_data/prop_greening_plots.csv")
 
 # DATA VISUALISATION and modelling ----
 # 1. EARLY GREENING  -----

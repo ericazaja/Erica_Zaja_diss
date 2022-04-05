@@ -29,12 +29,16 @@ Repository includes: datasets, figures, R scripts, statistical output, Markdown 
   - [RQ1_models_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ1_models_EZ.R): script with models to answer RQ1
   - [RQ2_extraction_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ2_extraction_EZ.R): script with climate extraction code  
   - [RQ2_models_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ2_models_EZ.R): script with models to answer RQ2
+  - [RQ3_mariana_cleaning_EZ](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ3_mariana_cleaning_EZ.R): script adapted from Mariana Garcia Criado's ITEX dataset data wranglig script. Modified to keep only functional groups I needed. 
   - [RQ3_vegcover_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ3_vegcover_EZ.R): script with models for cover of functional groups over time in the ANWR
-  - [RQ3_vegcover_separate_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ3_vegcover_separate_EZ.R): script with separate models for each func.group
-  - 
-  - [RQ3_shrubcover_EZ.R]()
-  - [RQ4_phenology_EZ.R]()
+  - [RQ3_vegcover_separate_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ3_vegcover_separate_EZ.R): script with separate models for each functional group
+  - [RQ3_shrubcover_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ3_shrubcover_EZ.R): script with models for cover of shrubs over time in the ANWR
+  - [RQ3_shrubcover_separate_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ3_shrubcover_separate_EZ.R): script with separate models for each shrub genus
+  - [RQ4_wrangle_EZ.R](): script with data wrangling for shrub phenology analysis 
+  - [RQ4_models_EZ.R](): script with shrub phenology models
   
+  EXTRA SCRIPTS: 
+
   - [RQ1_extras_EZ](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ1_extras_EZ.R): NOT USED extra code/analyses for RQ1
   - [RQ2_extras_EZ](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ2_extras_EZ.R): NOT USED extra code/analyses for RQ2
   - [RQ3_extras_EZ](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ3_extras_EZ.R):  NOT USED extra code/analyses for RQ3

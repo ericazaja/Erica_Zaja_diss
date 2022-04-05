@@ -6,6 +6,8 @@
 ##%######################################################%##
 
 # RQ3: How has vegetation cover changed in the Arctic National Wildlife Refuge between 1996-2007? 
+library(betareg)
+library(emmeans)
 
 # Beta regression for functional group analysis ----
 lmer_all_beta <- betareg(mean_cover_prop~I(YEAR-1995) + 1|FuncGroup, data = ANWR_veg_fg_trim)
