@@ -86,3 +86,12 @@ stargazer(lmer_shrub_sp_rand, type = "text",
 
 ggsave(file = "output/figures/genus_rand_slopes.png")
 
+# Trying models with poisson distribution for shrub genus
+lmer_shrub_sp_2a <- glmer(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_3a <- glmer(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_0a <- glmer(genus_cover_prop~I(YEAR-1995) + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
+dispersion_glmer(lmer_shrub_sp_2a) #0.2316012
+dispersion_glmer(lmer_shrub_sp_3a)#0.2369076
+dispersion_glmer(lmer_shrub_sp_0a)#0.2512536
+
+

@@ -195,12 +195,11 @@ r.squaredGLMM(lmer_shrub_sp_2)
 AIC(lmer_shrub_sp_null, lmer_shrub_sp_2)
 
 # Comparing different models:
-lmer_shrub_sp_4 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp_3 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp_0 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|YEAR), data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp_1 <- glmer.nb(genus_cover_prop~I(YEAR-1995)+ (1|GENUS), data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp <- glmer.nb(genus_cover_prop~I(YEAR-1995)*GENUS + (1|YEAR), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_3 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_0 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_1 <- glmer.nb(genus_cover_prop~I(YEAR-1995)+ (1|GENUS) , data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp <- glmer.nb(genus_cover_prop~I(YEAR-1995)*GENUS + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
 dispersion_glmer(lmer_shrub_sp_3) #0.2723795
 dispersion_glmer(lmer_shrub_sp_0)# 0.2750381
 r.squaredGLMM(lmer_shrub_sp_3)
@@ -221,13 +220,6 @@ stargazer(lmer_shrub_sp,
           digit.separator = "", 
           type = "html", out = "output/tables/lmer_shrub_sp.html")
 
-# Trying models with poisson distribution
-lmer_shrub_sp_2a <- glmer(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp_3a <- glmer(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp_0a <- glmer(genus_cover_prop~I(YEAR-1995) + (1|YEAR), family = "poisson", data = ITEX_shrubs_sp_trim)
-dispersion_glmer(lmer_shrub_sp_2a) #0.2316012
-dispersion_glmer(lmer_shrub_sp_3a)#0.2369076
-dispersion_glmer(lmer_shrub_sp_0a)#0.2512536
 
 # Trying model with random intercepts/slopes
 lmer_shrub_sp_rand <- glmer.nb(genus_cover~YEAR + (1+YEAR|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim) 
@@ -237,7 +229,7 @@ lmer_shrub_sp_rand <- glmer.nb(genus_cover~YEAR + (1+YEAR|GENUS) + (1|YEAR), dat
 lmer_shrub_sp_null <- glm.nb(genus_cover_prop~1, data = ITEX_shrubs_sp_trim)
 
 # comparing AIC values
-AIC(lmer_shrub_sp_null, lmer_shrub_sp_2,lmer_shrub_sp_2a, lmer_shrub_sp_3,lmer_shrub_sp_3a, lmer_shrub_sp_0,lmer_shrub_sp_0a, lmer_shrub_sp)
+AIC(lmer_shrub_sp_null, lmer_shrub_sp_2, lmer_shrub_sp_3, lmer_shrub_sp_0, lmer_shrub_sp)
 
 ## N.B BEST model fit is lmer_shrub_sp_0 because lowest AIC (), but doesnt take genus as effect. SO next best is genus as random effect
 
@@ -251,32 +243,31 @@ AIC(lmer_shrub_sp_null, lmer_shrub_sp_2,lmer_shrub_sp_2a, lmer_shrub_sp_3,lmer_s
 
 # 3. SHRUB COVER IN SPACE  ----
 # standardise lat and long
-ITEX_shrubs_mean_trim$LAT <-scale(ITEX_shrubs_mean_trim$LAT , center = TRUE, scale = TRUE)
-ITEX_shrubs_mean_trim$LONG <-scale(ITEX_shrubs_mean_trim$LONG , center = TRUE, scale = TRUE)
-hist(ITEX_shrubs_mean_trim$mean_cover)
+ITEX_shrubs_mean_trim$LAT <- scale(ITEX_shrubs_mean_trim$LAT , center = TRUE, scale = TRUE)
+ITEX_shrubs_mean_trim$LONG <- scale(ITEX_shrubs_mean_trim$LONG , center = TRUE, scale = TRUE)
+hist(ITEX_shrubs_mean_trim$mean_cover) # distribution
 glimpse(ITEX_shrubs_mean_trim$mean_cover_prop)
 
 # Shrub cover vs latitude 
 shrub_lat <- glm.nb(mean_cover ~ LAT, data = ITEX_shrubs_mean_trim)
 summary(shrub_lat)
-length(unique(ITEX_shrubs_mean_trim$SiteSubsitePlot ))
-
-shrub_lat_null <- glm.nb(mean_cover ~ 1, data = ITEX_shrubs_mean_trim)
-AIC(shrub_lat, shrub_lat_null, shrub_long)
 # Null deviance: 230.24 
 # Residual deviance:  136.82 
 # Pseudo R2 = 1-(136.82 /230.24)
 # [1] 0.4057505 latitude explains ~40 % in variation in shrub cover
-
-# mean shrub cover decreases with lat ( -0.44675 ***)
-
 plot(shrub_lat)
 
+# null model
+shrub_lat_null <- glm.nb(mean_cover ~ 1, data = ITEX_shrubs_mean_trim)
+AIC(shrub_lat, shrub_lat_null)
+
+# Output table
 stargazer(shrub_lat, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
+# Plotting scatter
 (cover_lat_scatter <- (ggplot(ITEX_shrubs_mean_trim))+
     geom_point(aes(x = LAT, y = mean_cover), colour= "#009E73", size = 1) +
     geom_smooth(aes(x = LAT, y = mean_cover),colour = "black", method = "glm", fill="#009E73", size = 2) + 
@@ -285,7 +276,7 @@ stargazer(shrub_lat, type = "text",
     annotate(geom = "text", x = 0.5, y = 20, label="slope = -0.447*** ", size = 10) +
      theme_shrub())
 
-ggsave(file = "output/figures/cover_lat_scatter.png")
+# ggsave(file = "output/figures/cover_lat_scatter.png")
 
 # adding icon
 lat_logo <- readPNG("lat_icon.png")
@@ -316,17 +307,19 @@ model_10_preds <- cbind(ITEX_shrubs_mean_trim, predictions_10)
 ggsave(file = "output/figures/plot_model_shrub_lat.png")
 
 # Shrub cover vs longitude
-shrub_long<- glm.nb(mean_cover ~ LONG, data = ITEX_shrubs_mean_trim)
+shrub_long <- glm.nb(mean_cover ~ LONG, data = ITEX_shrubs_mean_trim)
 summary(shrub_long)
 
 plot(shrub_long)
+
+# Output table
 stargazer(shrub_long, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 # F-statistic: 55.18 on 1 and 143 DF,  p-value: 9.123e-12***
-# mean shrub cover decreases with longitude
 
+# scatter
 (cover_long_scatter <- (ggplot(ITEX_shrubs_mean_trim))+
     geom_point(aes(x = LONG, y = mean_cover), colour = "skyblue", size = 2) +
     geom_smooth(aes(x = LONG, y = mean_cover), colour = "black", method = "lm") + 
@@ -336,7 +329,7 @@ stargazer(shrub_long, type = "text",
     theme_shrub())
 
 
-ggsave(file = "output/figures/cover_long_scatter.png")
+# ggsave(file = "output/figures/cover_long_scatter.png")
 
 # Extracting model predictions 
 predictions_11 <- as.data.frame(predict(shrub_long, newdata = ITEX_shrubs_mean_trim, interval = "confidence")) # this gives overall predictions for the model
@@ -358,30 +351,15 @@ model_11_preds <- cbind(ITEX_shrubs_mean_trim, predictions_11)
                             # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
                             theme_shrub()+ theme(legend.position = "none")))
 
-ggsave(file = "output/figures/plot_model_shrub_long.png")
+# ggsave(file = "output/figures/plot_model_shrub_long.png")
 
 
-
-(panel_cover_latlong <- grid.arrange(arrangeGrob(cover_lat_scatter,cover_long_scatter,
-                                           ncol = 2)) )# Sets number of panel columns
-
-ggsave(panel_cover_latlong, file = "output/figures/panel_cover_latlong.png", height = 10, width = 20)
-
+# Panel ----
 (panel_cover_latlong_pred <- grid.arrange(arrangeGrob(plot_model_shrub_lat,plot_model_shrub_long,
                                                  ncol = 2)) )# Sets number of panel columns
 
 ggsave(panel_cover_latlong_pred, file = "output/figures/panel_cover_latlong_pred.png", height = 10, width = 20)
 
 
-# LOGIC checks ----
-# checking correlations
-ITEX_shrubs_mean_trim_2 <- ITEX_shrubs_mean_trim %>% 
-  dplyr::select(LAT, LONG, YEAR, mean_cover)
-corrplot(cor(ITEX_shrubs_mean_trim_2))
-
-ITEX_shrubs_sp_trim_2 <- ITEX_shrubs_sp_trim %>% 
-  dplyr::select(YEAR, genus_cover)
-corrplot(cor(ITEX_shrubs_sp_trim_2))
-
-# END -----           
+############################################################### END -----           
 
