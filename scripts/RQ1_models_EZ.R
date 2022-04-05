@@ -214,33 +214,30 @@ cor.test( r3_rsample_002$latitude,r3_rsample_002$longitude, method = "pearson")
 
 # BIOMASS LEVELS ----
 
-# Categorising into high-medium-low level
-mean(r3_rsample_001$biomass) 
+# Exploring dataset
+mean(r3_rsample_002$biomass) 
 #  267.5807 g/m2 mean biomass
-range(r3_rsample_001$biomass)
+range(r3_rsample_002$biomass)
 #  9.820163 1003.684387
-quantile(r3_rsample_001$biomass)
+quantile(r3_rsample_002$biomass)
 # 0%         25%         50%         75%        100% 
 #  9.820163  170.630482  257.406342  347.062210 1003.684387 
 
-r3_rsample_categ <- r3_rsample_001 %>%
-  mutate(biomass_level = case_when (biomass < 170.630482     ~ 'Low', # lower than mean biomass
+# Categorising into high-medium-low level using quantiles (25% and 75%)
+r3_rsample_categ <- r3_rsample_002 %>%
+  mutate(biomass_level = case_when (biomass < 170.630482     ~ 'Low', # lower than 25% quantile
                                     biomass > 170.630482    & biomass < 347.062210 ~ 'Medium', 
                                     biomass > 347.062210 ~ 'High')) %>% 
-  mutate(biomass_level_0 = case_when (biomass_level == 'Low' ~ 1, # 1 = low level
-                                    biomass_level == 'Medium' ~ 2, # 2 = medium level
-                                    biomass_level == 'High'~ 3)) %>% # 3 = high level
- dplyr::select(latitude, longitude, biomass, biomass_level, biomass_level_0)
+ dplyr::select(latitude, longitude, biomass, biomass_level)
 
+# Making biomass level a factor
 r3_rsample_categ$biomass_level <- as.factor(as.character(r3_rsample_categ$biomass_level))
-
 # reordeing factor levels 
-r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels=c("Low", "Medium", "High"),
+r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels = c("Low", "Medium", "High"),
                           labels = c("Low", "Medium", "High"),
                           ordered = T)
 
-
-# Histogram of biomass level
+# HISTOGRAM of biomass ----
 (hist_high_medium_low <- r3_rsample_categ %>%
     ggplot(aes(x = biomass, fill = biomass_level)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 60) +
@@ -254,21 +251,21 @@ r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels=c
     xlab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
     scale_fill_manual(name = "Biomass level", values=c( "#F0E442", "#E69F00", "#009E73")) +
     theme_shrub()+
-    theme( axis.title.x =element_text(size=25),
-           axis.title.y =element_text(size=25),
-           axis.text.x = element_text(size=25, hjust = 1),
-           axis.text.y = element_text(size=25, hjust = 1),
-      legend.text = element_text(size=20),
+    theme(axis.title.x =element_text(size=25),
+          axis.title.y =element_text(size=25),
+          axis.text.x = element_text(size=25, hjust = 1),
+          axis.text.y = element_text(size=25, hjust = 1),
+          legend.text = element_text(size=20),
           legend.title = element_text(size=25),
           legend.position = "bottom"))
 
-ggsave(file = "output/figures/hist_high_medium_low.png")
+# ggsave(file = "output/figures/hist_high_medium_low.png")
 
 # adding shrub logo
 shrub_logo <- readPNG("team_shrub_logo.png")
 raster_logo <- as.raster(shrub_logo)
 (histogram <- hist_high_medium_low + annotation_raster(raster_logo, 750, 900, 150, 200))
-ggsave(file = "output/figures/histogram.png")
+# ggsave(file = "output/figures/histogram.png")
 
 # Random slope and intercept biomass level across latitudes ----
 # Standardising explanatory variables
