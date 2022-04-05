@@ -24,17 +24,17 @@ Repository includes: datasets, figures, R scripts, statistical output, Markdown 
   - [anna_data](https://github.com/ericazaja/dissertation/tree/main/datasets/anna_data): data used for model RMarkdown dissertation - **NOT** actual data I need 
 
 - #### [scripts](https://github.com/ericazaja/dissertation/tree/main/scripts): 
-  - [RQ1_mapping_EZ.R](): script with full shrub raster, full PCH range and cropped shrub map code
-  - [RQ1_sampling_EZ.R](): script with focal study area ID and buffered random sampling method
-  - [RQ1_models_EZ.R](): script with models to answer RQ1
-  - [RQ2_extraction_EZ.R](): script with climate extraction code  
-  - [RQ3_models_EZ.R](): script with models to answer RQ1
+  - [RQ1_mapping_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ1_mapping_EZ.R): script with full shrub raster, full PCH range and cropped shrub map code
+  - [RQ1_sampling_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ1_sampling_EZ.R): script with focal study area ID and buffered random sampling method
+  - [RQ1_models_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ1_models_EZ.R): script with models to answer RQ1
+  - [RQ2_extraction_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ2_extraction_EZ.R): script with climate extraction code  
+  - [RQ3_models_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ2_models_EZ.R): script with models to answer RQ1
   - [RQ3_vegcover_EZ.R]()
   - [RQ3_shrubcover_EZ.R]()
   - [RQ4_phenology_EZ.R]()
   
-  - [RQ1_extras_EZ](): NOT USED extra code/analyses for RQ1
-  - [RQ2_extras_EZ](): NOT USED extra code/analyses for RQ2
+  - [RQ1_extras_EZ](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ1_extras_EZ.R): NOT USED extra code/analyses for RQ1
+  - [RQ2_extras_EZ](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/RQ2_extras_EZ.R): NOT USED extra code/analyses for RQ2
 
 
 - #### [img](https://github.com/ericazaja/dissertation/tree/main/img):
