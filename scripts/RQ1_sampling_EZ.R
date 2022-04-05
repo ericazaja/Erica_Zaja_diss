@@ -49,8 +49,6 @@ shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif")
 PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") # loading data
 st_bbox(PCH_core_range) # extent of the PCH range
 
-### PART 1: SAMPLING -----
-
 ## CROPPING -----
 # Cropping shrub raster to the PCH range 
 r2 <- crop(shrub_agb_p50, extent(PCH_core_range))

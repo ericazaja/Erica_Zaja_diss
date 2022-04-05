@@ -5,8 +5,9 @@
 #                                                          #
 ##%######################################################%##
 
+### PART 2: MODELLING
 ## RQ1: How is shrub biomass distributed in the focal study area?
-# Colour palette credit: David Nichols (WONG palette)
+# Colour palette credit: David Nichols (WONG colour blind friendly palette)
 
 # LOADING LIBRARIES -----
 
@@ -37,153 +38,11 @@ library(performance)
 library(png)
 library(patchwork)
 
-##  LOADING DATA -----
 
-# SHRUB DATA: from Berner et al 2018
-# Loading raster of shrub biomass (g/m2) on Alaskan North Slope  
-shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif") 
-# Using the best-estimates: the 50th percentile of the 1,000 permutations
+## LOADING DATA -----
 
-# PCH CORE RANGE DATA: from Porcupine Caribou Management Board (2016)
-# Loading polygon of PCH range 
-PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") # loading data
-st_bbox(PCH_core_range) # extent of the PCH range
-
-### PART 1: SAMPLING -----
-
-## CROPPING -----
-# Cropping shrub raster to the PCH range 
-r2 <- crop(shrub_agb_p50, extent(PCH_core_range))
-r3 <- mask(r2, PCH_core_range)
-plot(r3) # plot cropped raster
-plot(PCH_core_range, add = TRUE, lwd = 2)
-
-# transforming CRS of cropped map from proj = aea (alaska albers) to proj = lalong 
-r3_latlong <- projectRaster(r3, crs="+init=EPSG:4326", xy = TRUE)
-# writeRaster(r3_latlong, "datasets/berner_data/r3_latlong.tif") #saving raster
-# r3_latlong <- raster("datasets/berner_data/r3_latlong.tif") # loading raster
-
-# resolution of cropped map
-res(r3_latlong)
-# 0.000726 x 0.000270 degrees 
-
-# plotting cropped shrub map with viridis palette
-(r3_cropped_viridis <- gplot(r3_latlong_agg) +
-    geom_raster(aes(x = x, y = y, fill = value)) +
-    # value is the specific value (of reflectance) each pixel is associated with
-    scale_fill_viridis_c(rescaler = function(x, to = c(0, 1), from = NULL) {
-    ifelse(x<500, scales::rescale(x, to = to, from = c(min(x, na.rm = TRUE), 500)),1)}, na.value="white") +
-    coord_quickmap()+
-    theme_shrub() +  
-    xlab("\nLongitude") +
-    ylab("Latitude\n") +
-    ggtitle("Shrub biomass cover (kg/m2) of the PCH alaskan range\n") +
-    theme(plot.title = element_text(hjust = 0.5),     # centres plot title
-          text = element_text(size=15),		       	    # font size
-          axis.text.x = element_text(angle = 30, hjust = 1)))  # rotates x axis text
-
-## AGGREGATION ----
-
-# aggregate shrub data to coarser resolution before extraction using aggregate()
-# factor chosen dividing climate cell resolution 0.008333333 x 0.008333333 by the resolution of the cropped shrub map (latlong)
-r3_latlong_agg <- aggregate(r3_latlong, fact=c(11.47842,30.8642), fun = mean, expand = TRUE) 
-# writeRaster(r3_latlong_agg, "datasets/berner_data/r3_latlong_agg.tif") # saving new raster
-r3_latlong_agg <- raster("datasets/berner_data/r3_latlong_agg.tif") # loading raster
-
-# checking new resolution
-res(r3_latlong_agg)
-# 0.007986 x 0.008370 
-projection(r3_latlong_agg)
-
-# RANDOM SAMPLE WHOLE MAP ----
-
-# Measuring area of raster
-# get sizes of all cells in raster [km2]
-cell_size <- area(r3_latlong_agg, na.rm=TRUE, weights=FALSE)
-# delete NAs from vector of all raster cells
-# NAs lie outside of the rastered region, can thus be omitted
-cell_size <- cell_size[!is.na(cell_size)] # 0.2815663
-#compute area [km2] of all cells in geo_raster
-raster_area <-length(cell_size)*median(cell_size)
-# print area of shrub map according to raster object
-print(paste("Area of PCH Alaskan range (raster)", round(raster_area, digits = 1),"km2"))
-# [1] "Area of PCH Alaskan range (raster) is 9583.6 km2"
-# This means there are 9583.6 cells of ~1km x 1km 
-# NB. PIXELS = CELLS
-
-## BUFFER 
-# deciding on buffer distance
-res(r3_latlong_agg)
-# 0.007986 0.008370 degrees
-# ie. raster divided into ~1km x 1km grid cells 
-# diagonal of a grid square = 1414.2 m
-# buffer = diagonal of grid cell means that no point will be taken from same grid cell
-
-
-# Buffered random sampling
-
-# a. Extracting all pixels (9583)
-r3_rsample_00 <- as.data.frame(sampleRandom(r3_latlong_agg, 9583, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
-                                           cells=TRUE, rowcol=FALSE, xy = TRUE)) 
-
-hist(r3_rsample_00$r3_latlong_agg) # checking distribution
-mean(r3_rsample_00$r3_latlong_agg) 
-
-# b. Extracting 1 every 2 pixels (9583/2= 4792)
-r3_rsample_0 <- as.data.frame(sampleRandom(r3_latlong_agg, 4792, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
-                                              cells=TRUE, rowcol=FALSE, xy = TRUE)) 
-
-hist(r3_rsample_0$r3_latlong_agg) # checking distribution
-mean(r3_rsample_0$r3_latlong_agg) # 266.3
-
-# c. Extracting 1 every 3 pixels (9583/3 = 3195)
-r3_rsample_1 <- as.data.frame(sampleRandom(r3_latlong_agg, 3195, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
-                                           cells=TRUE, rowcol=FALSE, xy = TRUE)) 
-
-hist(r3_rsample_1$r3_latlong_agg) # checking distribution
-mean(r3_rsample_1$r3_latlong_agg) # 267.6
-# mean and histogram look similar to the above, confirming extraction is accurate
-
-# LOGIC checks 
-# trying to sample 30000 pixels to see if the distribution is different 
-r3_rsample_0_try <- as.data.frame(sampleRandom(r3_latlong_agg, 30000, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
-                                           cells=TRUE, rowcol=FALSE, xy = TRUE)) # 30000 pixels 
-hist(r3_rsample_0_try$r3_latlong_agg) # checking distribution - looks similar to the other histogram
-mean(r3_rsample_0_try$r3_latlong_agg) #267.4842
-
-# I decide to use the random sample with 1 every 3 pixels sampled: r3_rsample_1 
-
-# Checking buffer works
-# calculating Haversine distance between points (x and y coordinates)
-r3_rsample_01 <- r3_rsample_1  %>% 
-  mutate(r3_rsample_1, Distance = distHaversine(cbind(x, y),
-                                                   cbind(lag(x), lag(y))))
-
-# If distance between points > buffer distance, buffer works
-r3_rsample_01 <- r3_rsample_01 %>% 
-  mutate(buff = case_when(Distance >= 1414.2 ~ "T", Distance < 1414.2 ~ "F"))
-
-r3_rsample_01 <- r3_rsample_01 %>%  filter(buff %in% c("T")) # only keeping obseervations where buff worked
-unique(r3_rsample_01$buff) # T: buffer works
-glimpse(r3_rsample_01)
-
-# Cleaning random sample dataframe and making a gridcell column the new dataframe
-r3_rsample_001  <- r3_rsample_01 %>%
-  rename (cell_ID = "cell", 
-          latitude = "y",
-          longitude = "x", 
-          biomass = "r3_latlong_agg") %>%
-  mutate(lat = plyr::round_any(latitude, 0.5, f = floor),
-         long = ifelse(longitude > 0, plyr::round_any(longitude, 0.5, f = floor), plyr::round_any(longitude, 0.5, f = ceiling))) %>% 
-  mutate(gridcell = paste0("_", lat, "_", long))  %>%
-  dplyr::select(cell_ID, latitude, longitude, long, lat, biomass, gridcell)
-
-# saving all datasets
-# write.csv(r3_rsample_00, file= "datasets/berner_data/r3_rsample_00.csv") # with all pixels (a.)
-# write.csv(r3_rsample_001, file= "datasets/berner_data/r3_rsample_001.csv") # with half pixels (b.)
-# write.csv(r3_rsample_001, file= "datasets/berner_data/r3_rsample_002.csv") # with 1/3 pixels (c.)
-
-### PART 2: MODELLING ----
+# Loading the random sample dataset (1/3 of pixels)
+r3_rsample_002 <- read_csv("datasets/berner_data/r3_rsample_002.csv")
 
 # THEME ----
 
@@ -200,38 +59,27 @@ theme_shrub <- function(){ theme(legend.position = "right",
 
 
 
-# Loading the random sample dataset
-r3_rsample_00 <- read_csv("datasets/berner_data/r3_rsample_00.csv")
+## DATA MANIPULATION ----
 
-hist(r3_rsample_001$biomass) # distribution 
-str(r3_rsample_001) # lat and long and biomass numeric
-range(r3_rsample_001$biomass) # 9.820163 1003.684387
+# Exploring data
+hist(r3_rsample_002$biomass) # distribution 
+str(r3_rsample_002) # lat and long and biomass numeric
+range(r3_rsample_002$biomass) # 9.820163 1003.684387
 
+##  MODELLING ----
 # Standardising lat and long (explanatory variables)
-r3_rsample_001$latitude <- scale(r3_rsample_001$latitude, center = TRUE, scale = TRUE)
-r3_rsample_001$longitude <- scale(r3_rsample_001$longitude, center = TRUE, scale = TRUE)
+r3_rsample_002$latitude <- scale(r3_rsample_002$latitude, center = TRUE, scale = TRUE)
+r3_rsample_002$longitude <- scale(r3_rsample_002$longitude, center = TRUE, scale = TRUE)
 
-# Model 1. biomass vs lat ----
-model_1 <- lm(biomass~latitude, data = r3_rsample_001)
+# MODEL 1. biomass vs lat ----
+model_1 <- lm(biomass~latitude, data = r3_rsample_002)
 summary(model_1)
 # F-statistic: 639.3 on 1 and 3190 DF,  p-value: < 2.2e-16
 # slope =  -49.079***
 
-# null model
-model_1_null <- lm(biomass~1, data = r3_rsample_001)
+# Null model
+model_1_null <- lm(biomass~1, data = r3_rsample_002)
 AIC(model_1, model_1_null) # delta AIC indicates very diff models
-
-# Quick scatter
-(scatter_lat <- ggplot(r3_rsample_001, aes(x = latitude, y = biomass))+
-    geom_point(color="#70B1A6", size = 0.1) +
-    geom_smooth(method = lm, color ='black', fill = "grey", se=TRUE)+
-    labs(x = "\nLatitude", y = "Shrub biomass (g/m2)\n") +
-   annotate(geom = "text", x = 2, y = 1100, label="(a)", size = 10) +
-   annotate(geom = "text", x = 1, y = 800, label="slope =  -49.079*** ", size = 6) +
-         # title = "Shrub biomass decreases with latitude\n") + 
-    theme_shrub())
-
-ggsave(file = "output/figures/biomass_vs_lat_scatter.png")
 
 # Checking model 1 assumptions 
 plot(model_1)
@@ -245,8 +93,8 @@ stargazer(model_1, type = "text",
           digit.separator = "")
 
 # Extracting model predictions 
-predictions_1 <- as.data.frame(predict(model_1, newdata = r3_rsample_001, interval = "confidence")) # this gives overall predictions for the model
-model_1_lat <- cbind(r3_rsample_001, predictions_1)
+predictions_1 <- as.data.frame(predict(model_1, newdata = r3_rsample_002, interval = "confidence")) # this gives overall predictions for the model
+model_1_lat <- cbind(r3_rsample_002, predictions_1)
 
 # Plot the predictions 
 (predictions_biomass_vs_lat <- (ggplot(model_1_lat, aes(latitude, fit)) + 
@@ -264,39 +112,35 @@ model_1_lat <- cbind(r3_rsample_001, predictions_1)
                               axis.text.x = element_text(size=25, hjust = 1),
                               axis.text.y = element_text(size=25, hjust = 1) )) )
 
-ggsave(file = "output/figures/predictions_biomass_vs_lat.png")
+# ggsave(file = "output/figures/predictions_biomass_vs_lat.png")
 
 # adding icon
 lat_logo <- readPNG("lat_icon.png")
 raster_lat_logo <- as.raster(lat_logo)
 (predictions_biomass_vs_lat <- predictions_biomass_vs_lat + annotation_raster(raster_lat_logo, 0.5, 1.5, 800, 1200))
-ggsave(file = "output/figures/predictions_biomass_vs_temp.png")
+# ggsave(file = "output/figures/predictions_biomass_vs_temp.png")
 
+# Quick scatter to check predictions plotted well
+(scatter_lat <- ggplot(r3_rsample_002, aes(x = latitude, y = biomass))+
+    geom_point(color="#70B1A6", size = 0.1) +
+    geom_smooth(method = lm, color ='black', fill = "grey", se=TRUE)+
+    labs(x = "\nLatitude", y = "Shrub biomass (g/m2)\n") +
+    annotate(geom = "text", x = 2, y = 1100, label="(a)", size = 10) +
+    annotate(geom = "text", x = 1, y = 800, label="slope =  -49.079*** ", size = 6) +
+    # title = "Shrub biomass decreases with latitude\n") + 
+    theme_shrub())
 
-dev.off()
+# ggsave(file = "output/figures/biomass_vs_lat_scatter.png")
 
-# Model 2. biomass vs long ----
-model_2 <- lm(biomass~longitude, data = r3_rsample_001)
+# MODEL 2. biomass vs long ----
+model_2 <- lm(biomass~longitude, data = r3_rsample_002)
 summary(model_2)
 # F-statistic: 110.9 on 1 and 3190 DF,  p-value: < 2.2e-16***
 # slope -22.021
 
 # null model
-model_2_null <- lm(biomass~1, data = r3_rsample_001)
+model_2_null <- lm(biomass~1, data = r3_rsample_002)
 AIC(model_2, model_2_null) # delta AIC indicates very different models
-
-
-# Quick scatter
-(scatter_lon <- ggplot(r3_rsample_001, aes(x = longitude, y = biomass)) +
-    geom_point(color="skyblue", size = 0.01) +
-    geom_smooth(method = lm, colour='black') +
-    labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n") +  
-   annotate(geom = "text", x = 2, y = 1250, label="(b)", size = 15) +
-  annotate(geom = "text", x = 1, y = 900, label="slope = -22.021*** ", size = 10) +
-         # title = "Shrub biomass decreases with longitude\n") + 
-    theme_shrub())
-
-ggsave(file = "output/figures/biomass_vs_long_scatter.png")
 
 # Checking model 2 assumptions 
 plot(model_2)
@@ -310,8 +154,8 @@ stargazer(model_2, type = "text",
           digit.separator = "")
 
 # Extracting model predictions 
-predictions_2 <- as.data.frame(predict(model_2, newdata = r3_rsample_001, interval = "confidence")) # this gives overall predictions for the model
-model_2_long <- cbind(r3_rsample_001, predictions_2)
+predictions_2 <- as.data.frame(predict(model_2, newdata = r3_rsample_002, interval = "confidence")) # this gives overall predictions for the model
+model_2_long <- cbind(r3_rsample_002, predictions_2)
 
 # Plot the predictions 
 (predictions_biomass_vs_long <- (ggplot(model_2_long, aes(longitude, fit)) + 
@@ -329,7 +173,7 @@ model_2_long <- cbind(r3_rsample_001, predictions_2)
                               axis.text.x = element_text(size=25, hjust = 1),
                               axis.text.y = element_text(size=25, hjust = 1) )) )
 
-ggsave(file = "output/figures/predictions_biomass_vs_long.png")
+# ggsave(file = "output/figures/predictions_biomass_vs_long.png")
 
 # adding icon
 long_logo <- readPNG("long_icon.png")
@@ -337,32 +181,35 @@ raster_long_logo <- as.raster(long_logo)
 (predictions_biomass_vs_long <- predictions_biomass_vs_long + annotation_raster(raster_long_logo, 0, 2, 900, 1150))
 ggsave(file = "output/figures/predictions_biomass_vs_temp.png")
 
+# Quick scatter to check predictions plotted well
+(scatter_lon <- ggplot(r3_rsample_002, aes(x = longitude, y = biomass)) +
+    geom_point(color="skyblue", size = 0.01) +
+    geom_smooth(method = lm, colour='black') +
+    labs(x = "\nLongitude", y = "Shrub biomass (kg/m2)\n") +  
+    annotate(geom = "text", x = 2, y = 1250, label="(b)", size = 15) +
+    annotate(geom = "text", x = 1, y = 900, label="slope = -22.021*** ", size = 10) +
+    # title = "Shrub biomass decreases with longitude\n") + 
+    theme_shrub())
 
-# Panel latlong ----
+# ggsave(file = "output/figures/biomass_vs_long_scatter.png")
+
+# Making panel
 # Panel of scatters 
-panel_title <- text_grob("Shrub biomass decreases with latitude and longitude",
-                         size = 18, face = "bold")
-
-(panel_latlong <- grid.arrange(arrangeGrob(scatter_lat, scatter_lon,
-                                           ncol = 2))) # Sets number of panel columns
-                              #  top = panel_title  # Adding panel title
-
-ggsave(panel_latlong, file = "output/figures/panel_latlong.png", width = 18, height = 9)
-
 (panel_latlong_predictions <- grid.arrange(arrangeGrob(predictions_biomass_vs_lat, predictions_biomass_vs_long,
                                            ncol = 2))) # Sets number of panel columns
 
-ggsave(panel_latlong_predictions, file = "output/figures/panel_latlong_predictions.png", width = 18, height = 9)
+# ggsave(panel_latlong_predictions, file = "output/figures/panel_latlong_predictions.png", width = 18, height = 9)
 
 
-# Model  biomass vs long*lat ----
-model_2a <- lm(biomass~longitude*latitude, data = r3_rsample_00)
+# Extra model:  biomass vs long*lat  (not used in final diss)
+model_2a <- lm(biomass~longitude*latitude, data = r3_rsample_002)
 summary(model_2a)
-# F-statistic:  1058 on 3 and 9575 DF,  p-value: < 2.2e-16
-cor.test( r3_rsample_00$latitude,r3_rsample_00$longitude, method = "pearson")
-# t = -20.437, df = 9577, p-value < 2.2e-16 
+# F-statistic: 353.7 on 3 and 3188 DF,  p-value: < 2.2e-16***
+# checking correlation betwee lat and long
+cor.test( r3_rsample_002$latitude,r3_rsample_002$longitude, method = "pearson")
+# t = -11.449, df = 3190, p-value < 2.2e-16
 # lat and long are correlated 
-# doesnt mean much. As latitude increases longitude decreases
+# Does not mean much: as latitude increases longitude decreases
 
 
 # BIOMASS LEVELS ----
