@@ -11,11 +11,13 @@
 library(tidyverse)
 
 # LOADING DATA  -----
-phenology_data <- read_csv("datasets/phenology_data/CCIN13215_20210302_tundra_phenology_database.csv")
 prop_greening_plots <- read_csv("datasets/phenology_data/prop_greening_plots.csv")
 
 # DATA VISUALISATION and modelling ----
+
 # 1. EARLY GREENING  -----
+
+# Scatter
 (early_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_early)) +
     geom_point(size = 3, colour = "#009E73") +
     geom_smooth(method = "lm", colour = "#009E73",  fill ="#009E73", alpha= 0.2, size = 2)+
@@ -29,8 +31,7 @@ prop_greening_plots <- read_csv("datasets/phenology_data/prop_greening_plots.csv
          axis.title.y = element_text(size=25),
          axis.text.y = element_text(size=25, hjust = 1)))
 
-
-ggsave(file = "output/figures/early_greening_plots.png")
+#ggsave(file = "output/figures/early_greening_plots.png")
 
 # adding logo
 early_logo <- readPNG("early.png")
@@ -38,31 +39,25 @@ raster_early_logo <- as.raster(early_logo)
 (early_greening_plots <- early_greening_plots + annotation_raster(raster_early_logo, 2011, 2019, 0.70, 1))
 ggsave(file = "output/figures/early_greening_plots.png")
 
-
-
-unique(prop_greening_plots$year)
-
-# Model ----
+# MODEL 13 ----
 # Generalised linear mixed model model family binomial 
 glm_early <- glmer(prop_early ~  I(year-1995) + (1|year), family = binomial, data = prop_greening_plots)
 summary(glm_early)
-tab_model(glm_early, file = "output/tables/glm_early.html")
-webshot("output/tables/glm_early.html", "output/tables/glm_early.png")
+r.squaredGLMM(glm_early)
 
-
-glm_early_2 <- glm(prop_early ~  I(year-1995) , family = binomial, data = prop_greening_plots)
-summary(glm_early_2)
-
-#Null model
+# null model
 glm_early_null <- glm(prop_early ~  1, family = binomial, data = prop_greening_plots)
+AIC(glm_early, glm_early_null)
 
-AICc(glm_early, glm_early_null, glm_early_2)
-
+# assumptions
 plot(glm_early)
 dispersion_glmer(glm_early)# 0.7259031
 qqnorm(resid(glm_early))
 qqline(resid(glm_early))
 
+# model output tables
+tab_model(glm_early, file = "output/tables/glm_early.html")
+webshot("output/tables/glm_early.html", "output/tables/glm_early.png")
 stargazer(glm_early, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -70,6 +65,7 @@ stargazer(glm_early, type = "text",
 
 
 # 2. LATE GREENING -----
+# Scatter
 (late_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_late)) +
     geom_point(size = 3, colour = "#009E73") +
    geom_smooth(method = "lm", colour = "#009E73",  fill ="#009E73", alpha= 0.2, size = 2)+
@@ -83,7 +79,7 @@ stargazer(glm_early, type = "text",
          axis.title.y = element_text(size=25),
          axis.text.y = element_text(size=25, hjust = 1)))
 
-ggsave(file = "output/figures/late_greening_plots.png")
+#ggsave(file = "output/figures/late_greening_plots.png")
 
 # adding logo
 late_logo <- readPNG("late.png")
@@ -91,23 +87,23 @@ raster_late_logo <- as.raster(late_logo)
 (late_greening_plots <- late_greening_plots + annotation_raster(raster_late_logo, 2012, 2019, 0, 0.25))
 ggsave(file = "output/figures/late_greening_plots.png")
 
-# Model ----
+# Model 13 ----
 # Generalised linear mixed model family binomial 
 glm_late <- glmer(prop_late ~ I(year-1995) + (1|year), family = binomial, data = prop_greening_plots)
 summary(glm_late)
+r.squaredGLMM(glm_late)
+
+# null model
+glm_late_null <- glm(prop_late ~  1, family = binomial, data = prop_greening_plots)
+AIC(glm_late, glm_late_null)
+
+# checking assumptions
 plot(glm_late)
 dispersion_glmer(glm_late)# 0.7259028
 qqnorm(resid(glm_late))
 qqline(resid(glm_late))
 
-glm_late_2 <- glm(prop_late ~ I(year-1995), family = binomial, data = prop_greening_plots)
-summary(glm_late_2)
-AIC(glm_late_null)
-# null
-glm_late_null <- glm(prop_late ~  1, family = binomial, data = prop_greening_plots)
-
-AIC(glm_late, glm_late_null)
-
+# output table
 stargazer(glm_late, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
@@ -121,13 +117,12 @@ panel_pheno <- grid.arrange(arrangeGrob(early_greening_plots, late_greening_plot
 ggsave(panel_pheno, file="output/figures/panel_pheno.png", height = 10, width = 20)
 
 # 3. MEAN DOY ----
-# Linear mixed model 
+
+# making study area categorical
 phenology_green_trim$study_area<- as.factor(as.character(phenology_green_trim$study_area))
-phenology_green_trim$SiteSubsitePlotYear<- as.factor(as.character(phenology_green_trim$SiteSubsitePlotYear))
 str(phenology_green_trim)
 
 # lmer with study_area as random effect 
-hist(phenology_green_trim$mean.doy) # normal distribution
 lmer_green <- lmer(mean.doy ~ I(year-1995) + (1 |study_area) + (1|year), data = phenology_green_trim ) 
 summary(lmer_green)
 r2_nakagawa(lmer_green)
@@ -135,48 +130,16 @@ r2_nakagawa(lmer_green)
 tab_model(lmer_green, file = "output/tables/lmer_green.html")
 webshot("output/tables/lmer_green.html", "output/tables/lmer_green.png")
 
-
-# null
+# null model
 lmer_green_null <- lm(mean.doy ~ 1, data = phenology_green_trim ) 
 AIC(lmer_green, lmer_green_null)
 
-stargazer(lmer_green, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-
+# checking assumptions
 plot(lmer_green)
 qqnorm(resid(glm_late))
 qqline(resid(glm_late))
 
-# Extracting model predictions 
-predictions_pheno <- ggpredict(lmer_green , terms = c("year", "study_area"), type = "re")
-(pheno_rand_slopes <- ggplot(predictions_pheno, aes(x = x, y = predicted, colour = group)) +
-    stat_smooth(method = "lm", se = FALSE)  +
-    theme(legend.position = "bottom") +
-    labs(x = "\nYear", y = "Mean greening DOY\n")+
-    theme_shrub()) # mean greening DOY getting earlier 
-
-ggsave(filename = "output/figures/pheno_rand_slopes.png")
-
-# Plot the predictions 
-pred_lmer_green <- ggpredict(lmer_green , terms = c("year", "study_area"), type = "re")
-
-(greening_model <- (ggplot(pred_lmer_green, aes(x = x, y = predicted), group=group) + 
-                         #geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                           #           fill = "lightgrey", alpha = 0.5) +  # error band
-                      #scale_x_continuous(breaks = 1994:2020)+
-                         geom_point(data = phenology_green_trim,                      # adding the raw data 
-                                    aes(x = year, y = mean.doy, colour= study_area),  size = 0.5) + 
-                      stat_smooth(method = lm, color= "green4")+
-                         labs(x = "\nYear", y = "Mean greening DOY\n")+ 
-                             # title = "Mean greening DOY not changing\n") + 
-                         theme_shrub() +  theme(axis.text.x = element_text(size= 10, angle = 45))))
-
-                      
-
- ggsave(file = "output/figures/greening_model.png")
- 
+# Scatter by study area
 (all_sites_greening<- (ggplot(phenology_green_trim, aes(x = year, y = mean.doy)) +
                        geom_point(size = 1, aes(colour = study_area))+
                        scale_colour_manual(values = c("#CC79A7", "#46AAE2", "#D55E00", "#009E73"), name = "Study area"))+
@@ -190,38 +153,34 @@ pred_lmer_green <- ggpredict(lmer_green , terms = c("year", "study_area"), type 
     guides(color = guide_legend(override.aes = list(size = 3))))
 
                                   
- ggsave(file = "output/figures/all_sites_greening.png")
+# ggsave(file = "output/figures/all_sites_greening.png")
  
-# I might want random slopes/intercepts?
-(slopes_pred_lmer_green <- ggplot(pred_lmer_green, aes(x = x, y = predicted, colour = group)) +
-    stat_smooth(method = "lm", se = FALSE)  +
-    theme(legend.position = "bottom")+
-    labs( x= "Year", y = "mean DOY"))
-
-ggsave(file = "outputs/figures/slopes_pred_lmer_green.png")
-
-
 # Separate models per study area ----
 ## ONLY QIKI significant  
-# Qikiqtaruk -----
+
+# a. Qikiqtaruk -----
 Qikiqtaruk <-  phenology_green_trim %>% filter (study_area == "Qikiqtaruk") 
 hist(Qikiqtaruk$mean.doy) 
+
+# Model
 lmer_Qiki <- lmer(mean.doy ~ I(year-1995) + (1|year), data =Qikiqtaruk ) 
 summary(lmer_Qiki)
 plot(lmer_Qiki)
-tab_model(lmer_Qiki, file = "output/tables/lmer_Qiki.html")
-webshot("output/tables/lmer_Qiki.html", "output/tables/lmer_Qiki.png")
-
 r2_nakagawa(lmer_Qiki)
 
+# null
 lm_Qiki_null <- lm(mean.doy ~ 1, data =Qikiqtaruk ) 
 AIC(lmer_Qiki, lm_Qiki_null)
 
+# output
+tab_model(lmer_Qiki, file = "output/tables/lmer_Qiki.html")
+webshot("output/tables/lmer_Qiki.html", "output/tables/lmer_Qiki.png")
 stargazer(lmer_Qiki, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "") # Mean DOY does decrease in Qiki
 
+# scatter
 (Qiki_DOY <- ggplot(Qikiqtaruk, aes(x = year, y =mean.doy)) +
     geom_point(size = 2, colour = "#009E73") +
     geom_smooth(method = "lm", colour = "black", fill = "#009E73", size =2)+
@@ -240,22 +199,24 @@ ggsave(Qiki_DOY, filename = "output/figures/Qiki_DOY.png")
 (Qiki_DOY <- Qiki_DOY + annotation_raster(raster_early_logo, 2012, 2016, 180, 200))
 ggsave(file = "output/figures/Qiki_DOY.png")
 
-
-# Atqasuk -----
+# b. Atqasuk -----
 Atqasuk <-  phenology_green_trim %>% filter (study_area == "Atqasuk") 
 lmer_Atqasuk <- lmer(mean.doy ~ year + (1|year), data =Atqasuk ) 
 summary(lmer_Atqasuk)
 plot(lmer_Atqasuk)
+r2_nakagawa(lmer_Atqasuk)
 
+# null
 lm_Atqasuk_null <- lm(mean.doy ~ 1, data = Atqasuk) 
 AIC(lmer_Atqasuk, lm_Atqasuk_null)
 
-r2_nakagawa(lmer_Atqasuk)
-
+# output
 stargazer(lmer_Atqasuk, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "") # Mean DOY does decrease in Qiki
+          digit.separator = "") 
+
+# scatter
 (Atqasuk_DOY <- ggplot(Atqasuk, aes(x = year, y =mean.doy)) +
     geom_point(size = 3, colour = "skyblue") +
     geom_smooth(method = "lm", colour = "black")+
@@ -265,21 +226,23 @@ stargazer(lmer_Atqasuk, type = "text",
     #title = "Proportion of early greening plots increasing\n") +
     theme_shrub())
 
-# Toolik -----
+# c. Toolik -----
 Toolik <-  phenology_green_trim %>% filter (study_area == "Toolik Lake") 
 lmer_Toolik <- lmer(mean.doy ~ year + (1|year), data =Toolik) 
 summary(lmer_Toolik)
 plot(lmer_Toolik)
+r2_nakagawa(lmer_Toolik)
 
+# null
 lm_Toolik_null <- lm(mean.doy ~ 1, data = Toolik) 
 AIC(lmer_Toolik, lm_Toolik_null)
 
-r2_nakagawa(lmer_Toolik)
-
+# output
 stargazer(lmer_Toolik, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "") # Mean DOY does decrease in Qiki
+# scatter
 (Toolik_DOY <- ggplot(Toolik, aes(x = year, y =mean.doy)) +
     geom_point(size = 3, colour = "skyblue") +
     geom_smooth(method = "lm", colour = "black")+
@@ -289,22 +252,24 @@ stargazer(lmer_Toolik, type = "text",
     #title = "Proportion of early greening plots increasing\n") +
     theme_shrub())
 
-# Utqiagvik -----
-
+# d. Utqiagvik -----
 Utqiagvik<-  phenology_green_trim %>% filter (study_area == "Utqiagvik") 
 lmer_Utqiagvik <- lmer(mean.doy ~ year + (1|year), data =Utqiagvik) 
 summary(lmer_Toolik)
 plot(lmer_Utqiagvik)
+r2_nakagawa(lmer_Utqiagvik)
 
+# null
 lm_Utqiagvik_null <- lm(mean.doy ~ 1, data = Utqiagvik) 
 AIC(lmer_Utqiagvik, lm_Utqiagvik_null)
 
-r2_nakagawa(lmer_Utqiagvik)
-
+# output
 stargazer(lmer_Utqiagvik, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "") # Mean DOY does decrease in Qiki
+          digit.separator = "") 
+
+# scatter
 (Utqiagvik_DOY <- ggplot(Utqiagvik, aes(x = year, y =mean.doy)) +
     geom_point(size = 3, colour = "skyblue") +
     geom_smooth(method = "lm", colour = "black")+
@@ -315,7 +280,7 @@ stargazer(lmer_Utqiagvik, type = "text",
     theme_shrub())
 
 
-# END -----
+####################################################################### END -----
 
 
  
