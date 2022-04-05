@@ -5,6 +5,10 @@
 #                                                         ##
 ##%######################################################%##
 
+# RQ3: How has vegetation cover changed in the Arctic National Wildlife Refuge between 1996-2007? 
+# colour palette by Wong 
+# https://davidmathlogic.com/colorblind/#%23000000-%23E69F00-%2356B4E9-%23009E73-%23F7EA40-%230072B2-%23D55E00-%23CC79A7 
+
 # LOADING LIBRARIES  ----
 library(tidyverse)
 library(cowplot)
@@ -18,8 +22,6 @@ library(sjPlot)  # to visualise model outputs
 library(stargazer)
 library(blmeco)
 
-# colour palette by Wong 
-# https://davidmathlogic.com/colorblind/#%23000000-%23E69F00-%2356B4E9-%23009E73-%23F7EA40-%230072B2-%23D55E00-%23CC79A7 
 # LOADING DATA ----
 
 load("~/Desktop/dissertation/R_dissertation/datasets/ITEX_data/ITEX_EZ_diss.RData")
@@ -51,8 +53,7 @@ theme_shrub <- function(){ theme(legend.position = "right",
 
 # 1. SHRUB COVER CHANGE ------
 
-# Mean shrub cover per plot per year
-#  THIS IS THE RIGHT METHOD:
+# Mean shrub cover per plot per year (right method - checked with Mariana)
 ITEX_shrubs_mean <- ITEX_shrubs %>%
   group_by(SiteSubsitePlotYear) %>%
   mutate(mean_cover = mean(RelCover)) %>%
@@ -65,11 +66,11 @@ ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>%
   mutate(mean_cover_prop = mean_cover/100)
 
 str(ITEX_shrubs_mean_trim)
+# making plot categorical
 ITEX_shrubs_mean_trim$PLOT <- as.factor(as.character(ITEX_shrubs_mean_trim$PLOT))
-hist(ITEX_shrubs_mean_trim$mean_cover_prop)
+hist(ITEX_shrubs_mean_trim$mean_cover_prop) # right skewed
 
-
-# Mean shrub cover change over time  
+# Mean shrub cover change over time scatter plot
 (shrub_mean_change <- (ggplot(ITEX_shrubs_mean_trim)+
                      geom_point(aes(x = YEAR, y = mean_cover_prop), colour = "green4", size = 1) +
                      geom_smooth(aes(x = YEAR, y = mean_cover_prop), colour= "black", method = "glm") + 
@@ -79,7 +80,7 @@ hist(ITEX_shrubs_mean_trim$mean_cover_prop)
                      theme_shrub()+
                      theme(axis.text.x = element_text(angle = 45))))
 
-ggsave(shrub_mean_change, file = "output/figures/shrub_mean_change.png")          
+# ggsave(shrub_mean_change, file = "output/figures/shrub_mean_change.png")          
 
 # Model 6----
 # Shrub cover over time
@@ -89,39 +90,31 @@ unique(ITEX_shrubs_mean_trim$YEAR)
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean_trim %>% mutate(cover_prop = mean_cover/100)
 hist(ITEX_shrubs_mean_trim$mean_cover)
 
-# mixed effect model with plot and year as random effects
-model_6 <- glmer.nb(mean_cover ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
-summary(model_6)
-dispersion_glmer(model_6)# 0.9665275
-
+# glmer.nb, with plot and year as random effects
 model_6b <- glmer.nb(mean_cover_prop ~ I(YEAR-1995)  + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6b)
 dispersion_glmer(model_6b)# 0.2243548
 
-model_6a <- glmer(mean_cover ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), family = poisson, data = ITEX_shrubs_mean_trim)
-summary(model_6a)
-dispersion_glmer(model_6a)# 1.579284 overdispersed
-
+# glmer poisson,  with plot and year as random effects
 model_6c <- glmer(mean_cover_prop ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), family = poisson, data = ITEX_shrubs_mean_trim)
 summary(model_6c)
 dispersion_glmer(model_6c)#0.1816644
 
-# null
+# null model 
 model_6_null <- glm.nb(mean_cover_prop ~1,  data = ITEX_shrubs_mean_trim)
+# comparing AIC
 AIC(model_6_null, model_6,model_6a, model_6b, model_6c)
 
-# Checking model 6 assumptions 
+# Checking model assumptions 
 plot(model_6a)
 qqnorm(resid(model_6a))
 qqline(resid(model_6a))  # points fall nicely onto the line - good!
-dispersion_glmer(model_6a) #0.9665275
 
 # Output table model 6 
 stargazer(model_6, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
-
 
 # Extracting model predictions 
 pred_model_6 <- ggpredict(model_6, terms = c("YEAR", "PLOT"))
@@ -145,9 +138,9 @@ pred_model_6a <- ggpredict(model_6, terms = c("YEAR"))
 
 ggsave(file = "output/figures/shrub_cover_ANWR.png")
 
-
 ### 2. SHRUB GENUS -----
-# shrub species
+
+# different shrub species
 unique(ITEX_shrubs$GENUS) 
 # [1] "Dryas"          "Salix"          "Vaccinium"      "Arctostaphylos" "Betula"         "Cassiope"      
 # [7] "Ledum"
@@ -164,11 +157,15 @@ ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>%
   distinct(SiteSubsitePlotYear, genus_cover, .keep_all = TRUE)  %>% 
   mutate(genus_cover_prop = genus_cover/100)
 
+# making genus a factor
 ITEX_shrubs_sp_trim$GENUS <- as.factor(as.character(ITEX_shrubs_sp_trim$GENUS ))
-hist(ITEX_shrubs_sp_trim$genus_cover)
+# making year a factor
 ITEX_shrubs_sp_trim$YEAR <- as.numeric(ITEX_shrubs_sp_trim$YEAR)
+
+hist(ITEX_shrubs_sp_trim$genus_cover) # right skewed
 str(ITEX_shrubs_sp_trim)
 
+# scatter plot of different shrub genus change over time
 (facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover))+
                                  geom_point(size = 0.6, aes(colour=GENUS)) +
                                  scale_colour_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
@@ -187,11 +184,9 @@ str(ITEX_shrubs_sp_trim)
                                        strip.text.x = element_text(size = 25, face = "italic" )))
 
 dev.off()
-ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
+# ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 
 # Model ----
-hist(ITEX_shrubs_sp_trim$genus_cover)
-
 lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|PLOT), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp_2)
 AIC(lmer_shrub_sp_null, lmer_shrub_sp_2)
