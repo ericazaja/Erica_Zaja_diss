@@ -118,13 +118,10 @@ theme_shrub <- function(){ theme(legend.position = "right",
                    plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                    plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
-# MODELLING ----
-
-# 5. FUNCTIONAL GROUP ----
-
+# MODELLING mean cover of FUNCTIONAL GROUPS ----
 unique(ANWR_veg$FuncGroup)  # checking I have all functional groups
 
-# visualising distribution with a histogram
+# Visualising distribution with a histogram
 (hist_all_veg <- ANWR_veg %>%
       ggplot(aes(x = RelCover, fill = FuncGroup)) +
       geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 30) +
@@ -157,120 +154,109 @@ ANWR_veg_fg_trim <- ANWR_veg_fg %>%
 ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup))
 hist(ANWR_veg_fg_trim$mean_cover_prop) # checking proportion data distribution
 
-# MODEL 11 ----
+# MODEL(s) 11 ----
+# Trying and comparing different model syntaxes
 
-# no functional group
+# glmer.nb, functional group fixed effect, year and plot random effects
+lmer_all_2a <- glmer.nb(mean_cover_prop~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+dispersion_glmer(lmer_all_2a)
+summary(lmer_all_2a)
+AIC(lmer_all_2a, lmer_all_null)
+r.squaredGLMM(lmer_all_2a)
+### THIS IS THE MODEL SELECTED FOR THE RESULTS
+
+# glmer poisson, no functional group
 lmer_all_0 <- glmer(mean_cover_prop~I(YEAR-1995) + (1|YEAR) + (1|PLOT), family = "poisson", data = ANWR_veg_fg_trim)
 summary(lmer_all_0)
 r.squaredGLMM(lmer_all_0)
 dispersion_glmer(lmer_all_0)
 plot(lmer_all_0)
 
-# functional group fixed effect with poisson glmer 
+# glmer poisson, functional group fixed effect 
 lmer_all_2 <- glmer(mean_cover_prop~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT),family = "poisson", data = ANWR_veg_fg_trim)
 summary(lmer_all_2) 
 r.squaredGLMM(lmer_all_2)
 dispersion_glmer(lmer_all_2)
 plot(lmer_all_2)
 
-# functional group fixed effect with glmer.nb
-lmer_all_2a <- glmer.nb(mean_cover_prop~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
-dispersion_glmer(lmer_all_2a)
-summary(lmer_all_2a)
-AIC(lmer_all_2a, lmer_all_null)
-r.squaredGLMM(lmer_all_2a)
-
-
-#BEST model without year and plot random effects 
+#glm.nb, functional group fixed effect, model without year and plot random effects 
 lmer_all_2a_try <- glm.nb(mean_cover_prop~I(YEAR-1995) + FuncGroup, data = ANWR_veg_fg_trim)
 summary(lmer_all_2a_try)
 
+# glmer.nb, functional group random effect, no year and plot random effects
 lmer_all_3_try <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup), data = ANWR_veg_fg_trim)
 summary(lmer_all_3_try)
 
-# model 5a output table 
+# glmer.nb, functional group random effect, year and plot random effects
+lmer_all_3a <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+dispersion_glmer(lmer_all_3a) #0.1845308
+summary(lmer_all_3a)
+r.squaredGLMM(lmer_all_3a)
+
+# glmer poisson, functional group random effect, year and plot random effects
+lmer_all_3b <- glmer(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), family = "poisson", data = ANWR_veg_fg_trim)
+dispersion_glmer(lmer_all_3b) # 0.1595953
+
+# glmer.nb, random slopes 
+lmer_all_4 <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1+YEAR|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+summary(lmer_all_4)
+r.squaredGLMM(lmer_all_4)
+
+# glmer.nb with functional group interacting with year
+lmer_all <- glmer.nb(mean_cover_prop~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+summary(lmer_all)
+r.squaredGLMM(lmer_all)
+AIC(lmer_all, lmer_all_null, lmer_all_4)
+dispersion_glmer(lmer_all_2)# 0.9356298
+
+# glmer poisson, with functional group interacting with year
+lmer_all_2<- glmer(mean_cover~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), family = poisson, data = ANWR_veg_fg_trim)
+summary(lmer_all_2)
+plot(lmer_all_2)
+dispersion_glmer(lmer_all_4)# 1.477103
+
+# saving model outputs
 tab_model(lmer_all_2a, file = "output/tables/lmer_2a.html")
 webshot("output/tables/lmer_2a.html", "output/tables/lmer_2a.png")
 
 tab_model(lmer_all_2a_try, file = "output/tables/lmer_2a_try.html")
 webshot("output/tables/lmer_2a_try.html", "output/tables/lmer_2a_try.png")
 
-lmer_all_3a <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
-dispersion_glmer(lmer_all_3a) #0.1845308
-summary(lmer_all_3a)
-r.squaredGLMM(lmer_all_3a)
-
-lmer_all_3b <- glmer(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), family = "poisson", data = ANWR_veg_fg_trim)
-dispersion_glmer(lmer_all_3b) # 0.1595953
-
 # null model
 lmer_all_null <- glm.nb(mean_cover_prop~1, data = ANWR_veg_fg_trim)
 glimpse(ANWR_veg_fg_trim)
-AIC(lmer_all_null, lmer_all_0, lmer_all_2, lmer_all_2a, lmer_all_3, lmer_all_3a, lmer_all_3b)
 
-# BEST model is glmer.nb with fixed effect f group but AIC equivalent to null model
-
-# random slopes
-lmer_all_4 <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1+YEAR|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
-summary(lmer_all_4)
-r.squaredGLMM(lmer_all_4)
-
-predictions_rs_all <- ggpredict(lmer_all_2a  , terms = c("YEAR", "FuncGroup"))
-(groups_rand_slopes <- ggplot(predictions_rs_all, aes(x = x, y = predicted, colour = group)) +
-      stat_smooth(method = "lm", se = FALSE)  +
-      scale_colour_manual(values = c("green4", "green3", "red", "red4", "brown"), name = "Functional group")+
-      #scale_x_continuous(breaks=1997:2009)+
-      theme(legend.position = "bottom") +
-      labs(x = "\nYear", y = "Mean cover (%)\n")+
-      theme_shrub()+ 
-      theme(axis.text.x = element_text(angle = 45))) # really ugly 
-
-# mixed model with functional group as fixed effect
-lmer_all <- glmer.nb(mean_cover_prop~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
-summary(lmer_all)
-r.squaredGLMM(lmer_all)
-AIC(lmer_all, lmer_all_null, lmer_all_4)
+# Model selection ----
+# comparing AIC values 
+AIC(lmer_all_null, lmer_all, lmer_all_0, lmer_all_2, lmer_all_2a, lmer_all_3, lmer_all_3a, lmer_all_3b, lmer_all_4)
+# model selected: glmer.nb with fixed effect f group and year and plot random, but AIC equivalent to null model
 
 
-plot(lmer_all)
-qqnorm(resid(lmer_all))
-qqline(resid(lmer_all))  
-dispersion_glmer(lmer_all_2)# 0.9356298
+# DATA VISUALSATION -----
+(scatter_fgroups <- (ggplot(ANWR_veg_fg_trim, aes(x = YEAR, y = mean_cover, colour = FuncGroup))+
+                        geom_point(size = 0.5) +
+                        geom_smooth(method = "lm", aes(colour= FuncGroup, fill = FuncGroup), show.legend = FALSE)) + 
+    facet_wrap(~FuncGroup, scales = "free_y") +
+    scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
+    scale_colour_manual(values = c("#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"))+
+    scale_fill_manual(values = c("#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"))+
+    labs(y = "Mean cover (%) \n", x = "\nYear") +
+    theme_shrub() +
+    theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 45, colour = "black"),
+          legend.position = "none",
+          strip.text.x = element_text(size = 20),
+          axis.title.x = element_text(size=25),
+          axis.title.y = element_text(size=25),
+          axis.text.y = element_text(size=25, hjust = 1)))
 
-lmer_all_2<- glmer(mean_cover~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), family = poisson, data = ANWR_veg_fg_trim)
-summary(lmer_all_2)
-plot(lmer_all_2)
-qqnorm(resid(lmer_all_2))
-qqline(resid(lmer_all_2))  
-dispersion_glmer(lmer_all_4)# 1.477103
+# ggsave(file = "output/figures/scatter_fgroups.png")
 
-stargazer(lmer_all_3a,
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "", type= "text")
-
-# Output table model 7 
-stargazer(lmer_all_2,
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "", 
-          type = "html", out = "output/tables/lmer_all.html")
-
-AIC(lmer_all, lmer_all_0, lmer_all_2, lmer_all_3, lmer_all_4)
-
-# Extracting model predictions 
+# Extracting model predictions of selected model 
 pred_lmer_all_1 <- ggpredict(lmer_all_2a , terms = c("YEAR"))
 pred_lmer_all_2 <- ggpredict(lmer_all_2a , terms = c("FuncGroup"))  # this gives overall predictions for the model
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
-predics <- ggpredict(lmer_all_2a, terms = c("YEAR", "FuncGroup"), type = "re")
-(pred_plot2 <- ggplot(predics, aes(x = x, y = predicted, colour = group)) +
-      stat_smooth(method = "lm", se = FALSE)  +
-      scale_y_continuous(limits = c(0, 35)) +
-      theme(legend.position = "bottom") +
-      labs(x = "\nYear", y = "Cover\n"))
-
-# trying diff graph
+# trying different graph
 ANWR_veg_fg_trim$Predicted <- predict(lmer_all_2a, ANWR_veg_fg_trim)
 
 # plot predicted values
@@ -281,8 +267,7 @@ ggplot(ANWR_veg_fg_trim, aes(YEAR, Predicted)) +
                se = T, method = "lm") +
    guides(color=guide_legend(override.aes=list(fill=NA))) +  
    theme_shrub() + 
-   xlab("Year")
-
+   xlab("Year") # ugly
 
 # extracting model predictions
 pred.mm <- ggpredict(lmer_all_2a, terms = c("YEAR"))
@@ -292,58 +277,6 @@ pred.mm <- ggpredict(lmer_all_2a, terms = c("YEAR"))
 
 # Plotting random effects
 (re.effects <- plot_model(lmer_all_2a, type = "re", show.values = TRUE))
-
-# Random slopes 
-predict <- ggpredict(lmer_all_rand, terms = c("YEAR", "FuncGroup"), type = "re") 
-
-(pred_plot2 <- ggplot(predict, aes(x = x, y = predicted, colour = group)) +
-      stat_smooth(method = "lm", se = FALSE)  +
-      # scale_y_continuous(limits = c(0, )) +
-      theme(legend.position = "bottom") +
-      labs(x = "\nYear", y = "Predicted mean % cover\n"))
-# all increasing? probably wrong
-
-
-(scatter_fgroups <- (ggplot(ANWR_veg_fg_trim, aes(x = YEAR, y = mean_cover, colour = FuncGroup))+
-                       geom_point(size = 0.5) +
-                       geom_smooth(method = "lm", aes(colour= FuncGroup, fill = FuncGroup), show.legend = FALSE)) + 
-                    facet_wrap(~FuncGroup, scales = "free_y") +
-                       scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
-                       scale_colour_manual(values = c("#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"))+
-                        scale_fill_manual(values = c("#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"))+
-                       labs(y = "Mean cover (%) \n", x = "\nYear") +
-                       theme_shrub() +
-                       theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 45, colour = "black"),
-                             legend.position = "none",
-                           strip.text.x = element_text(size = 20),
-                         axis.title.x = element_text(size=25),
-                                 axis.title.y = element_text(size=25),
-                                 axis.text.y = element_text(size=25, hjust = 1)))
-
-            
-
-ggsave(file = "output/figures/scatter_fgroups.png")
-
-# Model with random slopes per f group
-lmer_fgroup_rand <- lmer(mean_cover~I(YEAR-1995) + (1+I(YEAR-1995)|FuncGroup), data = ANWR_veg_fg_trim)
-summary(lmer_fgroup_rand) # doesnt converge
-head(ANWR_veg_fg_trim)
-
-stargazer(lmer_fgroup_rand, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-
-predictions_fgroup_slopes <- ggpredict(lmer_fgroup_rand , terms = c("YEAR", "FuncGroup"), type = "re")
-
-(fgroup_rand_slopes <- ggplot(predictions_fgroup_slopes, aes(x = x, y = predicted, colour = group)) +
-      stat_smooth(method = "lm", se = FALSE)  +
-      #scale_y_continuous(limits = c(0, 30)) +
-     # scale_x_continuous(breaks=1997:2009)+
-      theme(legend.position = "bottom") +
-      labs(x = "\nYear", y = "Mean shrub genus cover (%)\n")+
-      theme_shrub()+ 
-      theme(axis.text.x = element_text(angle = 45)))
 
 
 # END -----
