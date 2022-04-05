@@ -182,3 +182,5 @@ r3_rsample_002  <- r3_rsample_01 %>%
 # write.csv(r3_rsample_002, file= "datasets/berner_data/r3_rsample_002.csv") # with 1/3 pixels (c.)
 
 # I USE THE r3_rsample_002 for subsequent analyses
+
+##################################################################### END -----
