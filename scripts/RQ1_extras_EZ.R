@@ -271,5 +271,83 @@ copy_raster <- r3_latlong_agg
 copy_raster[] <- clusters$cluster
 plot(copy_raster, main = "Kmeans", col = viridis_pal(option = "D")(3))
 
+# 3. Map overlay ----
+plot(shrub_agb_p50, xlim = c(-540475.3,  921674.7), ylim = c(1933928.1,2380628.1)) # plotting shrub raster
+plot(st_geometry(PCH_core_range), xlim = c(165444.3, 1049222.0), add = TRUE) # adding PCH polygon
+
+# 4. Base map ----
+# Full map of canada
+canada <- raster::getData("GADM", country = "CAN", level = 1)
+plot(canada)
+yukon <- canada[canada$NAME_1 != "Yukon"] # keeping Yukon
+
+# getting data from world 
+world <- ne_countries(scale = "medium", returnclass = "sf") 
+class(world)
+
+# making a datafrme of coordinates of Alaska/Yukon
+Alaska_coords <- data.frame(longitude = c(-180, -80), latitude = c(60, 75)) 
+Alaska_polygon <- as(Alaska_coords, 'SpatialPolygonsDataFrame') # making extent into polygon
+
+# plotting base map 
+(Alaska_Yukon <- ggplot(data = Alaska_polygon) +
+    geom_point(aes(x = longitude, y = latitude)) +
+    coord_sf()) # wrong 
+
+(Alaska_Yukon <- ggplot() +
+    geom_polygon(data = world, aes(x = long, y = lat, group = group),
+                 fill = "grey", colour = "black") + 
+    coord_cartesian(xlim = c(-180, -80), ylim = c(60, 75)) +
+    geom_sf(data = PCH_core_range,
+            fill = "yellow", colour = "yellow") + 
+    theme_shrub() +  
+    xlab("Longitude") +
+    ylab("Latitude") ) ## DOESNT WORK
+
+# Alternative: cropped map with another personalised colour palette (low-mid)
+(r3_cropped_my_palette <- gplot(r3_latlong_agg) +
+    geom_raster(aes(x = x, y = y, fill = value)) +
+    # value is the specific value (of reflectance) each pixel is associated with
+    scale_fill_gradient(low = "#F0E442", high = "#009E73", 
+                        rescaler = function(x, to = c(0, 1), from = NULL) {
+                          ifelse(x<347, scales::rescale(x, to = to,from = c(min(x, na.rm = TRUE), 347)),
+                                 1)}, na.value="white", name = "Shrub biomass (g/m^2)") +
+    coord_quickmap()+
+    theme_shrub() +  # Remove ugly grey background
+    xlab("\nLongitude") +
+    ylab("Latitude\n") +
+    xlim(-147.5, -140)+
+    ylim(69,70.5)+
+    theme(plot.title = element_text(hjust = 0.5),      # centres plot title
+          text = element_text(size=20),		       	    # font size
+          axis.text.x = element_text(angle = 30, hjust = 1),
+          legend.text = element_text(size=20),
+          legend.title = element_text(size=25)))  # rotates x axis text
+
+ggsave("output/figures/r3_cropped_my_palette.png")
+
+# adding logo
+(r3_cropped_my_palette <- r3_cropped_my_palette + annotation_raster(raster_caribou_logo, -142, -140, 69.8, 70.5))
+ggsave(file = "output/figures/r3_cropped_my_palette.png")
+
+# Alternative: cropped map with personalised colour palette (low-mid-high) 
+(r3_cropped_my_palette_2 <- gplot(r3_latlong_agg) +
+    geom_raster(aes(x = x, y = y, fill = value)) +
+    # value is the specific value (of reflectance) each pixel is associated with
+    scale_fill_gradient2(low = "tan", mid = "#FFFF6B", high = "green4", midpoint = 267,  na.value="white", name = "Biomass (kg/m2)") +
+    coord_quickmap()+
+    theme_shrub() +  
+    xlab("\nLongitude") +
+    ylab("Latitude\n") +
+    xlim(-147.5, -140)+
+    ylim(69,70.5)+
+    # ggtitle("Shrub biomass cover (kg/m2) of the PCH alaskan range\n") +
+    theme(plot.title = element_text(hjust = 0.5),             # centres plot title
+          text = element_text(size=15),		       	    # font size
+          axis.text.x = element_text(angle = 30, hjust = 1)))  # rotates x axis text
+
+ggsave("output/figures/r3_cropped_my_palette_2.png")
+
+dev.off()
 
 
