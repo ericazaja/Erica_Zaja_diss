@@ -21,6 +21,12 @@ library(ggeffects)
 library(sjPlot)  # to visualise model outputs
 library(stargazer)
 library(blmeco)
+library(MuMIn)
+library(sjmisc)
+library(MASS)
+library(sjmisc)
+library(sjlabelled)
+
 
 # LOADING DATA ----
 
@@ -188,7 +194,7 @@ dev.off()
 # ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 
 # MODEL(s) 13 ----
-lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|PLOT), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_2a <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|PLOT), data = ITEX_shrubs_sp_trim)
 summary(lmer_shrub_sp_2)
 dispersion_glmer(lmer_shrub_sp_2) # 0.2425216
 r.squaredGLMM(lmer_shrub_sp_2) 
@@ -200,9 +206,9 @@ lmer_shrub_sp_3 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR)
 lmer_shrub_sp_0 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_1 <- glmer.nb(genus_cover_prop~I(YEAR-1995)+ (1|GENUS) , data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp <- glmer.nb(genus_cover_prop~I(YEAR-1995)*GENUS + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
-dispersion_glmer(lmer_shrub_sp_3) #0.2723795
+dispersion_glmer(lmer_shrub_sp_2) #0.2723795
 dispersion_glmer(lmer_shrub_sp_0)# 0.2750381
-r.squaredGLMM(lmer_shrub_sp_3)
+r.squaredGLMM(lmer_shrub_sp_2)
 r.squaredGLMM(lmer_shrub_sp_0)
 summary(lmer_shrub_sp_0) 
 
@@ -214,7 +220,7 @@ tab_model(lmer_shrub_sp_0, file = "output/tables/lmer_shrub_sp_0.html")
 webshot("output/tables/lmer_shrub_sp_0.html", "output/tables/lmer_shrub_sp_0.png")
 
 # Output table 
-stargazer(lmer_shrub_sp,
+stargazer(lmer_shrub_sp_2,
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "", 
@@ -231,11 +237,8 @@ lmer_shrub_sp_null <- glm.nb(genus_cover_prop~1, data = ITEX_shrubs_sp_trim)
 # comparing AIC values
 AIC(lmer_shrub_sp_null, lmer_shrub_sp_2, lmer_shrub_sp_3, lmer_shrub_sp_0, lmer_shrub_sp)
 
-## N.B BEST model fit is lmer_shrub_sp_0 because lowest AIC (), but doesnt take genus as effect. SO next best is genus as random effect
-
-
 # Plotting fixed effects
-(fe.effects <- plot_model(lmer_shrub_sp , show.values = TRUE))
+(fe.effects <- plot_model(lmer_shrub_sp_2, show.values = TRUE))
 
 # Plotting random effects
 (re.effects <- plot_model(lmer_shrub_sp , type = "re", show.values = TRUE))
