@@ -9,9 +9,11 @@
 
 # LOADING LIBRARIES -----
 library(tidyverse)
+library(webshot)
 
 # LOADING DATA  -----
 prop_greening_plots <- read_csv("datasets/phenology_data/prop_greening_plots.csv")
+phenology_green_trim <- read_csv("datasets/phenology_data/phenology_green_trim.csv")
 
 # DATA VISUALISATION and modelling ----
 

@@ -153,6 +153,7 @@ phenology_green_trim <- phenology_mean_doy %>%
                 lat, long, elevation, ecosystem, exstart, soil_moisture, treatment, mean.doy) %>% 
   distinct(SiteSubsitePlotYear, mean.doy, .keep_all = TRUE) # 2980 rows, perfect!
 
+write.csv(phenology_green_trim, file = "datasets/phenology_data/phenology_green_trim.csv")
 
 # defining a threshold based on mean of all ranges 
 threshold <- phenology_green_trim %>% group_by(SiteSubsitePlotYear) %>% 

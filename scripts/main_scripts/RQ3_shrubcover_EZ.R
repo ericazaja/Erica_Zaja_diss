@@ -244,6 +244,10 @@ AIC(lmer_shrub_sp_null, lmer_shrub_sp_2, lmer_shrub_sp_3, lmer_shrub_sp_0, lmer_
 (re.effects <- plot_model(lmer_shrub_sp , type = "re", show.values = TRUE))
 
 
+#model predicions
+p <- ggpredict(lmer_shrub_sp_2, c("YEAR", "GENUS"))
+plot(p) 
+
 # 3. SHRUB COVER IN SPACE  ----
 # standardise lat and long
 ITEX_shrubs_mean_trim$LAT <- scale(ITEX_shrubs_mean_trim$LAT , center = TRUE, scale = TRUE)
