@@ -42,7 +42,15 @@ ITEX_gram$PLOT <- as.factor(as.character(ITEX_gram$PLOT))
 ITEX_gram_mean_trim <- ITEX_gram_mean %>% 
   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE) %>% 
-  mutate(mean_cover_prop = mean_cover/100)
+  mutate(mean_cover_prop = mean_cover/100) %>% 
+mutate(mean_cover_int = ceiling(mean_cover)) %>%   
+  mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
+                                 YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
+                                 YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
+                                 YEAR == 2002 ~ '7', YEAR == 2003 ~ '8',
+                                 YEAR== 2004 ~ '9', YEAR == 2005 ~ '10',
+                                 YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
+  
 
 # scatter
 (graminoid_scatter <- (ggplot(ITEX_gram_mean_trim)+
@@ -57,7 +65,8 @@ ITEX_gram_mean_trim <- ITEX_gram_mean %>%
 hist(ITEX_gram_mean_trim$mean_cover_prop) # right skewed
 # Graminoid cover over time 
 # glmer.nb, with plot and year as random effects
-model_7 <- glmer.nb(mean_cover_prop~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
+ITEX_gram_mean_trim$year_index <- as.numeric(ITEX_gram_mean_trim$year_index)
+model_7 <- glmer.nb(mean_cover_int ~ year_index + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
 summary(model_7)
 dispersion_glmer(model_7)
 tab_model(model_7a)
@@ -75,7 +84,7 @@ stargazer(model_7, type = "text",
           digit.separator = "")
 
 # Extracting model predictions 
-pred_model_7 <- ggpredict(model_7, terms = c("YEAR"))  # this gives overall predictions for the model
+pred_model_7 <- ggpredict(model_7, terms = c("year_index"))  # this gives overall predictions for the model
 # write.csv(pred_model_7, file = "datasets/pred_model_7.csv")
 
 # Plot the predictions 
@@ -133,7 +142,14 @@ ITEX_forb_mean$PLOT <- as.factor(as.character(ITEX_forb_mean$PLOT))
 ITEX_forb_mean_trim <- ITEX_forb_mean %>% 
   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE) %>% 
-  mutate(mean_cover_prop = mean_cover/100)
+  mutate(mean_cover_prop = mean_cover/100)%>% 
+  mutate(mean_cover_int = ceiling(mean_cover)) %>%   
+  mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
+                                 YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
+                                 YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
+                                 YEAR == 2002 ~ '7', YEAR == 2003 ~ '8',
+                                 YEAR== 2004 ~ '9', YEAR == 2005 ~ '10',
+                                 YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
 
 # scatter 
 (forb_scatter <- (ggplot(ITEX_forb_mean_trim)+
@@ -146,9 +162,15 @@ ITEX_forb_mean_trim <- ITEX_forb_mean %>%
 
 # Model 8 ----
 # Forb cover over time 
+ITEX_forb_mean_trim$year_index <- as.numeric(ITEX_forb_mean_trim$year_index)
+unique(ITEX_forb_mean_trim$mean_cover_int)
+
 # glmer.nb, with plot and year as random effects
-model_8 <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_forb_mean_trim)
+model_8 <- glmer.nb(mean_cover_int~year_index + (1|PLOT) + (1|YEAR), data = ITEX_forb_mean_trim)
 summary(model_8)
+
+model_8a <- glmer(mean_cover_int~year_index + (1|PLOT) + (1|YEAR), family = "poisson", data = ITEX_forb_mean_trim)
+
 
 # trying model without random effects
 model_8a <- glm.nb(mean_cover_prop~I(YEAR-1995), data = ITEX_forb_mean_trim)
@@ -197,7 +219,16 @@ ITEX_moss_mean$PLOT <- as.factor(as.character(ITEX_moss_mean$PLOT))
 ITEX_moss_mean_trim <- ITEX_moss_mean %>% 
   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>%
-  mutate(mean_cover_prop = mean_cover/100)
+  mutate(mean_cover_prop = mean_cover/100)%>%
+  mutate(mean_cover_int = ceiling(mean_cover)) %>%   
+  mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
+                                 YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
+                                 YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
+                                 YEAR == 2002 ~ '7', YEAR == 2003 ~ '8',
+                                 YEAR== 2004 ~ '9', YEAR == 2005 ~ '10',
+                                 YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
+
+ITEX_moss_mean_trim$year_index <- as.numeric(ITEX_moss_mean_trim$year_index )
 
 # scatter
 (moss_scatter <- (ggplot(ITEX_moss_mean_trim)+
@@ -209,7 +240,7 @@ ITEX_moss_mean_trim <- ITEX_moss_mean %>%
 # Model 9 ----
 # Moss cover over time
 
-model_9 <- glmer.nb(mean_cover~I(YEAR-1995) + (1|PLOT) + (1|YEAR), data = ITEX_moss_mean_trim)
+model_9 <- glmer.nb(mean_cover_int~year_index + (1|PLOT) + (1|YEAR), data = ITEX_moss_mean_trim)
 summary(model_9)
 
 # Checking model 9 assumptions 
@@ -256,7 +287,18 @@ ITEX_lich_mean$PLOT <- as.factor(as.character(ITEX_lich_mean$PLOT))
 ITEX_lich_mean_trim <- ITEX_lich_mean %>% 
   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>%
-  mutate(mean_cover_prop = mean_cover/100)
+  mutate(mean_cover_prop = mean_cover/100)%>%
+  mutate(mean_cover_int = ceiling(mean_cover)) %>%   
+  mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
+                                 YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
+                                 YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
+                                 YEAR == 2002 ~ '7', YEAR == 2003 ~ '8',
+                                 YEAR== 2004 ~ '9', YEAR == 2005 ~ '10',
+                                 YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
+
+ITEX_lich_mean_trim$year_index <- as.numeric(ITEX_lich_mean_trim$year_index )
+unique(ITEX_lich_mean_trim$year_index)
+hist(ITEX_lich_mean_trim$mean_cover_int)
 
 # scatter
 (lichen_scatter <- (ggplot(ITEX_lich_mean_trim))+
@@ -267,8 +309,11 @@ ITEX_lich_mean_trim <- ITEX_lich_mean %>%
 
 # Model 10 ----
 # Lichen cover over time 
-model_10 <- glmer.nb(mean_cover~I(YEAR-1995)+ (1|PLOT) + (1|YEAR), data = ITEX_lich_mean_trim)
+model_10 <- glmer.nb(mean_cover_int~year_index + (1|PLOT) + (1|YEAR), data = ITEX_lich_mean_trim)
 summary(model_10)
+
+model_10b <- glmer(mean_cover_int~year_index + (1|PLOT) + (1|YEAR), family = "poisson", data = ITEX_lich_mean_trim)
+
 
 # Checking model 9 assumptions 
 plot(model_10)

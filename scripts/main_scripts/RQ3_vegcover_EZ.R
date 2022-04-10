@@ -149,7 +149,18 @@ ANWR_veg_fg <- ANWR_veg %>%
 ANWR_veg_fg_trim <- ANWR_veg_fg %>% 
    dplyr::select(PLOT, YEAR, FuncGroup, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
    distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>% 
-   mutate(mean_cover_prop = mean_cover/100) # making into proportion data
+   mutate(mean_cover_prop = mean_cover/100) %>%    # making into proportion data
+   mutate(mean_cover_int = ceiling(mean_cover)) %>%   
+   mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
+                                  YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
+                                  YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
+                                  YEAR == 2002 ~ '7', YEAR == 2003 ~ '8',
+                                  YEAR== 2004 ~ '9', YEAR == 2005 ~ '10',
+                                 YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
+                      
+str(ANWR_veg_fg_trim$year_index)
+length(unique(ANWR_veg_fg_trim$year_index))
+ANWR_veg_fg_trim$year_index <- as.numeric(ANWR_veg_fg_trim$year_index)
 
 # making func group a factor in the new dataset
 ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup))
@@ -159,22 +170,25 @@ hist(ANWR_veg_fg_trim$mean_cover_prop) # checking proportion data distribution
 # Trying and comparing different model syntaxes
 
 # glmer.nb, functional group fixed effect, year and plot random effects
-lmer_all_2a <- glmer.nb(mean_cover_prop~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+lmer_all_2a <- glmer.nb(mean_cover_int~year_index + FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
 dispersion_glmer(lmer_all_2a)
 summary(lmer_all_2a)
 AIC(lmer_all_2a, lmer_all_null)
 r.squaredGLMM(lmer_all_2a)
 ### THIS IS THE MODEL SELECTED FOR THE RESULTS
 
+str(ANWR_veg_fg_trim$mean_cover_int)
+unique(ANWR_veg_fg_trim$mean_cover_int)
+
 # glmer poisson, no functional group
-lmer_all_0 <- glmer(mean_cover_prop~I(YEAR-1995) + (1|YEAR) + (1|PLOT), family = "poisson", data = ANWR_veg_fg_trim)
+lmer_all_0 <- glmer(mean_cover_int~year_index + (1|YEAR), family = "poisson", data = ANWR_veg_fg_trim)
 summary(lmer_all_0)
 r.squaredGLMM(lmer_all_0)
 dispersion_glmer(lmer_all_0)
 plot(lmer_all_0)
 
 # glmer poisson, functional group fixed effect 
-lmer_all_2 <- glmer(mean_cover_prop~I(YEAR-1995) + FuncGroup + (1|YEAR) + (1|PLOT),family = "poisson", data = ANWR_veg_fg_trim)
+lmer_all_2 <- glmer(mean_cover_prop~year_index + FuncGroup + (1|YEAR) + (1|PLOT),family = "poisson", data = ANWR_veg_fg_trim)
 summary(lmer_all_2) 
 r.squaredGLMM(lmer_all_2)
 dispersion_glmer(lmer_all_2)
@@ -226,6 +240,9 @@ webshot("output/tables/lmer_2a_try.html", "output/tables/lmer_2a_try.png")
 # null model
 lmer_all_null <- glm.nb(mean_cover_prop~1, data = ANWR_veg_fg_trim)
 glimpse(ANWR_veg_fg_trim)
+
+# Extract predictions
+predictions_vegcover<- ggpredict(lmer_all_2a, terms = c("year_index", "FuncGroup"), interval = "confidence")  # this gives overall predictions for the model
 
 # Model selection ----
 # comparing AIC values 

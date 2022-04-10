@@ -156,7 +156,15 @@ qqline(resid(glm_late))
 
                                   
 # ggsave(file = "output/figures/all_sites_greening.png")
- 
+
+# Extract predictions
+predictions_pheno <- as.data.frame(predict(lmer_green, newdata = phenology_green_trim, CI = TRUE)) # this gives overall predictions for the model
+preds_pheno <- cbind(phenology_green_trim, predictions_pheno)
+
+preds_pheno$study_area <- as.factor(as.character(preds_pheno$study_area))
+
+# Plot the predictions 
+
 # Separate models per study area ----
 ## ONLY QIKI significant  
 

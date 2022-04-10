@@ -69,7 +69,16 @@ ITEX_shrubs_mean <- ITEX_shrubs %>%
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>% 
   dplyr::select(PLOT, YEAR, LAT, LONG, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>% 
-  mutate(mean_cover_prop = mean_cover/100)
+  mutate(mean_cover_prop = mean_cover/100) %>%    # making into proportion data
+  mutate(mean_cover_int = ceiling(mean_cover)) %>%   
+  mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
+                                 YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
+                                 YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
+                                 YEAR == 2002 ~ '7', YEAR == 2003 ~ '8',
+                                 YEAR== 2004 ~ '9', YEAR == 2005 ~ '10',
+                                 YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
+ITEX_shrubs_mean_trim$year_index <- as.numeric(ITEX_shrubs_mean_trim$year_index)
+ITEX_shrubs_mean_trim$YEAR <- as.factor(ITEX_shrubs_mean_trim$YEAR)
 
 str(ITEX_shrubs_mean_trim)
 
@@ -98,9 +107,9 @@ ITEX_shrubs_mean_trim <- ITEX_shrubs_mean_trim %>% mutate(cover_prop = mean_cove
 hist(ITEX_shrubs_mean_trim$mean_cover)
 
 # glmer.nb, with plot and year as random effects
-model_6b <- glmer.nb(mean_cover_prop ~ I(YEAR-1995)  + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
+model_6b <- glmer.nb(mean_cover_int~ year_index  + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6b)
-dispersion_glmer(model_6b)# 0.2243548
+dispersion_glmer(model_6b)# 0.9659739
 
 # glmer poisson,  with plot and year as random effects
 model_6c <- glmer(mean_cover_prop ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), family = poisson, data = ITEX_shrubs_mean_trim)
@@ -113,9 +122,9 @@ model_6_null <- glm.nb(mean_cover_prop ~1,  data = ITEX_shrubs_mean_trim)
 AIC(model_6_null, model_6,model_6a, model_6b, model_6c)
 
 # Checking model assumptions 
-plot(model_6a)
-qqnorm(resid(model_6a))
-qqline(resid(model_6a))  # points fall nicely onto the line - good!
+plot(model_6b)
+qqnorm(resid(model_6b))
+qqline(resid(model_6b))  # points fall nicely onto the line - good!
 
 # Output table model 6 
 stargazer(model_6, type = "text",
@@ -124,9 +133,12 @@ stargazer(model_6, type = "text",
           digit.separator = "")
 
 # Extracting model predictions 
-pred_model_6 <- ggpredict(model_6, terms = c("YEAR", "PLOT"))
+pred_model_6 <- ggpredict(model_6b, terms = c("year_index"))
 # this gives overall predictions for the model
-pred_model_6a <- ggpredict(model_6, terms = c("YEAR"))
+pred_model_6a <- ggpredict(model_6b, terms = c("YEAR"))
+
+random_effect_terms <- insight::find_random(model_6b, split_nested = TRUE, flatten = TRUE)
+
 
 # write.csv(pred_model_6, file = "datasets/pred_model_6.csv")
 
