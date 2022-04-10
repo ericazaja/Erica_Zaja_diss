@@ -6,6 +6,7 @@
 ##%######################################################%##
 
 # RQ3: How has vegetation cover changed in the Arctic National Wildlife Refuge between 1996-2007? 
+# colour palettes credits: Bang Wong and Paul Tol
 
 # LOADING LIBRARIES  ----
 library(tidyverse)
@@ -239,8 +240,8 @@ AIC(lmer_all_null, lmer_all, lmer_all_0, lmer_all_2, lmer_all_2a, lmer_all_3, lm
                         geom_smooth(method = "lm", aes(colour= FuncGroup, fill = FuncGroup), show.legend = FALSE)) + 
     facet_wrap(~FuncGroup, scales = "free_y") +
     scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
-    scale_colour_manual(values = c("#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"))+
-    scale_fill_manual(values = c("#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"))+
+    scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
+    scale_fill_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
     labs(y = "Mean cover (%) \n", x = "\nYear") +
     theme_shrub() +
     theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 45, colour = "black"),
@@ -250,7 +251,7 @@ AIC(lmer_all_null, lmer_all, lmer_all_0, lmer_all_2, lmer_all_2a, lmer_all_3, lm
           axis.title.y = element_text(size=25),
           axis.text.y = element_text(size=25, hjust = 1)))
 
-# ggsave(file = "output/figures/scatter_fgroups.png")
+#ggsave(file = "output/figures/scatter_fgroups.png")
 
 # Extracting model predictions of selected model 
 pred_lmer_all_1 <- ggpredict(lmer_all_2a , terms = c("YEAR"))

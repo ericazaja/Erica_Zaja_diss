@@ -156,8 +156,8 @@ r3_latlong_agg_df$biomass_level <- factor(r3_latlong_agg_df$biomass_level,levels
   theme_shrub() +  
   xlab("\nLongitude") +
   ylab("Latitude\n") +
- xlim(-147.5, -140)+
- ylim(69,70.5)+ 
+ xlim(-146.5, -141)+
+ ylim(69.2,70.2)+ 
   theme(plot.title = element_text(hjust = 0.5),      # centres plot title
                        text = element_text(size=25),	
         axis.title.x =element_text(size=25),
@@ -172,7 +172,7 @@ r3_latlong_agg_df$biomass_level <- factor(r3_latlong_agg_df$biomass_level,levels
 caribou_logo <- readPNG("caribou_icon.png")
 raster_caribou_logo <- as.raster(caribou_logo)
 (raster_my_palette_new <- raster_my_palette_new + annotation_raster(raster_caribou_logo, -142, -140, 69.8, 70.5))
-# ggsave(file = "output/figures/raster_my_palette_new.png")
+ggsave(file = "output/figures/raster_my_palette_new.png")
 
 
 

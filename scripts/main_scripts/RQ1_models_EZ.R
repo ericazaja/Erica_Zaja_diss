@@ -233,8 +233,8 @@ r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels =
                colour = "black", linetype = "dashed", size = 1) +
     annotate(geom = "text", x = 450, y = 200, label="mean = 267.6", size = 14) +
     geom_curve(aes(x = 470, y = 210, xend = mean(biomass) + 2, yend = 210),
-               arrow = arrow(length = unit(0.07, "inch")), size = 1,
-               color = "grey30", curvature = 0.3) +
+               arrow = arrow(length = unit(0.07, "inch")), size = 2,
+               color = "black", curvature = 0.3) +
     ylab("Frequency\n") +
     xlab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
     scale_fill_manual(name = "Biomass level", values=c( "#F0E442", "#E69F00", "#009E73")) +
@@ -247,7 +247,7 @@ r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels =
           legend.title = element_text(size=25),
           legend.position = "bottom"))
 
-# ggsave(file = "output/figures/hist_high_medium_low.png")
+ggsave(file = "output/figures/hist_high_medium_low.png")
 
 # adding shrub logo
 shrub_logo <- readPNG("team_shrub_logo.png")

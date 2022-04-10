@@ -142,11 +142,11 @@ qqnorm(resid(glm_late))
 qqline(resid(glm_late))
 
 # Scatter by study area
-(all_sites_greening<- (ggplot(phenology_green_trim, aes(x = year, y = mean.doy)) +
+(all_sites_greening <- (ggplot(phenology_green_trim, aes(x = year, y = mean.doy)) +
                        geom_point(size = 1, aes(colour = study_area))+
-                       scale_colour_manual(values = c("#CC79A7", "#46AAE2", "#D55E00", "#009E73"), name = "Study area"))+
+                       scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677"), name = "Study area"))+
                        geom_smooth(method = lm, aes(colour= study_area, fill =study_area), alpha = 0.3, show.legend = FALSE)+ 
-    scale_fill_manual(values = c("#CC79A7", "#46AAE2", "#D55E00", "#009E73"))+
+    scale_fill_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677"))+
      scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2019))+
      labs(x = "\nYear", y = "Mean greening DOY\n")+ 
     theme_shrub() +  

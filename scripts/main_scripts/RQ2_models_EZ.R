@@ -219,7 +219,7 @@ predictions_5 <- as.data.frame(predict(model_5a, newdata = coord.chelsa.combo.d,
 model_5_preds <- cbind(coord.chelsa.combo.d, predictions_5)
 
 # reordeing factor levels 
-coord.chelsa.combo.d$precip_level <- factor(coord.chelsa.combo.d$precip_level,levels=c("Low", "Medium", "High"),
+model_5_preds$precip_level <- factor(model_5_preds$precip_level,levels=c("Low", "Medium", "High"),
                                             labels = c("Low", "Medium", "High"),
                                             ordered = T)
 # Plot the predictions 
@@ -234,9 +234,9 @@ coord.chelsa.combo.d$precip_level <- factor(coord.chelsa.combo.d$precip_level,le
                               #annotate(geom = "text", x = 2, y = 1000, label="(c)", size = 15) +
                                    theme_shrub()+ theme(legend.text = element_text(size= 20),
                                                         legend.title = element_text(size=25), 
-                                                        legend.position = "none")))
+                                                        legend.position = "right")))
 
-# ggsave(filename = "output/figures/predictions_interaction.png")
+ ggsave(filename = "output/figures/predictions_interaction.png")
 
 # adding rain logo
 (predictions_interaction <- predictions_interaction+ annotation_raster(raster_rain_logo, -3.8, -2, 750, 1000))
