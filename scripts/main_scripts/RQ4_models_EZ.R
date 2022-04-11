@@ -65,6 +65,22 @@ stargazer(glm_early, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
+# plotting binomial 
+
+fit = glm(prop_early ~ year_index, data=prop_greening_plots, family=binomial)
+newdat <- data.frame(year_index=seq(min(prop_greening_plots$year_index), max(prop_greening_plots$year_index),len=100))
+newdat$prop_early = predict(fit, newdata=newdat, type="response")
+plot(prop_early~year_index, data=prop_greening_plots, col="black")
+lines(prop_early~year_index, newdat, col="black", lwd=2)
+
+# plotting binomial with ggplot
+(ggplot(prop_greening_plots, aes(x=year_index, y = prop_early)) + 
+    geom_point(alpha=.5, colour = "black") +
+    stat_smooth(method="glm", se=TRUE, method.args = list(family=binomial))+
+    xlab("Year(indexed)") + 
+    ylab("Proportion of plots with early greening"))+
+    theme_shrub()
+
 
 # 2. LATE GREENING -----
 # Scatter
@@ -111,6 +127,20 @@ stargazer(glm_late, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
+# plotting binomial with base R
+fit_2 = glm(prop_late ~ year_index, data=prop_greening_plots, family=binomial)
+newdat <- data.frame(year_index=seq(min(prop_greening_plots$year_index), max(prop_greening_plots$year_index),len=100))
+newdat$prop_late = predict(fit_2, newdata=newdat, type="response")
+plot(prop_late~year_index, data=prop_greening_plots, col="black")
+lines(prop_late~year_index, newdat, col="black", lwd=2)
+
+# plotting binomial with ggplot
+(ggplot(prop_greening_plots, aes(x=year_index, y = prop_late)) + 
+        geom_point(alpha=.5, colour = "black") +
+        stat_smooth(method="glm", se=TRUE, method.args = list(family=binomial))+
+        xlab("Year(indexed)") + 
+        ylab("Proportion of plots with late greening"))+
+    theme_shrub()
 # Panel ----
 
 panel_pheno <- grid.arrange(arrangeGrob(early_greening_plots, late_greening_plots,

@@ -160,8 +160,12 @@ ANWR_veg_fg_trim <- ANWR_veg_fg %>%
                                  YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
 
                       
+ANWR_veg_fg_trim_2 <- ANWR_veg_fg_trim  %>%  group_by(FuncGroup, PLOT)  %>%  filter(mean_cover_int != 0)
+
+
 # counting zeros 
-ANWR_veg_fg_trim %>% group_by(PLOT)%>%  count(mean_cover_int == 0)
+ANWR_veg_fg_zeros <-  ANWR_veg_fg_trim  %>%   group_by(YEAR, PLOT, FuncGroup) %>% 
+ count(mean_cover_int == 0) %>% filter (FuncGroup == "Forb")   
 
 
 ANWR_veg_fg_trim$PLOT <- as.factor(ANWR_veg_fg_trim$PLOT)

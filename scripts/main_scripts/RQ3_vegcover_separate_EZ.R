@@ -211,6 +211,8 @@ ITEX_forb_mean_trim <- ITEX_forb_mean %>%
                     theme_shrub() +
                     theme(axis.text.x = element_text(angle = 45))))
 
+
+
 # Model 8 ----
 # Forb cover over time 
 ITEX_forb_mean_trim$year_index <- as.numeric(ITEX_forb_mean_trim$year_index)
