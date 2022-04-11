@@ -139,6 +139,7 @@ unique(ANWR_veg$FuncGroup)  # checking I have all functional groups
 # making functional group a factor 
 ANWR_veg$FuncGroup <- as.factor(as.character(ANWR_veg$FuncGroup))
 
+
 # calculating mean cover of functional groups
 ANWR_veg_fg <- ANWR_veg %>%
    group_by(SiteSubsitePlotYear, FuncGroup) %>%
@@ -150,17 +151,23 @@ ANWR_veg_fg_trim <- ANWR_veg_fg %>%
    dplyr::select(PLOT, YEAR, FuncGroup, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
    distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>% 
    mutate(mean_cover_prop = mean_cover/100) %>%    # making into proportion data
-   mutate(mean_cover_int = ceiling(mean_cover)) %>%   
+   mutate(mean_cover_int = floor(mean_cover)) %>%   
    mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
                                   YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
                                   YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
                                   YEAR == 2002 ~ '7', YEAR == 2003 ~ '8',
                                   YEAR== 2004 ~ '9', YEAR == 2005 ~ '10',
                                  YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
+
                       
-str(ANWR_veg_fg_trim$year_index)
+# counting zeros 
+ANWR_veg_fg_trim %>% group_by(PLOT)%>%  count(mean_cover_int == 0)
+
+
+ANWR_veg_fg_trim$PLOT <- as.factor(ANWR_veg_fg_trim$PLOT)
 length(unique(ANWR_veg_fg_trim$year_index))
 ANWR_veg_fg_trim$year_index <- as.numeric(ANWR_veg_fg_trim$year_index)
+hist(ANWR_veg_fg_trim$mean_cover_int)
 
 # making func group a factor in the new dataset
 ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup))

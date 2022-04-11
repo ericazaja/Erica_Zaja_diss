@@ -20,10 +20,10 @@ phenology_green_trim <- read_csv("datasets/phenology_data/phenology_green_trim.c
 # 1. EARLY GREENING  -----
 
 # Scatter
-(early_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_early)) +
+(early_greening_plots <- ggplot(prop_greening_plots, aes(x = year_index, y = prop_early)) +
     geom_point(size = 3, colour = "#009E73") +
     geom_smooth(method = "lm", colour = "#009E73",  fill ="#009E73", alpha= 0.2, size = 2)+
-   scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2018))+
+   # scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2018))+
    #annotate(geom = "text", x = 2020, y = 1, label="(a)", size = 15) +
     labs(x = "\nYear", y = "Proportion of early greening plots\n") +
          #title = "Proportion of early greening plots increasing\n") +
@@ -43,7 +43,7 @@ ggsave(file = "output/figures/early_greening_plots.png")
 
 # MODEL 13 ----
 # Generalised linear mixed model model family binomial 
-glm_early <- glmer(prop_early ~  I(year-1995) + (1|year), family = binomial, data = prop_greening_plots)
+glm_early <- glmer(prop_early ~  year_index + (1|year_index), family = binomial, data = prop_greening_plots)
 summary(glm_early)
 r.squaredGLMM(glm_early)
 
@@ -91,7 +91,7 @@ ggsave(file = "output/figures/late_greening_plots.png")
 
 # Model 13 ----
 # Generalised linear mixed model family binomial 
-glm_late <- glmer(prop_late ~ I(year-1995) + (1|year), family = binomial, data = prop_greening_plots)
+glm_late <- glmer(prop_late ~ year_index + (1|year_index), family = binomial, data = prop_greening_plots)
 summary(glm_late)
 r.squaredGLMM(glm_late)
 
@@ -122,15 +122,22 @@ ggsave(panel_pheno, file="output/figures/panel_pheno.png", height = 10, width = 
 
 # making study area categorical
 phenology_green_trim$study_area<- as.factor(as.character(phenology_green_trim$study_area))
+phenology_green_trim$year_index<- as.numeric(phenology_green_trim$year_index)
+
 str(phenology_green_trim)
 
 # lmer with study_area as random effect 
-lmer_green <- lmer(mean.doy ~ I(year-1995) + (1 |study_area) + (1|year), data = phenology_green_trim ) 
+lmer_green <- lmer(mean.doy ~ year_index + (1 |study_area) + (1|year), data = phenology_green_trim ) 
 summary(lmer_green)
 r2_nakagawa(lmer_green)
 
 tab_model(lmer_green, file = "output/tables/lmer_green.html")
 webshot("output/tables/lmer_green.html", "output/tables/lmer_green.png")
+
+stargazer(lmer_green, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
 
 # null model
 lmer_green_null <- lm(mean.doy ~ 1, data = phenology_green_trim ) 
@@ -138,8 +145,8 @@ AIC(lmer_green, lmer_green_null)
 
 # checking assumptions
 plot(lmer_green)
-qqnorm(resid(glm_late))
-qqline(resid(glm_late))
+qqnorm(resid(lmer_green))
+qqline(resid(lmer_green)) # good
 
 # Scatter by study area
 (all_sites_greening <- (ggplot(phenology_green_trim, aes(x = year, y = mean.doy)) +
@@ -158,12 +165,22 @@ qqline(resid(glm_late))
 # ggsave(file = "output/figures/all_sites_greening.png")
 
 # Extract predictions
+pred_phen <- ggpredict(lmer_green, terms = c("year_index", "study_area"))
+
 predictions_pheno <- as.data.frame(predict(lmer_green, newdata = phenology_green_trim, CI = TRUE)) # this gives overall predictions for the model
 preds_pheno <- cbind(phenology_green_trim, predictions_pheno)
 
 preds_pheno$study_area <- as.factor(as.character(preds_pheno$study_area))
 
 # Plot the predictions 
+(pheno_preds <- ggplot(pred_phen, aes(x = x, y = predicted), colour=group) +
+        stat_smooth(aes(colour = group, fill = group), method = "lm", show.legend = FALSE) +
+        geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1) +
+        geom_point(data = phenology_green_trim,                      # adding the raw data (scaled values)
+                   aes(x = year_index, y = mean.doy, colour = study_area))+
+        scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677"), name = "Study area"))+
+        labs(x = "\nYear (indexed)", y = "Mean greening DOY (%)\n") +
+          theme_shrub()
 
 # Separate models per study area ----
 ## ONLY QIKI significant  

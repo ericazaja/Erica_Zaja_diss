@@ -151,7 +151,21 @@ ggsave(file = "output/figures/doy_hist.png")
 phenology_green_trim <- phenology_mean_doy %>% 
   dplyr::select(study_area, subsite, plot, year, SiteSubsitePlotYear, SiteSubsitePlot,
                 lat, long, elevation, ecosystem, exstart, soil_moisture, treatment, mean.doy) %>% 
-  distinct(SiteSubsitePlotYear, mean.doy, .keep_all = TRUE) # 2980 rows, perfect!
+  distinct(SiteSubsitePlotYear, mean.doy, .keep_all = TRUE) %>% # 2980 rows, perfect!
+  mutate(year_index = case_when (year == 1994 ~ '1', year == 1995 ~ '2', 
+                                 year == 1996 ~ '3', year == 1997 ~ '4',
+                                 year == 1998 ~ '5', year== 1999 ~ '6', 
+                                 year == 2000 ~ '7', year== 2001 ~ '8',
+                                 year== 2002 ~ '9', year == 2003 ~ '10',
+                                 year== 2004 ~ '11', year == 2005 ~ '12',
+                                 year == 2006 ~ '13', year == 2007 ~ '14',
+                                 year == 2008 ~ '15', year == 2009 ~ '16',
+                                 year == 2010 ~ '17',year == 2011 ~ '18',
+                                 year == 2012 ~ '19',year == 2013~ '20',
+                                 year == 2014 ~ '21',year == 2015 ~ '22',
+                                 year == 2016 ~ '23',year == 2017 ~ '24',
+                                 year == 2018~ '25',year == 2019 ~ '26')
+  ) 
 
 write.csv(phenology_green_trim, file = "datasets/phenology_data/phenology_green_trim.csv")
 
@@ -198,9 +212,28 @@ prop_greening_plots <- count_years_wide %>%
          prop_late = late / total_plots) %>% 
   mutate(prop_total = prop_early + prop_late) # Just checking = 1
 
+unique(prop_greening_plots$year)
+prop_greening_plots <- prop_greening_plots %>% 
+  mutate(prop_early = ceiling(prop_early)) %>%  
+  mutate(prop_late = ceiling(prop_late)) %>%   
+  mutate(year_index = case_when (year == 1994 ~ '1', year == 1995 ~ '2', 
+                                 year == 1996 ~ '3', year == 1997 ~ '4',
+                                 year == 1998 ~ '5', year== 1999 ~ '6', 
+                                 year == 2000 ~ '7', year== 2001 ~ '8',
+                                 year== 2002 ~ '9', year == 2003 ~ '10',
+                                 year== 2004 ~ '11', year == 2005 ~ '12',
+                                 year == 2006 ~ '13', year == 2007 ~ '14',
+                                 year == 2008 ~ '15', year == 2009 ~ '16',
+                                 year == 2010 ~ '17',year == 2011 ~ '18',
+                                 year == 2012 ~ '19',year == 2013~ '20',
+                                 year == 2014 ~ '21',year == 2015 ~ '22',
+                                 year == 2016 ~ '23',year == 2017 ~ '24',
+                                 year == 2018~ '25',year == 2019 ~ '26')
+         ) 
+
 hist(prop_greening_plots$prop_early)# not normal
 hist(prop_greening_plots$prop_late)# not normal 
 
-# write.csv(prop_greening_plots, "datasets/phenology_data/prop_greening_plots.csv")
+write.csv(prop_greening_plots, "datasets/phenology_data/prop_greening_plots.csv")
 
 #################################################################### END -----

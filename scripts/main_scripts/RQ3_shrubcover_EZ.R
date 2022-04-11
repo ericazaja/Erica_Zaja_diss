@@ -141,20 +141,16 @@ g <-ggeffect(model_6b)
 random_effect_terms <- insight::find_random(model_6b, split_nested = TRUE, flatten = TRUE)
 ggeffect(model_6b, "year_index",ci.lvl = 0.95)
 
-install.packages("ggeffects")
 # write.csv(pred_model_6, file = "datasets/pred_model_6.csv")
 
 # Plot the predictions 
-(shrub_cover_ANWR <- (ggplot(pred_model_6) + 
-                        geom_line(aes(x = x, y = predicted)) +          # slope
-                        # geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
-                        # fill = "lightgrey", alpha = 0.5) +  # error band
-                        geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data 
-                                   aes(x = YEAR, y = mean_cover, colour = PLOT), size = 0.5) + 
-                        labs(x = "\nYear", y = "Shrub cover (%)\n", 
-                             title = "Shrub % cover increase in the ANWR\n") + 
-                        theme_shrub()
-))
+(shrub_preds <- ggplot(pred_model_6, aes(x = x, y = predicted)) +
+    stat_smooth(method = "lm")  +
+    geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1) +
+    geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data (scaled values)
+               aes(x = year_index, y = mean_cover_int))+
+    labs(x = "\nYear (indexed)", y = "Mean shrub cover (%)\n")+
+    theme_shrub()) 
 
 
 ggsave(file = "output/figures/shrub_cover_ANWR.png")
@@ -176,14 +172,23 @@ ITEX_shrub_sp <- ITEX_shrubs %>%
 ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>% 
   dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, GENUS, genus_cover) %>% 
   distinct(SiteSubsitePlotYear, genus_cover, .keep_all = TRUE)  %>% 
-  mutate(genus_cover_prop = genus_cover/100)
+  mutate(genus_cover_prop = genus_cover/100)  %>%
+  mutate(genus_cover_int = ceiling(genus_cover)) %>%   
+  mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
+                                 YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
+                                 YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
+                                 YEAR == 2002 ~ '7', YEAR == 2003 ~ '8',
+                                 YEAR== 2004 ~ '9', YEAR == 2005 ~ '10',
+                                 YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
+
 
 # making genus a factor
 ITEX_shrubs_sp_trim$GENUS <- as.factor(as.character(ITEX_shrubs_sp_trim$GENUS ))
 # making year a factor
 ITEX_shrubs_sp_trim$YEAR <- as.numeric(ITEX_shrubs_sp_trim$YEAR)
+ITEX_shrubs_sp_trim$year_index <- as.numeric(ITEX_shrubs_sp_trim$year_index)
 
-hist(ITEX_shrubs_sp_trim$genus_cover) # right skewed
+hist(ITEX_shrubs_sp_trim$genus_cover_int) # right skewed
 str(ITEX_shrubs_sp_trim)
 
 # scatter plot of different shrub genus change over time
@@ -191,8 +196,7 @@ str(ITEX_shrubs_sp_trim)
                                  geom_point(size = 0.6, aes(colour=GENUS)) +
                                  scale_colour_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
                                  geom_smooth(method = lm, aes(colour= GENUS, fill = GENUS), show.legend = FALSE))+
-    scale_fill_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
-    #scale_fill_manual(values = c("green4", "green3", "red", "red4", "brown", "blue4", 'blue3' ))+ 
+                                 scale_fill_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
                                  facet_wrap(~ GENUS, scales = "free_y") +
                                  scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
                                  labs(y = "Mean cover (%) \n", x = "\nYear") +
@@ -215,16 +219,16 @@ r.squaredGLMM(lmer_shrub_sp_2)
 AIC(lmer_shrub_sp_null, lmer_shrub_sp_2)
 
 # Comparing different models:
-lmer_shrub_sp_2 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + GENUS + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_2 <- glmer.nb(genus_cover_int~year_index + GENUS + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_3 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_0 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_1 <- glmer.nb(genus_cover_prop~I(YEAR-1995)+ (1|GENUS) , data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp <- glmer.nb(genus_cover_prop~I(YEAR-1995)*GENUS + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp <- glmer.nb(genus_cover_int~year_index*GENUS + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim) # doesnt converge
 dispersion_glmer(lmer_shrub_sp_2) #0.2723795
 dispersion_glmer(lmer_shrub_sp_0)# 0.2750381
 r.squaredGLMM(lmer_shrub_sp_2)
 r.squaredGLMM(lmer_shrub_sp_0)
-summary(lmer_shrub_sp_0) 
+summary(lmer_shrub_sp_2) 
 
 # Output tables
 tab_model(lmer_shrub_sp_3, file = "output/tables/lmer_shrub_sp_3.html")
@@ -242,7 +246,7 @@ stargazer(lmer_shrub_sp_2,
 
 
 # Trying model with random intercepts/slopes
-lmer_shrub_sp_rand <- glmer.nb(genus_cover~YEAR + (1+YEAR|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim) 
+lmer_shrub_sp_rand <- glmer.nb(genus_cover_int~year_index + (1+YEAR|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim) 
 # NB. doesn't converge with glmer.nb and with glmer we have overdispersion
 
 # null model
@@ -259,8 +263,31 @@ AIC(lmer_shrub_sp_null, lmer_shrub_sp_2, lmer_shrub_sp_3, lmer_shrub_sp_0, lmer_
 
 
 #model predicions
-p <- ggpredict(lmer_shrub_sp_2, c("YEAR", "GENUS"))
-plot(p) 
+p <- ggpredict(lmer_shrub_sp_2, c("year_index", "GENUS"))
+p$group <- as.factor(as.character(p$group))
+str(p)
+
+# Plot the predictions 
+(genera_preds <- ggplot(p, aes(x = x, y = predicted)) +
+   stat_smooth(method = "lm") +
+    geom_ribbon(data = p, aes(ymin = conf.low, ymax = conf.high), alpha = 0)) +
+    geom_point(data = ITEX_shrubs_sp_trim,                
+               aes(x = year_index, y = genus_cover_int, colour = GENUS), size = 1)+
+    scale_colour_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
+    #geom_smooth(data = ITEX_shrubs_sp_trim, method = lm, aes(colour = GENUS, fill = GENUS), show.legend = FALSE)+
+   #scale_fill_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
+    facet_wrap(~ GENUS, scales = "free_y") +
+    labs(x = "\nYear (indexed)", y = "Mean cover (%)\n")+
+    theme_shrub()+
+    theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 45, 
+                                      colour = "black"), 
+          legend.position = "right",
+          axis.title.x = element_text(size=25),
+          axis.title.y = element_text(size=25),
+          strip.text.x = element_text(size = 25, face = "italic" ))
+
+ggsave(genera_preds, file = "output/figures/genera_preds.png")
+
 
 # 3. SHRUB COVER IN SPACE  ----
 # standardise lat and long
