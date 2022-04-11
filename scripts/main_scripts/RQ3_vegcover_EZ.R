@@ -146,6 +146,15 @@ ANWR_veg_fg <- ANWR_veg %>%
    mutate(mean_cover = mean(RelCover)) %>%
    ungroup()
 
+ANWR_veg_fg_2 <- ANWR_veg_fg %>% mutate(cover = floor(mean_cover)) %>%
+   group_by(FuncGroup, PLOT) %>%  
+   filter (mode(cover) != 0)  
+
+hist(ANWR_veg_fg_2$cover)
+
+zeros <- ANWR_veg_fg_2 %>% group_by(FuncGroup, PLOT)%>%  summarise_each(funs(sum(.==0)))
+
+
 # Shrinking the dataframe to retain one row per plot etc.
 ANWR_veg_fg_trim <- ANWR_veg_fg %>% 
    dplyr::select(PLOT, YEAR, FuncGroup, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 

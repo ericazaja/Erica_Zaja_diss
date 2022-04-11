@@ -20,7 +20,7 @@ phenology_green_trim <- read_csv("datasets/phenology_data/phenology_green_trim.c
 # 1. EARLY GREENING  -----
 
 # Scatter
-(early_greening_plots <- ggplot(prop_greening_plots, aes(x = year_index, y = prop_early)) +
+(early_greening_plots <- ggplot(prop_greening_plots, aes(x = year, y = prop_early)) +
     geom_point(size = 3, colour = "#009E73") +
     geom_smooth(method = "lm", colour = "#009E73",  fill ="#009E73", alpha= 0.2, size = 2)+
    # scale_x_continuous(breaks= c(1994, 1997, 2000, 2003, 2006, 2009, 2012, 2015, 2018))+
@@ -43,8 +43,8 @@ ggsave(file = "output/figures/early_greening_plots.png")
 
 # MODEL 13 ----
 # Generalised linear mixed model model family binomial 
-glm_early <- glmer(prop_early ~  year_index + (1|year_index), family = binomial, data = prop_greening_plots)
-summary(glm_early)
+glm_early <- glmer(prop_early ~  year_index + (1|year_index), family = "binomial", data = prop_greening_plots)
+summary(glm_early) # significant
 r.squaredGLMM(glm_early)
 
 # null model
@@ -74,12 +74,15 @@ plot(prop_early~year_index, data=prop_greening_plots, col="black")
 lines(prop_early~year_index, newdat, col="black", lwd=2)
 
 # plotting binomial with ggplot
-(ggplot(prop_greening_plots, aes(x=year_index, y = prop_early)) + 
-    geom_point(alpha=.5, colour = "black") +
-    stat_smooth(method="glm", se=TRUE, method.args = list(family=binomial))+
-    xlab("Year(indexed)") + 
-    ylab("Proportion of plots with early greening"))+
+(early_binomial <- ggplot(prop_greening_plots, aes(x=year_index, y = prop_early)) + 
+    geom_point(alpha=.8, colour = "black") +
+    stat_smooth(method="glm", se=TRUE, method.args = list(family=binomial), colour = "#009E73",  fill ="#009E73", alpha= 0.2, size = 2)+
+    xlab("\nYear (indexed)") + 
+    ylab("Plots with early greening\n"))+
     theme_shrub()
+
+ggsave(file = "output/figures/early_binomial.png")
+
 
 
 # 2. LATE GREENING -----
@@ -135,12 +138,13 @@ plot(prop_late~year_index, data=prop_greening_plots, col="black")
 lines(prop_late~year_index, newdat, col="black", lwd=2)
 
 # plotting binomial with ggplot
-(ggplot(prop_greening_plots, aes(x=year_index, y = prop_late)) + 
+(late_binomial <- ggplot(prop_greening_plots, aes(x=year_index, y = prop_late)) + 
         geom_point(alpha=.5, colour = "black") +
-        stat_smooth(method="glm", se=TRUE, method.args = list(family=binomial))+
+        stat_smooth(method="glm", se=TRUE, method.args = list(family=binomial),colour = "#009E73",  fill ="#009E73", alpha= 0.2, size = 2)+
         xlab("Year(indexed)") + 
-        ylab("Proportion of plots with late greening"))+
-    theme_shrub()
+        ylab("Plots with late greening")+
+    theme_shrub())
+
 # Panel ----
 
 panel_pheno <- grid.arrange(arrangeGrob(early_greening_plots, late_greening_plots,

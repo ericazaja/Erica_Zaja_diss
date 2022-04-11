@@ -213,9 +213,10 @@ prop_greening_plots <- count_years_wide %>%
   mutate(prop_total = prop_early + prop_late) # Just checking = 1
 
 unique(prop_greening_plots$year)
+
 prop_greening_plots <- prop_greening_plots %>% 
-  mutate(prop_early = ceiling(prop_early)) %>%  
-  mutate(prop_late = ceiling(prop_late)) %>%   
+  #mutate(prop_early = floor(prop_early)) %>%  
+  #mutate(prop_late = floor(prop_late)) %>%   
   mutate(year_index = case_when (year == 1994 ~ '1', year == 1995 ~ '2', 
                                  year == 1996 ~ '3', year == 1997 ~ '4',
                                  year == 1998 ~ '5', year== 1999 ~ '6', 
