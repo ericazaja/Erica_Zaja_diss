@@ -5,6 +5,12 @@
 #                                                         ##
 ##%######################################################%##
 
+# LIBRARIES -----
+library(lme4)
+library(ggeffects)
+library(effects)
+
+
 # Loading full dataset
 ANWR_veg <- read_csv("datasets/ITEX_data/ANWR_veg.csv")
 
@@ -67,10 +73,13 @@ hist(ITEX_gram_mean_trim$mean_cover_prop) # right skewed
 # glmer.nb, with plot and year as random effects
 ITEX_gram_mean_trim$year_index <- as.numeric(ITEX_gram_mean_trim$year_index)
 model_7 <- glmer.nb(mean_cover_int ~ year_index + (1|PLOT) + (1|YEAR), data = ITEX_gram_mean_trim)
+
 summary(model_7)
 dispersion_glmer(model_7)
 tab_model(model_7a)
 model_7a <- glm.nb(mean_cover_prop~ I(YEAR-1995), data = ITEX_gram_mean_trim)
+
+ggeffect(model_7)
 
 # Checking model 7 assumptions 
 plot(model_7)

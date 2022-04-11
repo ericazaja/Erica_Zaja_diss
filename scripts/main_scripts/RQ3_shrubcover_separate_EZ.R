@@ -6,6 +6,7 @@
 ##%######################################################%##
 
 # RQ3: How has vegetation cover changed in the Arctic National Wildlife Refuge between 1996-2007? 
+library(tidyverse)
 
 # LOADING DATA ----
 # Loading and cleaning the data 

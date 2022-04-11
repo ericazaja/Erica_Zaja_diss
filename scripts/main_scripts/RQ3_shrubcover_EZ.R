@@ -106,6 +106,7 @@ unique(ITEX_shrubs_mean_trim$YEAR)
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean_trim %>% mutate(cover_prop = mean_cover/100)
 hist(ITEX_shrubs_mean_trim$mean_cover)
 
+
 # glmer.nb, with plot and year as random effects
 model_6b <- glmer.nb(mean_cover_int~ year_index  + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
 summary(model_6b)
@@ -136,10 +137,11 @@ stargazer(model_6, type = "text",
 pred_model_6 <- ggpredict(model_6b, terms = c("year_index"))
 # this gives overall predictions for the model
 pred_model_6a <- ggpredict(model_6b, terms = c("YEAR"))
-
+g <-ggeffect(model_6b)
 random_effect_terms <- insight::find_random(model_6b, split_nested = TRUE, flatten = TRUE)
+ggeffect(model_6b, "year_index",ci.lvl = 0.95)
 
-
+install.packages("ggeffects")
 # write.csv(pred_model_6, file = "datasets/pred_model_6.csv")
 
 # Plot the predictions 
