@@ -212,13 +212,9 @@ dev.off()
 # ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
 
 # MODEL(s) 13 ----
-lmer_shrub_sp_2a <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|PLOT), data = ITEX_shrubs_sp_trim)
-summary(lmer_shrub_sp_2)
-dispersion_glmer(lmer_shrub_sp_2) # 0.2425216
-r.squaredGLMM(lmer_shrub_sp_2) 
-AIC(lmer_shrub_sp_null, lmer_shrub_sp_2)
 
 # Comparing different models:
+lmer_shrub_sp_2a <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|PLOT), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_2 <- glmer.nb(genus_cover_int~year_index + GENUS + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_3 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
 lmer_shrub_sp_0 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
@@ -230,9 +226,15 @@ r.squaredGLMM(lmer_shrub_sp_2)
 r.squaredGLMM(lmer_shrub_sp_0)
 summary(lmer_shrub_sp_2) 
 
+# Using model with genus fixed effect
+summary(lmer_shrub_sp_2)
+dispersion_glmer(lmer_shrub_sp_2) # 1.015989
+r.squaredGLMM(lmer_shrub_sp_2) 
+AIC(lmer_shrub_sp_null, lmer_shrub_sp_2)
+
 # Output tables
-tab_model(lmer_shrub_sp_3, file = "output/tables/lmer_shrub_sp_3.html")
-webshot("output/tables/lmer_shrub_sp_3.html", "output/tables/lmer_shrub_sp_3.png")
+tab_model(lmer_shrub_sp_2, file = "output/tables/lmer_shrub_sp_2.html")
+webshot("output/tables/lmer_shrub_sp_2.html", "output/tables/lmer_shrub_sp_2.png")
 
 tab_model(lmer_shrub_sp_0, file = "output/tables/lmer_shrub_sp_0.html")
 webshot("output/tables/lmer_shrub_sp_0.html", "output/tables/lmer_shrub_sp_0.png")
@@ -250,10 +252,10 @@ lmer_shrub_sp_rand <- glmer.nb(genus_cover_int~year_index + (1+YEAR|GENUS) + (1|
 # NB. doesn't converge with glmer.nb and with glmer we have overdispersion
 
 # null model
-lmer_shrub_sp_null <- glm.nb(genus_cover_prop~1, data = ITEX_shrubs_sp_trim)
+lmer_shrub_sp_null <- glm.nb(genus_cover_int~1, data = ITEX_shrubs_sp_trim)
 
 # comparing AIC values
-AIC(lmer_shrub_sp_null, lmer_shrub_sp_2, lmer_shrub_sp_3, lmer_shrub_sp_0, lmer_shrub_sp)
+AIC(lmer_shrub_sp_null, lmer_shrub_sp_2)
 
 # Plotting fixed effects
 (fe.effects <- plot_model(lmer_shrub_sp_2, show.values = TRUE))
@@ -268,25 +270,29 @@ p$group <- as.factor(as.character(p$group))
 str(p)
 
 # Plot the predictions 
-(genera_preds <- ggplot(p, aes(x = x, y = predicted)) +
-   stat_smooth(method = "lm") +
+(genera_predictions <- ggplot(p, aes(x = x, y = predicted)) +
+   stat_smooth(method = "lm", colour = "black", size = 1.5) +
+    # facet_wrap(~ GENUS, scales = "free_y") +
     geom_ribbon(data = p, aes(ymin = conf.low, ymax = conf.high), alpha = 0)) +
     geom_point(data = ITEX_shrubs_sp_trim,                
-               aes(x = year_index, y = genus_cover_int, colour = GENUS), size = 1)+
+               aes(x = year_index, y = genus_cover_int, colour = GENUS), size = 2)+
     scale_colour_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
     #geom_smooth(data = ITEX_shrubs_sp_trim, method = lm, aes(colour = GENUS, fill = GENUS), show.legend = FALSE)+
    #scale_fill_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
-    facet_wrap(~ GENUS, scales = "free_y") +
-    labs(x = "\nYear (indexed)", y = "Mean cover (%)\n")+
+  scale_x_continuous(breaks=1:13)+
+  labs(x = "\nYear (indexed)", y = "Mean cover (%)\n")+
     theme_shrub()+
-    theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 45, 
+    theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 0, 
                                       colour = "black"), 
           legend.position = "right",
           axis.title.x = element_text(size=25),
           axis.title.y = element_text(size=25),
-          strip.text.x = element_text(size = 25, face = "italic" ))
+          legend.text = element_text(size=20),
+          legend.title = element_text(size=25),
+          strip.text.x = element_text(size = 25, face = "italic" )) +
+          guides(color = guide_legend(override.aes = list(size = 3)))
 
-ggsave(genera_preds, file = "output/figures/genera_preds.png")
+ggsave(file = "output/figures/genera_predictions.png")
 
 
 # 3. SHRUB COVER IN SPACE  ----

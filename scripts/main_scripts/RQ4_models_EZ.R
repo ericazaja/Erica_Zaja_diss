@@ -199,7 +199,7 @@ qqline(resid(lmer_green)) # good
 # ggsave(file = "output/figures/all_sites_greening.png")
 
 # Extract predictions
-pred_phen <- ggpredict(lmer_green, terms = c("year_index", "study_area"))
+pred_phen <- ggpredict(lmer_green, terms = c("year_index"))
 
 predictions_pheno <- as.data.frame(predict(lmer_green, newdata = phenology_green_trim, CI = TRUE)) # this gives overall predictions for the model
 preds_pheno <- cbind(phenology_green_trim, predictions_pheno)
@@ -207,14 +207,25 @@ preds_pheno <- cbind(phenology_green_trim, predictions_pheno)
 preds_pheno$study_area <- as.factor(as.character(preds_pheno$study_area))
 
 # Plot the predictions 
-(pheno_preds <- ggplot(pred_phen, aes(x = x, y = predicted), colour=group) +
-        stat_smooth(aes(colour = group, fill = group), method = "lm", show.legend = FALSE) +
-        geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1) +
+(pheno_preds <- ggplot(pred_phen, aes(x = x, y = predicted)) +
+        stat_smooth(method = "lm", colour = "black", size = 2) +
+        geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
         geom_point(data = phenology_green_trim,                      # adding the raw data (scaled values)
-                   aes(x = year_index, y = mean.doy, colour = study_area))+
+                   aes(x = year_index, y = mean.doy, colour = study_area), size = 2.5)+
         scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677"), name = "Study area"))+
         labs(x = "\nYear (indexed)", y = "Mean greening DOY (%)\n") +
-          theme_shrub()
+    scale_x_continuous(breaks=c(2,4,6,8,10,12,14,16,18,20,22,24,26))+
+    theme_shrub()+
+    theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 0, 
+                                      colour = "black"), 
+          legend.position = "right",
+          axis.title.x = element_text(size=25),
+          axis.title.y = element_text(size=25),
+          legend.text = element_text(size=20),
+          legend.title = element_text(size=25))+ 
+    guides(color = guide_legend(override.aes = list(size = 3)))
+
+ggsave(file = "output/figures/pheno_preds.png")
 
 # Separate models per study area ----
 ## ONLY QIKI significant  
@@ -224,7 +235,7 @@ Qikiqtaruk <-  phenology_green_trim %>% filter (study_area == "Qikiqtaruk")
 hist(Qikiqtaruk$mean.doy) 
 
 # Model
-lmer_Qiki <- lmer(mean.doy ~ I(year-1995) + (1|year), data =Qikiqtaruk ) 
+lmer_Qiki <- lmer(mean.doy ~ year_index + (1|year_index), data =Qikiqtaruk ) 
 summary(lmer_Qiki)
 plot(lmer_Qiki)
 r2_nakagawa(lmer_Qiki)
@@ -240,6 +251,19 @@ stargazer(lmer_Qiki, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "") # Mean DOY does decrease in Qiki
+
+Qiki_preds <- ggpredict(lmer_Qiki, terms = ("year_index"))
+
+(qiki_preds <- ggplot(Qiki_preds , aes(x = x, y = predicted)) +
+        stat_smooth(method = "lm", colour = "black", size = 2) +
+        geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "#009E73", alpha = .2) +
+        geom_point(data = Qikiqtaruk ,                      # adding the raw data (scaled values)
+                   aes(x = year_index, y = mean.doy), colour = "#009E73", size = 2.5))+
+    scale_x_continuous(breaks=c(2,4,6,8,10,12,14,16,18,20,22,24,26))+
+    labs(x = "\nYear (indexed)", y = "Mean greening DOY\n") +
+    theme_shrub()
+
+ggsave(file = "output/figures/qiki_preds.png")
 
 # scatter
 (Qiki_DOY <- ggplot(Qikiqtaruk, aes(x = year, y =mean.doy)) +

@@ -8,6 +8,9 @@
 # RQ2: how does biomass vary with temperature and precipitation?
 # PART 2: MODELLING ----
 
+# Libraries
+library(sjPlot)
+
 # Loading dataset 
 coord.chelsa.combo.c <- read_csv("datasets/climate_data/coord_chelsa_combo_new.csv")
 
@@ -244,6 +247,10 @@ model_5_preds$precip_level <- factor(model_5_preds$precip_level,levels=c("Low", 
 
 # ggsave(filename = "output/figures/predictions_interaction.png")
 
+# saving model outputs
+tab_model(model_5a, file = "output/tables/model_5a.html")
+webshot("output/tables/model_5a.html", "output/tables/model_5a.png")
+ 
 # ASSUMPTION CHECK -----
 
 coord.chelsa.combo.e <- coord.chelsa.combo.c %>%
