@@ -214,7 +214,7 @@ rename(FuncGroup = group)
 # Atigun f.groups ----
 (atigun <- ggplot(atigun_preds, aes(x = x, y = predicted, colour=FuncGroup))+
    stat_smooth(method = "glm", aes(colour = FuncGroup, fill = FuncGroup), size = 1.5) +
-   facet_wrap(~FuncGroup, ncol = 2))+
+   facet_wrap(~FuncGroup, ncol = 3))+
    geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = FuncGroup), alpha = 0.1) +
    geom_point(data = ANWR_Atigun, aes(x = year_index, y = sum_cover_int, colour = FuncGroup), size = 2.5) +
    scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
@@ -234,7 +234,7 @@ ggsave(file = "output/figures/atigun.png")
 # Jago f. groups----
 (jago <- ggplot(jago_preds, aes(x = x, y = predicted, colour=FuncGroup))+
     stat_smooth(method = "glm", aes(colour = FuncGroup, fill = FuncGroup), size = 1.5) +
-    facet_wrap(~FuncGroup, ncol = 2))+
+    facet_wrap(~FuncGroup, ncol = 3))+
    geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = FuncGroup), alpha = 0.1) +
    geom_point(data = ANWR_Jago, aes(x = year_index, y = sum_cover_int, colour = FuncGroup), size = 2.5) +
    scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
