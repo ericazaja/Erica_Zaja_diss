@@ -67,7 +67,7 @@ ITEX_shrubs_mean <- ITEX_shrubs %>%
 
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>% 
-  dplyr::select(PLOT, YEAR, LAT, LONG, SiteSubsitePlotYear, SiteSubsitePlot, sum_cover, lat_grid, lon_grid, gridcell) %>% 
+  dplyr::select(PLOT, YEAR, LAT, LONG, SUBSITE, SiteSubsitePlotYear, SiteSubsitePlot, sum_cover, lat_grid, lon_grid, gridcell) %>% 
   distinct(SiteSubsitePlotYear, sum_cover, .keep_all = TRUE)%>% 
   mutate(sum_cover_prop = sum_cover/100) %>%    # making into proportion data
   mutate(sum_cover_int = floor(sum_cover)) %>%   
@@ -85,7 +85,8 @@ str(ITEX_shrubs_mean_trim)
 
 # making plot categorical
 ITEX_shrubs_mean_trim$PLOT <- as.factor(as.character(ITEX_shrubs_mean_trim$PLOT))
-hist(ITEX_shrubs_mean_trim$mean_cover_prop) # right skewed
+hist(ITEX_shrubs_mean_trim$sum_cover_int) # right skewed
+glimpse(ITEX_shrubs_mean_trim)
 
 # Mean shrub cover change over time scatter plot
 (shrub_mean_change <- (ggplot(ITEX_shrubs_mean_trim)+
@@ -200,8 +201,11 @@ ANWR_Jago_shrub <- ITEX_shrubs_sp_trim %>% filter(SUBSITE %in% c("JAGO-A", "JAGO
 ANWR_Atigun_shrub$year_index <- as.numeric(ANWR_Atigun_shrub$year_index)
 ANWR_Jago_shrub$year_index <- as.numeric(ANWR_Jago_shrub$year_index)
 
+# Atigun 
 glm_atigun_shrub <- glm.nb(genus_cover_int~year_index + GENUS, data = ANWR_Atigun_shrub)
 summary(glm_atigun_shrub)
+
+# Jago
 glm_jago_shrub <- glm.nb(genus_cover_int~year_index + GENUS, data = ANWR_Jago_shrub)
 summary(glm_jago_shrub)
 
@@ -352,14 +356,25 @@ ggsave(file = "output/figures/genera_predictions.png")
 
 
 # 3. SHRUB COVER IN SPACE  ----
+
+## dividing subsites
+
+ANWR_Atigun_shrub_lat <- ITEX_shrubs_mean_trim %>% filter(SUBSITE %in% c("ATIGUN-A", "ATIGUN-B", "ATIGUN-C"))
+ANWR_Jago_shrub_lat <- ITEX_shrubs_mean_trim %>% filter(SUBSITE %in% c("JAGO-A", "JAGO-B"))
+
 # standardise lat and long
 ITEX_shrubs_mean_trim$LAT <- scale(ITEX_shrubs_mean_trim$LAT , center = TRUE, scale = TRUE)
 ITEX_shrubs_mean_trim$LONG <- scale(ITEX_shrubs_mean_trim$LONG , center = TRUE, scale = TRUE)
-hist(ITEX_shrubs_mean_trim$mean_cover) # distribution
-glimpse(ITEX_shrubs_mean_trim$mean_cover_prop)
+hist(ITEX_shrubs_mean_trim$sum_cover_int) # normal distribution
 
-# Shrub cover vs latitude 
-shrub_lat <- glm.nb(mean_cover ~ LAT, data = ITEX_shrubs_mean_trim)
+# standardising lat and long
+ANWR_Atigun_shrub_lat$LAT<- scale(ANWR_Atigun_shrub_lat$LAT , center = TRUE, scale = TRUE)
+ANWR_Atigun_shrub_lat$LONG<- scale(ANWR_Atigun_shrub_lat$LONG , center = TRUE, scale = TRUE)
+ANWR_Jago_shrub_lat$LAT<- scale(ANWR_Jago_shrub_lat$LAT , center = TRUE, scale = TRUE)
+ANWR_Jago_shrub_lat$LONG<- scale(ANWR_Jago_shrub_lat$LONG , center = TRUE, scale = TRUE)
+
+# Shrub cover vs latitude at Atigun 
+shrub_lat <- lm(sum_cover_int ~ LAT, data = ANWR_Atigun_shrub_lat)
 summary(shrub_lat)
 # Null deviance: 230.24 
 # Residual deviance:  136.82 
@@ -378,12 +393,12 @@ stargazer(shrub_lat, type = "text",
           digit.separator = "")
 
 # Plotting scatter
-(cover_lat_scatter <- (ggplot(ITEX_shrubs_mean_trim))+
-    geom_point(aes(x = LAT, y = mean_cover), colour= "#009E73", size = 1) +
-    geom_smooth(aes(x = LAT, y = mean_cover),colour = "black", method = "glm", fill="#009E73", size = 2) + 
-    labs(y = "Mean shrub % cover\n", x = "\nScaled latitude") +
+(cover_lat_scatter <- (ggplot(ANWR_Atigun_shrub_lat))+
+    geom_point(aes(x = LAT, y = sum_cover_int), colour= "#009E73", size = 1) +
+    geom_smooth(aes(x = LAT, y = sum_cover_int),colour = "black", method = "glm", fill="#009E73", size = 2) + 
+    labs(y = "Shrub % cover\n", x = "\nScaled latitude") +
    # annotate(geom = "text", x = 1, y = 60, label="(a)", size = 10) +
-    annotate(geom = "text", x = 0.5, y = 20, label="slope = -0.447*** ", size = 10) +
+    #annotate(geom = "text", x = 0.5, y = 20, label="slope = -0.447*** ", size = 10) +
      theme_shrub())
 
 # ggsave(file = "output/figures/cover_lat_scatter.png")
@@ -417,7 +432,7 @@ model_10_preds <- cbind(ITEX_shrubs_mean_trim, predictions_10)
 ggsave(file = "output/figures/plot_model_shrub_lat.png")
 
 # Shrub cover vs longitude
-shrub_long <- glm.nb(mean_cover ~ LONG, data = ITEX_shrubs_mean_trim)
+shrub_long <- lm(sum_cover_int ~ LAT, data = ANWR_Jago_shrub_lat)
 summary(shrub_long)
 
 plot(shrub_long)
@@ -430,12 +445,12 @@ stargazer(shrub_long, type = "text",
 # F-statistic: 55.18 on 1 and 143 DF,  p-value: 9.123e-12***
 
 # scatter
-(cover_long_scatter <- (ggplot(ITEX_shrubs_mean_trim))+
-    geom_point(aes(x = LONG, y = mean_cover), colour = "skyblue", size = 2) +
-    geom_smooth(aes(x = LONG, y = mean_cover), colour = "black", method = "lm") + 
+(cover_long_scatter <- (ggplot(ANWR_Atigun_shrub_lat))+
+    geom_point(aes(x = LONG, y = sum_cover_int), colour = "skyblue", size = 2) +
+    geom_smooth(aes(x = LONG, y = sum_cover_int), colour = "black", method = "lm") + 
     labs(y = "Mean shrub % cover\n", x = "\nLongitude") +
-    annotate(geom = "text", x = 1, y = 60, label="(b)", size = 10) +
-    annotate(geom = "text", x = 0.5, y = 20, label="slope = -4.419*** ", size = 6) +
+    #annotate(geom = "text", x = 1, y = 60, label="(b)", size = 10) +
+    #annotate(geom = "text", x = 0.5, y = 20, label="slope = -4.419*** ", size = 6) +
     theme_shrub())
 
 
