@@ -190,6 +190,8 @@ unique(ANWR_veg_fg_trim$SiteSubsitePlot)
 # Dividing two subsites
 ANWR_Atigun <- ANWR_veg_fg_trim %>% filter(SUBSITE %in% c("ATIGUN-A", "ATIGUN-B", "ATIGUN-C"))
 ANWR_Jago <- ANWR_veg_fg_trim %>% filter(SUBSITE %in% c("JAGO-A", "JAGO-B"))
+
+# making year numeric
 ANWR_Atigun$year_index <- as.numeric(ANWR_Atigun$year_index)
 ANWR_Jago$year_index <- as.numeric(ANWR_Jago$year_index)
 
@@ -197,15 +199,15 @@ ANWR_Jago$year_index <- as.numeric(ANWR_Jago$year_index)
 
 # Atigun model
 glm_atigun <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Atigun)
-glm_jago <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Atigun)
-summary(glm_atigun)
+glm_jago <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Jago)
+summary(glm_jago)
 
 # extracting predictions
 atigun_preds <- ggpredict(glm_atigun, terms = c("year_index", "FuncGroup"), type = "fe")
 jago_preds <- ggpredict(glm_jago, terms = c("year_index", "FuncGroup"), type = "fe")
 
 # plotting predictions
-# Atigun
+# Atigun ----
 (atigun <- ggplot(atigun_preds, aes(x = x, y = predicted)) +
       stat_smooth(method = "lm", colour = "black", size = 2) +
       geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "black", alpha = 0) +
@@ -216,7 +218,7 @@ jago_preds <- ggpredict(glm_jago, terms = c("year_index", "FuncGroup"), type = "
    labs(x = "\nYear (indexed)", y = "Cover (%)\n") +
    theme_shrub()
 
-# Jago
+# Jago ----
 (jago <- ggplot(jago_preds, aes(x = x, y = predicted)) +
       stat_smooth(method = "lm", colour = "black", size = 2) +
       geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "black", alpha = 0) +

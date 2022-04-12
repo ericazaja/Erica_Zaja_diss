@@ -171,10 +171,10 @@ ITEX_shrub_sp <- ITEX_shrubs %>%
 
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>% 
-  dplyr::select(PLOT, YEAR, SiteSubsitePlotYear, SiteSubsitePlot, GENUS, genus_cover) %>% 
+  dplyr::select(PLOT, YEAR, SUBSITE, SiteSubsitePlotYear, SiteSubsitePlot, GENUS, genus_cover) %>% 
   distinct(SiteSubsitePlotYear, genus_cover, .keep_all = TRUE)  %>% 
   mutate(genus_cover_prop = genus_cover/100)  %>%
-  mutate(genus_cover_int = ceiling(genus_cover)) %>%   
+  mutate(genus_cover_int = floor(genus_cover)) %>%   
   mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
                                  YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
                                  YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
@@ -191,6 +191,61 @@ ITEX_shrubs_sp_trim$year_index <- as.numeric(ITEX_shrubs_sp_trim$year_index)
 
 hist(ITEX_shrubs_sp_trim$genus_cover_int) # right skewed
 str(ITEX_shrubs_sp_trim)
+
+# Dividing two subsites
+ANWR_Atigun_shrub <- ITEX_shrubs_sp_trim %>% filter(SUBSITE %in% c("ATIGUN-A", "ATIGUN-B", "ATIGUN-C"))
+ANWR_Jago_shrub <- ITEX_shrubs_sp_trim %>% filter(SUBSITE %in% c("JAGO-A", "JAGO-B"))
+
+# making year numeric
+ANWR_Atigun_shrub$year_index <- as.numeric(ANWR_Atigun_shrub$year_index)
+ANWR_Jago_shrub$year_index <- as.numeric(ANWR_Jago_shrub$year_index)
+
+glm_atigun_shrub <- glm.nb(genus_cover_int~year_index + GENUS, data = ANWR_Atigun_shrub)
+summary(glm_atigun_shrub)
+glm_jago_shrub <- glm.nb(genus_cover_int~year_index + GENUS, data = ANWR_Jago_shrub)
+summary(glm_jago_shrub)
+
+# extracting predictions
+atigun_shrub_preds <- ggpredict(glm_atigun_shrub, terms = c("year_index", "GENUS"), type = "re")
+jago_shrub_preds <- ggpredict(glm_jago_shrub, terms = c("year_index", "GENUS"), type = "re")
+
+# plotting predictions
+# Atigun ----
+(atigun_shrub <- ggplot(atigun_shrub_preds, aes(x = x, y = predicted)) +
+   stat_smooth(method = "lm", aes(colour = group, fill =group), size = 2) +
+   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = group), alpha = 0.1) +
+   geom_point(data = ANWR_Atigun_shrub ,                      
+              aes(x = year_index, y = genus_cover_int, colour = GENUS), size = 2.5))+
+  scale_x_continuous(breaks=c(2,4,6,8,10))+
+  scale_colour_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654"))+
+  scale_fill_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654"))+
+  labs(x = "\nYear (indexed)", y = "Cover (%)\n") +
+  theme_shrub()+
+  theme(axis.text.x = element_text(size= 20, angle = 0), legend.text = element_text(size= 18),
+        legend.title = element_text(size=25)) +
+  guides(color = guide_legend(override.aes = list(size = 3)))
+
+ggsave(file = "output/figures/atigun_shrub.png")
+
+
+# Jago ----
+(jago <- ggplot(jago_shrub_preds, aes(x = x, y = predicted)) +
+   stat_smooth(method = "lm", aes(colour = group, fill = group),size = 2) +
+   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = group), alpha = 0.1, show.legend = FALSE) +
+   geom_point(data = ANWR_Jago_shrub ,                      
+              aes(x = year_index, y = genus_cover_int, colour = GENUS), size = 2.5))+
+  scale_colour_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
+  scale_fill_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
+  scale_x_continuous(breaks=c(2,4,6,8,10))+
+  labs(x = "\nYear (indexed)", y = "Cover (%)\n") +
+  theme_shrub()+
+  theme(axis.text.x = element_text(size= 20, angle = 0), legend.text = element_text(size= 18),
+        legend.title = element_text(size=25)) +
+  guides(color = guide_legend(override.aes = list(size = 3)))
+
+
+ggsave(file = "output/figures/jago.png")
+
 
 # scatter plot of different shrub genus change over time
 (facet_scatter_shrub_genus <- (ggplot(ITEX_shrubs_sp_trim, aes(x = YEAR, y = genus_cover))+
