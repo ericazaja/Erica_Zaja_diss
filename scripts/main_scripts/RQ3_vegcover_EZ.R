@@ -202,42 +202,52 @@ glm_atigun <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Atigun)
 glm_jago <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Jago)
 summary(glm_atigun)
 
-# extracting predictions
-atigun_preds <- ggpredict(glm_atigun, terms = c("year_index", "FuncGroup"), type = "re")
-jago_preds <- ggpredict(glm_jago, terms = c("year_index", "FuncGroup"), type = "re")
+# extracting predictions Atigun
+atigun_preds <- ggpredict(glm_atigun, terms = c("year_index", "FuncGroup"), type = "re") %>% 
+   rename(FuncGroup = group)
+
+# extracting predictions Jago
+jago_preds <- ggpredict(glm_jago, terms = c("year_index", "FuncGroup"), type = "re") %>% 
+rename(FuncGroup = group)
 
 # plotting predictions
-# Atigun ----
-(atigun <- ggplot(atigun_preds, aes(x = x, y = predicted)) +
-      stat_smooth(method = "lm", aes(colour = group, fill =group), size = 2) +
-      geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = group), alpha = 0.1) +
-      geom_point(data = ANWR_Atigun ,                      
-                 aes(x = year_index, y = sum_cover_int, colour = FuncGroup), size = 2.5))+
-   scale_x_continuous(breaks=c(2,4,6,8,10))+
+# Atigun f.groups ----
+(atigun <- ggplot(atigun_preds, aes(x = x, y = predicted, colour=FuncGroup))+
+   stat_smooth(method = "glm", aes(colour = FuncGroup, fill = FuncGroup), size = 1.5) +
+   facet_wrap(~FuncGroup, ncol = 2))+
+   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = FuncGroup), alpha = 0.1) +
+   geom_point(data = ANWR_Atigun, aes(x = year_index, y = sum_cover_int, colour = FuncGroup), size = 2.5) +
    scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
    scale_fill_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
-   labs(x = "\nYear (indexed)", y = "Cover (%)\n") +
+   scale_x_continuous(breaks=c(2,4,6,8,10,12))+
+   labs(y = "Predicted cover (%) \n", x = "\nYear (indexed)") +
    theme_shrub()+
-   theme(axis.text.x = element_text(size= 20, angle = 0), legend.text = element_text(size= 18),
-         legend.title = element_text(size=25)) +
-   guides(color = guide_legend(override.aes = list(size = 3)))
+   theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 0, 
+                                     colour = "black"), 
+         legend.position = "none",
+         axis.title.x = element_text(size=25),
+         axis.title.y = element_text(size=25),
+         strip.text.x = element_text(size = 25, face = "italic" ))
 
 ggsave(file = "output/figures/atigun.png")
 
-# Jago ----
-(jago <- ggplot(jago_preds, aes(x = x, y = predicted)) +
-      stat_smooth(method = "lm",  aes(colour = group, fill =group), size = 2) +
-      geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill =group), alpha = 0.1) +
-      geom_point(data = ANWR_Jago ,                      
-                 aes(x = year_index, y = sum_cover_int, colour = FuncGroup), size = 2.5))+
+# Jago f. groups----
+(jago <- ggplot(jago_preds, aes(x = x, y = predicted, colour=FuncGroup))+
+    stat_smooth(method = "glm", aes(colour = FuncGroup, fill = FuncGroup), size = 1.5) +
+    facet_wrap(~FuncGroup, ncol = 2))+
+   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = FuncGroup), alpha = 0.1) +
+   geom_point(data = ANWR_Jago, aes(x = year_index, y = sum_cover_int, colour = FuncGroup), size = 2.5) +
    scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
    scale_fill_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
-   scale_x_continuous(breaks=c(2,4,6,8,10))+
-   labs(x = "\nYear (indexed)", y = "Cover (%)\n") +
+   scale_x_continuous(breaks=c(2,4,6,8,10,12))+
+   labs(y = "Predicted cover (%) \n", x = "\nYear (indexed)") +
    theme_shrub()+
-   theme(axis.text.x = element_text(size= 20, angle = 0), legend.text = element_text(size= 18),
-         legend.title = element_text(size=25)) +
-   guides(color = guide_legend(override.aes = list(size = 3)))
+   theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 0, 
+                                     colour = "black"), 
+         legend.position = "none",
+         axis.title.x = element_text(size=25),
+         axis.title.y = element_text(size=25),
+         strip.text.x = element_text(size = 25, face = "italic" ))
 
 ggsave(file = "output/figures/jago.png")
 
