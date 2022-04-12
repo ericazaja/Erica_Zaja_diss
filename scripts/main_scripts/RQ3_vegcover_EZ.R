@@ -143,24 +143,24 @@ ANWR_veg$FuncGroup <- as.factor(as.character(ANWR_veg$FuncGroup))
 # calculating mean cover of functional groups
 ANWR_veg_fg <- ANWR_veg %>%
    group_by(SiteSubsitePlotYear, FuncGroup) %>%
-   mutate(mean_cover = mean(RelCover)) %>%
+   mutate(sum_cover = sum(RelCover)) %>%
    ungroup()
 
 ANWR_veg_fg_2 <- ANWR_veg_fg %>% mutate(cover = floor(mean_cover)) %>%
    group_by(FuncGroup, PLOT) %>%  
    filter (mode(cover) != 0)  
 
-hist(ANWR_veg_fg_2$cover)
+hist(ANWR_veg_fg$sum_cover)
 
 zeros <- ANWR_veg_fg_2 %>% group_by(FuncGroup, PLOT)%>%  summarise_each(funs(sum(.==0)))
 
 
 # Shrinking the dataframe to retain one row per plot etc.
 ANWR_veg_fg_trim <- ANWR_veg_fg %>% 
-   dplyr::select(PLOT, YEAR, FuncGroup, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
-   distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>% 
-   mutate(mean_cover_prop = mean_cover/100) %>%    # making into proportion data
-   mutate(mean_cover_int = floor(mean_cover)) %>%   
+   dplyr::select(PLOT, YEAR, FuncGroup, SUBSITE, SiteSubsitePlotYear, SiteSubsitePlot, sum_cover, lat_grid, lon_grid, gridcell) %>% 
+   distinct(SiteSubsitePlotYear, sum_cover, .keep_all = TRUE)%>% 
+   mutate(sum_cover_prop = sum_cover/100) %>%    # making into proportion data
+   mutate(sum_cover_int = floor(sum_cover)) %>%   
    mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
                                   YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
                                   YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
@@ -185,12 +185,55 @@ hist(ANWR_veg_fg_trim$mean_cover_int)
 # making func group a factor in the new dataset
 ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup))
 hist(ANWR_veg_fg_trim$mean_cover_prop) # checking proportion data distribution
+unique(ANWR_veg_fg_trim$SiteSubsitePlot)
+
+# Dividing two subsites
+ANWR_Atigun <- ANWR_veg_fg_trim %>% filter(SUBSITE %in% c("ATIGUN-A", "ATIGUN-B", "ATIGUN-C"))
+ANWR_Jago <- ANWR_veg_fg_trim %>% filter(SUBSITE %in% c("JAGO-A", "JAGO-B"))
+ANWR_Atigun$year_index <- as.numeric(ANWR_Atigun$year_index)
+ANWR_Jago$year_index <- as.numeric(ANWR_Jago$year_index)
 
 # MODEL(s) 11 ----
+
+# Atigun model
+glm_atigun <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Atigun)
+glm_jago <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Atigun)
+summary(glm_atigun)
+
+# extracting predictions
+atigun_preds <- ggpredict(glm_atigun, terms = c("year_index", "FuncGroup"), type = "fe")
+jago_preds <- ggpredict(glm_jago, terms = c("year_index", "FuncGroup"), type = "fe")
+
+# plotting predictions
+# Atigun
+(atigun <- ggplot(atigun_preds, aes(x = x, y = predicted)) +
+      stat_smooth(method = "lm", colour = "black", size = 2) +
+      geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "black", alpha = 0) +
+      geom_point(data = ANWR_Atigun ,                      
+                 aes(x = year_index, y = sum_cover_int, colour = FuncGroup), size = 2.5))+
+   #scale_x_continuous(breaks=c(2,4,6,8,10,12,14,16,18,20,22,24,26))+
+   scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
+   labs(x = "\nYear (indexed)", y = "Cover (%)\n") +
+   theme_shrub()
+
+# Jago
+(jago <- ggplot(jago_preds, aes(x = x, y = predicted)) +
+      stat_smooth(method = "lm", colour = "black", size = 2) +
+      geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "black", alpha = 0) +
+      geom_point(data = ANWR_Jago ,                      
+                 aes(x = year_index, y = sum_cover_int, colour = FuncGroup), size = 2.5))+
+   scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
+   #scale_x_continuous(breaks=c(2,4,6,8,10,12,14,16,18,20,22,24,26))+
+   labs(x = "\nYear (indexed)", y = "Cover (%)\n") +
+   theme_shrub()
+
+
 # Trying and comparing different model syntaxes
+hist(ANWR_veg_fg_trim$sum_cover_int)
 
 # glmer.nb, functional group fixed effect, year and plot random effects
-lmer_all_2a <- glmer.nb(mean_cover_int~year_index + FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
+lmer_all_2a <- glmer(sum_cover_int~year_index + FuncGroup + (1|YEAR), data = ANWR_veg_fg_trim)
+
 dispersion_glmer(lmer_all_2a)
 summary(lmer_all_2a)
 AIC(lmer_all_2a, lmer_all_null)

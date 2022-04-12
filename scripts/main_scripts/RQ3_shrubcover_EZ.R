@@ -62,21 +62,22 @@ theme_shrub <- function(){ theme(legend.position = "right",
 # Mean shrub cover per plot per year (right method - checked with Mariana)
 ITEX_shrubs_mean <- ITEX_shrubs %>%
   group_by(SiteSubsitePlotYear) %>%
-  mutate(mean_cover = mean(RelCover)) %>%
+  mutate(sum_cover = sum(RelCover)) %>%
   ungroup()
 
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>% 
-  dplyr::select(PLOT, YEAR, LAT, LONG, SiteSubsitePlotYear, SiteSubsitePlot, mean_cover, lat_grid, lon_grid, gridcell) %>% 
-  distinct(SiteSubsitePlotYear, mean_cover, .keep_all = TRUE)%>% 
-  mutate(mean_cover_prop = mean_cover/100) %>%    # making into proportion data
-  mutate(mean_cover_int = ceiling(mean_cover)) %>%   
+  dplyr::select(PLOT, YEAR, LAT, LONG, SiteSubsitePlotYear, SiteSubsitePlot, sum_cover, lat_grid, lon_grid, gridcell) %>% 
+  distinct(SiteSubsitePlotYear, sum_cover, .keep_all = TRUE)%>% 
+  mutate(sum_cover_prop = sum_cover/100) %>%    # making into proportion data
+  mutate(sum_cover_int = floor(sum_cover)) %>%   
   mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
                                  YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
                                  YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
                                  YEAR == 2002 ~ '7', YEAR == 2003 ~ '8',
                                  YEAR== 2004 ~ '9', YEAR == 2005 ~ '10',
                                  YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
+
 ITEX_shrubs_mean_trim$year_index <- as.numeric(ITEX_shrubs_mean_trim$year_index)
 ITEX_shrubs_mean_trim$YEAR <- as.factor(ITEX_shrubs_mean_trim$YEAR)
 
