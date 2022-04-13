@@ -169,16 +169,9 @@ ANWR_veg_fg_trim <- ANWR_veg_fg %>%
                                  YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
 
                       
-ANWR_veg_fg_trim_2 <- ANWR_veg_fg_trim  %>%  group_by(FuncGroup, PLOT)  %>%  filter(mean_cover_int != 0)
-
-
-# counting zeros 
-ANWR_veg_fg_zeros <-  ANWR_veg_fg_trim  %>%   group_by(YEAR, PLOT, FuncGroup) %>% 
- count(mean_cover_int == 0) %>% filter (FuncGroup == "Forb")   
 
 
 ANWR_veg_fg_trim$PLOT <- as.factor(ANWR_veg_fg_trim$PLOT)
-length(unique(ANWR_veg_fg_trim$year_index))
 ANWR_veg_fg_trim$year_index <- as.numeric(ANWR_veg_fg_trim$year_index)
 hist(ANWR_veg_fg_trim$mean_cover_int)
 
@@ -212,9 +205,9 @@ rename(FuncGroup = group)
 
 # plotting predictions
 # Atigun f.groups ----
-(atigun <- ggplot(atigun_preds, aes(x = x, y = predicted, colour=FuncGroup))+
+(atigun_fgroups <- ggplot(atigun_preds, aes(x = x, y = predicted, colour=FuncGroup))+
    stat_smooth(method = "glm", aes(colour = FuncGroup, fill = FuncGroup), size = 1.5) +
-   facet_wrap(~FuncGroup, ncol = 3))+
+   facet_wrap(~FuncGroup, ncol = 3, scales = "free_y"))+
    geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = FuncGroup), alpha = 0.1) +
    geom_point(data = ANWR_Atigun, aes(x = year_index, y = sum_cover_int, colour = FuncGroup), size = 2.5) +
    scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
@@ -232,9 +225,9 @@ rename(FuncGroup = group)
 ggsave(file = "output/figures/atigun.png")
 
 # Jago f. groups----
-(jago <- ggplot(jago_preds, aes(x = x, y = predicted, colour=FuncGroup))+
+(jago_fgroups <- ggplot(jago_preds, aes(x = x, y = predicted, colour=FuncGroup))+
     stat_smooth(method = "glm", aes(colour = FuncGroup, fill = FuncGroup), size = 1.5) +
-    facet_wrap(~FuncGroup, ncol = 3))+
+    facet_wrap(~FuncGroup, ncol = 3, scales = "free_y"))+
    geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = FuncGroup), alpha = 0.1) +
    geom_point(data = ANWR_Jago, aes(x = year_index, y = sum_cover_int, colour = FuncGroup), size = 2.5) +
    scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
@@ -249,7 +242,7 @@ ggsave(file = "output/figures/atigun.png")
          axis.title.y = element_text(size=25),
          strip.text.x = element_text(size = 25, face = "italic" ))
 
-ggsave(file = "output/figures/jago.png")
+ggsave(file = "output/figures/jago_fgroups.png")
 
 # Trying and comparing different model syntaxes
 hist(ANWR_veg_fg_trim$sum_cover_int)

@@ -176,7 +176,7 @@ phenology_green_trim$year_index<- as.numeric(phenology_green_trim$year_index)
 str(phenology_green_trim)
 
 # lmer with study_area as random effect 
-lmer_green <- lmer(mean.doy ~ year_index + (1 |study_area) + (1|year), data = phenology_green_trim ) 
+lmer_green <- lmer(mean.doy ~ year_index + (1 |study_area) + (1|year_index), data = phenology_green_trim ) 
 summary(lmer_green)
 r2_nakagawa(lmer_green)
 
