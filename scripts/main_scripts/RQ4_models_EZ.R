@@ -44,9 +44,9 @@ ggsave(file = "output/figures/early_greening_plots.png")
 # MODEL 13 ----
 prop_greening_plots$year_index <- as.numeric(prop_greening_plots$year_index)
 
-# Generalised linear mixed model model family binomial 
+# generalised linear model family binomial 
 glm_early <- glm(prop_early_int ~  year_index, family = "binomial", data = prop_greening_plots)
-summary(glm_early) # significant
+summary(glm_early) 
 r.squaredGLMM(glm_early)
 
 # null model
@@ -121,6 +121,8 @@ ggsave(file = "output/figures/late_greening_plots.png")
 glm_late <- glm(prop_late_int~ year_index , family = binomial, data = prop_greening_plots)
 summary(glm_late)
 r.squaredGLMM(glm_late)
+check_overdispersion(glm_late)
+
 
 # null model
 glm_late_null <- glm(prop_late ~  1, family = binomial, data = prop_greening_plots)

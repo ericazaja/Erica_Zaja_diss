@@ -204,10 +204,21 @@ ANWR_Jago_shrub$year_index <- as.numeric(ANWR_Jago_shrub$year_index)
 # Atigun 
 glm_atigun_shrub <- glm.nb(genus_cover_int~year_index + GENUS, data = ANWR_Atigun_shrub)
 summary(glm_atigun_shrub)
+# Output tables
+tab_model(glm_atigun_shrub, file = "output/tables/glm_atigun_shrub.html")
+webshot("output/tables/glm_atigun_shrub.html", "output/tables/glm_atigun_shrub.png")
+
+check_overdispersion(glm_atigun_shrub) # no over.
+
 
 # Jago
 glm_jago_shrub <- glm.nb(genus_cover_int~year_index + GENUS, data = ANWR_Jago_shrub)
 summary(glm_jago_shrub)
+tab_model(glm_jago_shrub, file = "output/tables/glm_jago_shrub.html")
+webshot("output/tables/glm_jago_shrub.html", "output/tables/glm_jago_shrub.png")
+
+check_overdispersion(glm_jago_shrub) # no over.
+
 
 # extracting predictions
 atigun_shrub_preds <- ggpredict(glm_atigun_shrub, terms = c("year_index", "GENUS"), type = "re") %>% 
@@ -225,8 +236,8 @@ jago_shrub_preds <- ggpredict(glm_jago_shrub, terms = c("year_index", "GENUS"), 
    geom_point(data = ANWR_Atigun_shrub ,                      
               aes(x = year_index, y = genus_cover_int, colour = GENUS), size = 2.5) +
   scale_x_continuous(breaks=c(2,4,6,8,10))+
-  scale_colour_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654"))+
-  scale_fill_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654"))+
+  scale_colour_manual(values = c("#DC9902", "#003654",  "#009E73","#CC79A7"))+
+  scale_colour_manual(values = c("#DC9902", "#003654",  "#009E73","#CC79A7"))+
   scale_x_continuous(breaks=c(2,4,6,8,10,12))+
   labs(y = "Predicted cover (%) \n", x = "\nYear (indexed)") +
   theme_shrub()+

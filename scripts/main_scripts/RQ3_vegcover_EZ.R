@@ -192,8 +192,21 @@ ANWR_Jago$year_index <- as.numeric(ANWR_Jago$year_index)
 
 # Atigun model
 glm_atigun <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Atigun)
+
+tab_model(glm_atigun, file = "output/tables/glm_atigun.html")
+webshot("output/tables/glm_atigun.html", "output/tables/glm_atigun.png")
+
+check_overdispersion(glm_atigun) # no over
+
+
+# Jago 
 glm_jago <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Jago)
-summary(glm_atigun)
+
+tab_model(glm_jago, file = "output/tables/glm_jago.html")
+webshot("output/tables/glm_jago.html", "output/tables/glm_jago.png")
+
+check_overdispersion(glm_jago) # some over.
+
 
 # extracting predictions Atigun
 atigun_preds <- ggpredict(glm_atigun, terms = c("year_index", "FuncGroup"), type = "re") %>% 
@@ -222,7 +235,7 @@ rename(FuncGroup = group)
          axis.title.y = element_text(size=25),
          strip.text.x = element_text(size = 25, face = "italic" ))
 
-ggsave(file = "output/figures/atigun.png")
+ggsave(file = "output/figures/atigun_fgroups.png")
 
 # Jago f. groups----
 (jago_fgroups <- ggplot(jago_preds, aes(x = x, y = predicted, colour=FuncGroup))+
