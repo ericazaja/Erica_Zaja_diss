@@ -214,24 +214,28 @@ qqline(resid(lmer_green)) # good
 # ggsave(file = "output/figures/all_sites_greening.png")
 
 # Extract predictions
-pred_phen <- ggpredict(lmer_green, terms = c("year_index", "study_area"), type = "re")
+pred_phen <- ggpredict(lmer_green, terms = c("year_index", "study_area"), type = "re") %>%
+    rename(study_area = group)
 
-
-preds_pheno$study_area <- as.factor(as.character(preds_pheno$study_area))
 
 # Plot the predictions 
-(pheno_preds <- ggplot(pred_phen, aes(x = x, y = predicted)) +
-        stat_smooth(method = "lm", size = 2, colour="black") +
-        geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0) +
+(pheno_preds <- ggplot(pred_phen, aes(x = x, y = predicted, colour = study_area)) +
+        stat_smooth(method = "lm", aes(colour = study_area, fill = study_area),size = 1.5) +
+        facet_wrap(~study_area, ncol = 2))+
+        geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = study_area), alpha = 0.1) +
         geom_point(data = phenology_green_trim,                      # adding the raw data (scaled values)
                    aes(x = year_index, y = mean.doy, colour = study_area), size = 2.5) +
     scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677"))+
-    scale_x_continuous(breaks=c(2,4,6,8,10,12,14,16,18,20,22,24,26))+
+    scale_fill_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677"))+
+    scale_x_continuous(breaks=c(2,6,10,14,18,22,26))+
     labs(x = "\nYear (indexed)", y = "Mean greening DOY (%)\n") +
     theme_shrub()+
-    theme(axis.text.x = element_text(size= 20, angle = 0), legend.text = element_text(size= 18),
-          legend.title = element_text(size=25)) +
-    guides(color = guide_legend(override.aes = list(size = 3))))
+    theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 0, 
+                                      colour = "black"), 
+          legend.position = "none",
+          axis.title.x = element_text(size=25),
+          axis.title.y = element_text(size=25),
+          strip.text.x = element_text(size = 25, face = "italic" ))
 
 dev.off()
 
@@ -271,13 +275,20 @@ stargazer(lmer_Qiki, type = "text",
 Qiki_preds <- ggpredict(lmer_Qiki, terms = ("year_index"))
 
 (qiki_preds <- ggplot(Qiki_preds , aes(x = x, y = predicted)) +
-        stat_smooth(method = "lm", colour = "black", size = 2) +
-        geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "#009E73", alpha = .2) +
+        stat_smooth(method = "lm", colour = "#117733", size = 2) +
+        geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "#117733", alpha = .2) +
         geom_point(data = Qikiqtaruk ,                      # adding the raw data (scaled values)
-                   aes(x = year_index, y = mean.doy), colour = "#009E73", size = 2.5))+
-    scale_x_continuous(breaks=c(2,4,6,8,10,12,14,16,18,20,22,24,26))+
-    labs(x = "\nYear (indexed)", y = "Mean greening DOY\n") +
-    theme_shrub()
+                   aes(x = year_index, y = mean.doy), colour = "#117733", size = 2.5))+
+    scale_x_continuous(breaks=c(2,6,10,14,18,22,26))+
+    labs(x = "\nYear (indexed)", y = "Mean greening DOY (%)\n") +
+    theme_shrub()+
+    theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 0, 
+                                      colour = "black"), 
+          legend.position = "none",
+          axis.title.x = element_text(size=25),
+          axis.title.y = element_text(size=25),
+          strip.text.x = element_text(size = 25, face = "italic" ))
+
 
 ggsave(file = "output/figures/qiki_preds.png")
 

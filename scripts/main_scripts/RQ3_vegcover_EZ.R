@@ -160,7 +160,7 @@ ANWR_veg_fg_trim <- ANWR_veg_fg %>%
    dplyr::select(PLOT, YEAR, FuncGroup, SUBSITE, SiteSubsitePlotYear, SiteSubsitePlot, sum_cover, lat_grid, lon_grid, gridcell) %>% 
    distinct(SiteSubsitePlotYear, sum_cover, .keep_all = TRUE)%>% 
    mutate(sum_cover_prop = sum_cover/100) %>%    # making into proportion data
-   mutate(sum_cover_int = floor(sum_cover)) %>%   
+   mutate(sum_cover_int = round(sum_cover)) %>%   
    mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
                                   YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
                                   YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
@@ -184,7 +184,7 @@ hist(ANWR_veg_fg_trim$mean_cover_int)
 
 # making func group a factor in the new dataset
 ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup))
-hist(ANWR_veg_fg_trim$mean_cover_prop) # checking proportion data distribution
+hist(ANWR_veg_fg_trim$sum_cover_int) # checking proportion data distribution
 unique(ANWR_veg_fg_trim$SiteSubsitePlot)
 
 # Dividing two subsites
