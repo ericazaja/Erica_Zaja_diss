@@ -70,6 +70,8 @@ theme_shrub <- function(){ theme(legend.position = "right",
 phenology_green <- phenology_new %>%
   filter(phenophase == "green")
 
+hist(phenology_green$DOY)
+
 unique(phenology_green$phenophase) # only greening
 
 (greening <- (ggplot(phenology_green, aes(x = phenophase, y = DOY))+
@@ -215,8 +217,8 @@ prop_greening_plots <- count_years_wide %>%
 unique(prop_greening_plots$year)
 
 prop_greening_plots <- prop_greening_plots %>% 
-  #mutate(prop_early = floor(prop_early)) %>%  
-  #mutate(prop_late = floor(prop_late)) %>%   
+  mutate(prop_early_int = round(prop_early)) %>%  
+  mutate(prop_late_int = round(prop_late)) %>%   
   mutate(year_index = case_when (year == 1994 ~ '1', year == 1995 ~ '2', 
                                  year == 1996 ~ '3', year == 1997 ~ '4',
                                  year == 1998 ~ '5', year== 1999 ~ '6', 
@@ -232,8 +234,8 @@ prop_greening_plots <- prop_greening_plots %>%
                                  year == 2018~ '25',year == 2019 ~ '26')
          ) 
 
-hist(prop_greening_plots$prop_early)# not normal
-hist(prop_greening_plots$prop_late)# not normal 
+hist(prop_greening_plots$prop_early_int)# not normal
+hist(prop_greening_plots$prop_late_int)# not normal 
 
 write.csv(prop_greening_plots, "datasets/phenology_data/prop_greening_plots.csv")
 

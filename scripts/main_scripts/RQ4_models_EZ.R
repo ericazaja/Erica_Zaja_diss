@@ -42,8 +42,10 @@ raster_early_logo <- as.raster(early_logo)
 ggsave(file = "output/figures/early_greening_plots.png")
 
 # MODEL 13 ----
+prop_greening_plots$year_index <- as.numeric(prop_greening_plots$year_index)
+
 # Generalised linear mixed model model family binomial 
-glm_early <- glmer(prop_early ~  year_index + (1|year_index), family = "binomial", data = prop_greening_plots)
+glm_early <- glm(prop_early_int ~  year_index, family = "binomial", data = prop_greening_plots)
 summary(glm_early) # significant
 r.squaredGLMM(glm_early)
 
@@ -53,7 +55,7 @@ AIC(glm_early, glm_early_null)
 
 # assumptions
 plot(glm_early)
-dispersion_glmer(glm_early)# 0.7259031
+dispersion_glmer(glm_early) # 0.7259031
 qqnorm(resid(glm_early))
 qqline(resid(glm_early))
 
@@ -67,19 +69,25 @@ stargazer(glm_early, type = "text",
 
 # plotting binomial 
 
-fit = glm(prop_early ~ year_index, data=prop_greening_plots, family=binomial)
+fit = glm(prop_early_int ~ year_index, data=prop_greening_plots, family=binomial)
 newdat <- data.frame(year_index=seq(min(prop_greening_plots$year_index), max(prop_greening_plots$year_index),len=100))
-newdat$prop_early = predict(fit, newdata=newdat, type="response")
-plot(prop_early~year_index, data=prop_greening_plots, col="black")
-lines(prop_early~year_index, newdat, col="black", lwd=2)
+newdat$prop_early_int = predict(fit, newdata=newdat, type="response")
+plot(prop_early_int~year_index, data=prop_greening_plots, col="black")
+lines(prop_early_int~year_index, newdat, col="black", lwd=2)
 
 # plotting binomial with ggplot
-(early_binomial <- ggplot(prop_greening_plots, aes(x=year_index, y = prop_early)) + 
+(early_binomial <- ggplot(prop_greening_plots, aes(x=year_index, y = prop_early_int)) + 
     geom_point(alpha=.8, colour = "black") +
     stat_smooth(method="glm", se=TRUE, method.args = list(family=binomial), colour = "#009E73",  fill ="#009E73", alpha= 0.2, size = 2)+
-    xlab("\nYear (indexed)") + 
+    scale_x_continuous(breaks=c(2,4,6,8,10,12,14,16,18,20,22,24,26))+
+    xlab("\nYear(indexed)") + 
     ylab("Plots with early greening\n"))+
-    theme_shrub()
+    theme_shrub() +
+    theme(axis.text.x = element_text(size= 20, angle = 0),
+          axis.title.x = element_text(size=25),
+          axis.title.y = element_text(size=25),
+          axis.text.y = element_text(size=25, hjust = 1))
+
 
 ggsave(file = "output/figures/early_binomial.png")
 
@@ -110,7 +118,7 @@ ggsave(file = "output/figures/late_greening_plots.png")
 
 # Model 13 ----
 # Generalised linear mixed model family binomial 
-glm_late <- glmer(prop_late ~ year_index + (1|year_index), family = binomial, data = prop_greening_plots)
+glm_late <- glm(prop_late_int~ year_index , family = binomial, data = prop_greening_plots)
 summary(glm_late)
 r.squaredGLMM(glm_late)
 
@@ -131,19 +139,26 @@ stargazer(glm_late, type = "text",
           digit.separator = "")
 
 # plotting binomial with base R
-fit_2 = glm(prop_late ~ year_index, data=prop_greening_plots, family=binomial)
+fit_2 = glm(prop_late_int ~ year_index, data=prop_greening_plots, family=binomial)
 newdat <- data.frame(year_index=seq(min(prop_greening_plots$year_index), max(prop_greening_plots$year_index),len=100))
 newdat$prop_late = predict(fit_2, newdata=newdat, type="response")
-plot(prop_late~year_index, data=prop_greening_plots, col="black")
-lines(prop_late~year_index, newdat, col="black", lwd=2)
+plot(prop_late_int~year_index, data=prop_greening_plots, col="black")
+lines(prop_late_int~year_index, newdat, col="black", lwd=2)
 
 # plotting binomial with ggplot
-(late_binomial <- ggplot(prop_greening_plots, aes(x=year_index, y = prop_late)) + 
+(late_binomial <- ggplot(prop_greening_plots, aes(x=year_index, y = prop_late_int)) + 
         geom_point(alpha=.5, colour = "black") +
         stat_smooth(method="glm", se=TRUE, method.args = list(family=binomial),colour = "#009E73",  fill ="#009E73", alpha= 0.2, size = 2)+
-        xlab("Year(indexed)") + 
-        ylab("Plots with late greening")+
-    theme_shrub())
+        scale_x_continuous(breaks=c(2,4,6,8,10,12,14,16,18,20,22,24,26))+
+         xlab("\nYear(indexed)") + 
+        ylab("Plots with late greening\n")+
+    theme_shrub()+
+        theme(axis.text.x = element_text(size= 20, angle = 0),
+              axis.title.x = element_text(size=25),
+              axis.title.y = element_text(size=25),
+              axis.text.y = element_text(size=25, hjust = 1)))
+
+ggsave(file = "output/figures/late_binomial.png")
 
 # Panel ----
 
