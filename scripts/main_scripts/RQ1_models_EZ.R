@@ -19,16 +19,11 @@ library(viridis)
 library(rasterVis)
 library(sf)
 library(tidyverse)
-library(ggmap)
-library(maptools)
-library(rgeos)
-library(rworldmap)
 library(tidyverse)
 library(lme4)
 library(Require)
 library(SpaDES.tools)
 library(geosphere)
-library(dplyr)
 library(ggeffects)
 library(stargazer)
 library(factoextra)
@@ -76,10 +71,6 @@ model_1 <- lm(biomass~latitude, data = r3_rsample_002)
 summary(model_1)
 # F-statistic: 639.3 on 1 and 3190 DF,  p-value: < 2.2e-16
 # slope =  -49.079***
-
-# Null model
-model_1_null <- lm(biomass~1, data = r3_rsample_002)
-AIC(model_1, model_1_null) # delta AIC indicates very diff models
 
 # Checking model 1 assumptions 
 plot(model_1)

@@ -5,13 +5,16 @@ date: '2022-04-14'
 output: pdf_document
 ---
 
-### Mapping and sampling
+# # RQ1: How is shrub biomass distributed in the focal study area?
 
-```{r setup, include=FALSE}
+### Part 1: BUFFERED RANDOM SAMPLING 
+
+
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r, warming = FALSE}
+```{r, warning = FALSE, message= FALSE}
 ## LOADING LIBRARIES -----
 library(sp)
 library(raster)
@@ -23,18 +26,17 @@ library(tidyverse)
 ```
 
 
-```{r}
+```{r, warning = FALSE}
 ## LOADING DATA ----
 
 # SHRUB DATA: from Berner et al 2018
 # Loading raster of shrub biomass (g/m2) on Alaskan North Slope  
-shrub_agb_p50 <- raster("datasets/berner_data/shrub_agb_p50.tif") 
+shrub_agb_p50 <- raster("../../datasets/berner_data/shrub_agb_p50.tif") 
 # Using the best-estimates: the 50th percentile of the 1,000 permutations
 
 # PCH CORE RANGE DATA: from Porcupine Caribou Management Board (2016)
 # Loading polygon of PCH range 
-PCH_core_range <- st_read("datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") # loading data
-st_bbox(PCH_core_range) # extent of the PCH range
+PCH_core_range <- st_read("../../datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") # loading data
 
 ```
 
@@ -54,109 +56,172 @@ res(shrub_agb_p50) # resolution of map: [1] 30m x 30m
 ## CROPPING -----
 
 # Cropping shrub raster to the PCH range 
-r2 <- crop(shrub_agb_p50, extent(PCH_core_range))
-r3 <- mask(r2, PCH_core_range)
-plot(r3) # plot cropped raster
-plot(PCH_core_range, add = TRUE, lwd = 2)
+#r2 <- crop(shrub_agb_p50, extent(PCH_core_range))
+#r3 <- mask(r2, PCH_core_range)
+#plot(r3) # plot cropped raster
+#plot(PCH_core_range, add = TRUE, lwd = 2)
 
-# transforming CRS of cropped map from proj = aea (alaska albers) to proj = lalong 
-r3_latlong <- projectRaster(r3, crs="+init=EPSG:4326", xy = TRUE)
+# transforming CRS of cropped map from proj = aea (alaska albers) to proj = latlong 
+# r3_latlong <- projectRaster(r3, crs="+init=EPSG:4326", xy = TRUE)
 
 ```
 
 ```{r}
 ## AGGREGATION ----
+r3_latlong <- raster("../../datasets/berner_data/r3_latlong.tif")
 
 # aggregate shrub data to coarser resolution before extraction using aggregate()
-# factor chosen dividing climate cell resolution 0.008333333 x 0.008333333 by the resolution of the cropped shrub map (latlong)
-r3_latlong_agg <- aggregate(r3_latlong, fact=c(11.47842,30.8642), fun = mean, expand = TRUE) 
+# factor chosen dividing climate cell resolution 0.008333333 x 0.008333333 by 
+# the resolution of the cropped shrub map (latlong)
+# r3_latlong_agg <- aggregate(r3_latlong, fact=c(11.47842,30.8642), fun = mean, 
+# expand = TRUE) 
+
+# Loading aggregated raster
+r3_latlong_agg <- raster("../../datasets/berner_data/r3_latlong_agg.tif")
+
 ```
 
-```{r}
+```{r, error = FALSE, warning = FALSE}
 # RANDOM SAMPLE WHOLE MAP ----
 
 # Measuring area of raster
 # get sizes of all cells in raster [km2]
-cell_size <- area(r3_latlong_agg, na.rm=TRUE, weights=FALSE)
+cell_size <- raster::area(r3_latlong_agg, na.rm=TRUE, weights=FALSE)
 # delete NAs from vector of all raster cells
 # NAs lie outside of the rastered region, can thus be omitted
 cell_size <- cell_size[!is.na(cell_size)] # 0.2815663
 #compute area [km2] of all cells in geo_raster
 raster_area <-length(cell_size)*median(cell_size)
 # print area of shrub map according to raster object
-print(paste("Area of PCH Alaskan range (raster)", round(raster_area, digits = 1),"km2"))
+print(paste("Area of PCH Alaskan range (raster)", round(raster_area, digits = 1),
+            "km2"))
 
 
 # Buffered random sampling 
 
-# a. Extracting all pixels (9583)
-r3_rsample_00 <- as.data.frame(sampleRandom(r3_latlong_agg, 9583, buffer = 1414.2, na.rm=TRUE, ext=NULL, 
-                                            cells=TRUE, rowcol=FALSE, xy = TRUE)) 
-
-hist(r3_rsample_00$r3_latlong_agg)
+# c. Extracting 1 every 3 pixels (9583/3 = 3195)
+# r3_rsample_1 <- as.data.frame(sampleRandom(r3_latlong_agg, 3195, buffer = 1414.2, 
+#na.rm=TRUE, ext=NULL, cells=TRUE, rowcol=FALSE, xy = TRUE)) 
 
 # Checking buffer works
 # calculating Haversine distance between points (x and y coordinates)
-r3_rsample_01 <- r3_rsample_1  %>% 
-  mutate(r3_rsample_1, Distance = distHaversine(cbind(x, y),
-                                                cbind(lag(x), lag(y))))
+# r3_rsample_01 <- r3_rsample_1  %>% 
+ # mutate(r3_rsample_1, Distance = distHaversine(cbind(x, y),
+                                                #cbind(lag(x), lag(y))))
 
 # If distance between points > buffer distance, buffer works
-r3_rsample_01 <- r3_rsample_01 %>% 
-  mutate(buff = case_when(Distance >= 1414.2 ~ "T", Distance < 1414.2 ~ "F"))
+#r3_rsample_01 <- r3_rsample_01 %>% 
+ # mutate(buff = case_when(Distance >= 1414.2 ~ "T", Distance < 1414.2 ~ "F"))
 
-r3_rsample_01 <- r3_rsample_01 %>%  filter(buff %in% c("T")) # only keeping obseervations where buff worked
+# r3_rsample_01 <- r3_rsample_01 %>%  filter(buff %in% c("T")) 
+# only keeping observations where buff worked
+
+# Clean random sample dataset saved as r3_rsample_002
+r3_rsample_002 <- read_csv("../../datasets/berner_data/r3_rsample_002.csv")
+
 ```
 
-```{r}
+
+
+```{r, fig.show="hide" }
 ## DATA VISUALISATION -----
 
-# setting a personalised theme 
-theme_shrub <- function(){ theme(legend.position = "right",
-                                 axis.title.x = element_text(face="bold", size=20),
-                                 axis.text.x  = element_text(vjust=0.5, size=18, colour = "black"), 
-                                 axis.title.y = element_text(face="bold", size=20),
-                                 axis.text.y  = element_text(vjust=0.5, size=18, colour = "black"),
-                                 panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(), 
-                                 panel.grid.minor.y=element_blank(), panel.grid.major.y=element_blank(), 
-                                 panel.background = element_blank(), axis.line = element_line(colour = "black"), 
-                                 plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
-                                 plot.margin = unit(c(1,1,1,1), units = , "cm"))}
+# Plotting cropped map with personalised color palette
+# Colour palette credit: David Nichols (WONG colour blind friendly palette)
 
-# 1. FULL Shrub map ----
+# making raster into dataframe
+r3_latlong_agg_df <- as.data.frame(r3_latlong_agg, xy=TRUE, 
+                                   na.rm=TRUE)
 
-# Plotting shrub raster (entire) with ggplot
-(gplot_shrub_agb_p50 <- gplot(shrub_agb_p50) +
-    geom_raster(aes(x = x, y = y, fill = value)) +
-    # value is the specific value (of reflectance) each pixel is associated with
-    scale_fill_viridis_c(rescaler = function(x, to = c(0, 1), from = NULL) {
-      ifelse(x<1000, scales::rescale(x, to = to, from = c(min(x, na.rm = TRUE), 1000)),1)}, na.value="white") +
-    coord_quickmap()+
-    theme_shrub() + 
-    xlab("\nLongitude") +
-    ylab("Latitude\n") +
-    ggtitle("Shrub biomass cover (g/m2) of Alaskan north slope\n") +
-    theme(plot.title = element_text(hjust = 0.5),     # centres plot title
-          text = element_text(size=15),		       	    # font size
-          axis.text.x = element_text(angle = 0, hjust = 1)))  # rotates x axis text
+# setting biomass level thresholds using quantiles 
+r3_latlong_agg_df <- r3_latlong_agg_df %>%
+  mutate(biomass_level = case_when (r3_latlong_agg < 170.630482 ~ 'Low', 
+                                    r3_latlong_agg> 170.630482    
+                                    & r3_latlong_agg < 347.062210 ~ 'Medium', 
+                                    r3_latlong_agg > 347.062210 ~ 'High'))
 
+# ordering factor levels
+r3_latlong_agg_df$biomass_level <- factor(r3_latlong_agg_df$biomass_level,
+                                          levels=c("Low", "Medium", "High"),
+                                         labels = c("Low", "Medium", "High"),
+                                         ordered = T)
 
-# 2. FULL PCH range ----
-# Plotting PCH core range (entire) using ggplot
-(PCH_range_map <- ggplot() + 
-    geom_sf(data = PCH_core_range, size = 0.5, color = "black", fill = "white") + 
-    theme_shrub()+
-    ggtitle("PCH core range 2016")) 
+# plotting raster with personalised colours
+(raster_my_palette_new <- ggplot(r3_latlong_agg_df) + 
+  geom_tile(aes(x=x,y=y,fill=biomass_level)) + 
+  scale_fill_manual(name = "Biomass level", values=c("#F0E442", "#E69F00", 
+                                                      "#009E73")) +
+  coord_quickmap()+
+ # theme_shrub() +  
+  xlab("\nLongitude") +
+  ylab("Latitude\n") +
+  xlim(-146.5, -141)+
+  ylim(69.2,70.2)+ 
+  theme(plot.title = element_text(hjust = 0.5),      
+                       text = element_text(size=25),	
+        axis.title.x = element_text(size=25),
+        axis.title.y = element_text(size=25),
+        axis.text.x = element_text(size=25, hjust = 1),
+                       axis.text.y = element_text(size=25, hjust = 1),
+                       legend.text = element_text(size=20),
+                       legend.title = element_text(size=30), 
+                       legend.position ="bottom"))
 ```
 
 
-
-## Including Plots
-
-You can also embed plots, for example:
-
+### Part 2: MODELLING
 ```{r pressure, echo=FALSE}
-plot(pressure)
+## DATA MANIPULATION ----
+
+# Exploring data
+hist(r3_rsample_002$biomass) # distribution ```
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r, echo=FALSE}
+##  MODELLING ----
+# Standardising lat and long (explanatory variables)
+r3_rsample_002$latitude <- scale(r3_rsample_002$latitude, center = TRUE, 
+                                 scale = TRUE)
+r3_rsample_002$longitude <- scale(r3_rsample_002$longitude, center = TRUE, 
+                                  scale = TRUE)
+
+# MODEL 1. biomass vs lat ----
+model_1 <- lm(biomass~latitude, data = r3_rsample_002)
+summary(model_1)
+
+# Checking model 1 assumptions 
+plot(model_1)
+qqnorm(resid(model_1))
+qqline(resid(model_1))  # points fall nicely onto the line - good!
+
+
+```
+
+
+```{r, echo=FALSE, fig.show="hide"}
+# Extracting model predictions 
+predictions_1 <- as.data.frame(predict(model_1, newdata = r3_rsample_002, 
+                                       interval = "confidence")) 
+model_1_lat <- cbind(r3_rsample_002, predictions_1)
+
+# Plot the predictions 
+(predictions_biomass_vs_lat <- (ggplot(model_1_lat, aes(latitude, fit)) + 
+                      geom_point(data = model_1_lat, aes(x = latitude, y = biomass), 
+                                 colour =  "#006146", size = 0.5) +
+                      stat_smooth(method=lm, colour = "black", size = 2)+
+                      geom_line(aes(y=lwr),  color = "#F96E00", 
+                                linetype = "dashed", size = 0.5)+
+                      geom_line(aes(y=upr), color = "#F96E00", 
+                                linetype = "dashed", size = 0.5)+
+                        annotate(geom = "text", x = 1, y = 800, label="slope = -49.079*** ",
+                                 size = 10) +
+                      xlab("\nScaled latitude") +
+                      ylab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
+                      # theme_shrub()+
+                      theme(axis.title.x =element_text(size=25),
+                              axis.title.y =element_text(size=25),
+                              axis.text.x = element_text(size=25, hjust = 1),
+                              axis.text.y = element_text(size=25, hjust = 1) )) )
+

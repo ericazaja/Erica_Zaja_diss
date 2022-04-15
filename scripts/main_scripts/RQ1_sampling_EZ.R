@@ -97,7 +97,7 @@ projection(r3_latlong_agg)
 
 # Measuring area of raster
 # get sizes of all cells in raster [km2]
-cell_size <- area(r3_latlong_agg, na.rm=TRUE, weights=FALSE)
+cell_size <- raster::area(r3_latlong_agg, na.rm = TRUE, weights = FALSE)
 # delete NAs from vector of all raster cells
 # NAs lie outside of the rastered region, can thus be omitted
 cell_size <- cell_size[!is.na(cell_size)] # 0.2815663
