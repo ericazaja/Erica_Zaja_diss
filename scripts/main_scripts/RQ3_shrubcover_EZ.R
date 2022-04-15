@@ -37,7 +37,7 @@ ANWR_veg <- read_csv("datasets/ITEX_data/ANWR_veg.csv")
 
 # Filtering shrub only data
 ITEX_shrubs <-  ANWR_veg %>% filter (FuncGroup == "Shrub") 
-unique(ITEX_shrubs$GENUS) # Unique genus names 
+unique(ITEX_shrubs$YEAR) # Unique genus names 
 # [1] "Dryas"          "Salix"          "Vaccinium"      "Arctostaphylos" "Betula"         "Cassiope"       "Ledum"         
 str(ITEX_shrubs)
 
@@ -202,7 +202,7 @@ ANWR_Atigun_shrub$year_index <- as.numeric(ANWR_Atigun_shrub$year_index)
 ANWR_Jago_shrub$year_index <- as.numeric(ANWR_Jago_shrub$year_index)
 
 # Atigun 
-glm_atigun_shrub <- glm.nb(genus_cover_int~year_index + GENUS, data = ANWR_Atigun_shrub)
+glm_atigun_shrub <- glm.nb(genus_cover_int~year_index+GENUS, data = ANWR_Atigun_shrub)
 summary(glm_atigun_shrub)
 # Output tables
 tab_model(glm_atigun_shrub, file = "output/tables/glm_atigun_shrub.html")
@@ -212,7 +212,7 @@ check_overdispersion(glm_atigun_shrub) # no over.
 
 
 # Jago
-glm_jago_shrub <- glm.nb(genus_cover_int~year_index + GENUS, data = ANWR_Jago_shrub)
+glm_jago_shrub <- glm.nb(genus_cover_int~year_index+GENUS, data = ANWR_Jago_shrub)
 summary(glm_jago_shrub)
 tab_model(glm_jago_shrub, file = "output/tables/glm_jago_shrub.html")
 webshot("output/tables/glm_jago_shrub.html", "output/tables/glm_jago_shrub.png")

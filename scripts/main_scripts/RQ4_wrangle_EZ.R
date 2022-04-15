@@ -17,7 +17,7 @@ phenology_data <- read_csv("datasets/phenology_data/CCIN13215_20210302_tundra_ph
 # DATA EXPLORATION and WRANGLING  -----
 range(phenology_data$year)# 1992-2019
 
-unique(phenology_data$study_area) # Unique site names
+unique(phenology_data$year) # Unique site names
 
 # Retaining only locations on Alaskan north slope or close to PCH range
 phenology_new <- phenology_data %>%

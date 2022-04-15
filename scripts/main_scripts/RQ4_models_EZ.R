@@ -220,6 +220,7 @@ str(phenology_green_trim)
 lmer_green <- lmer(mean.doy ~ year_index + (1 |study_area) + (1|year_index), data = phenology_green_trim ) 
 summary(lmer_green)
 r2_nakagawa(lmer_green)
+plot(lmer_green)
 
 tab_model(lmer_green, file = "output/tables/lmer_green.html")
 webshot("output/tables/lmer_green.html", "output/tables/lmer_green.png")
