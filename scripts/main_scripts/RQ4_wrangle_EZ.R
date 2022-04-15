@@ -128,16 +128,17 @@ phenology_mean_doy <- phenology_green_id %>%
   mutate(mean.doy = mean(DOY)) %>% 
   ungroup()
 
+mean(phenology_green_id$DOY)
 mean(phenology_mean_doy$mean.doy) # 166.5352
 
 # HISTOGRAM of greening DOY ----
-(doy_hist <- phenology_mean_doy %>%
-   ggplot(aes(x = mean.doy)) +
+(doy_hist <- phenology_green_id %>%
+   ggplot(aes(x = DOY)) +
    geom_histogram( color="black", fill="#009E73", alpha=0.6, position = 'identity', bins = 60) +
-   geom_vline(aes(xintercept = mean(mean.doy)),            
+   geom_vline(aes(xintercept = mean(DOY)),            
               colour = "black", linetype = "dashed", size = 1) +
    ylab("Frequency\n") +
-   xlab(bquote("\nMean greening day of year"))+ 
+   xlab(bquote("\n Day of year of shrub green-up"))+ 
    theme_shrub()+
    theme(axis.title.x =element_text(size=25),
          axis.title.y =element_text(size=25),

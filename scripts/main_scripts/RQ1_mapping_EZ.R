@@ -11,7 +11,6 @@
 ## LOADING LIBRARIES -----
 
 library(sp)
-library(rgdal)
 library(raster)
 library(ggplot2)
 library(viridis)

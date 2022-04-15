@@ -392,23 +392,17 @@ ITEX_shrubs_mean_trim$LONG <- scale(ITEX_shrubs_mean_trim$LONG , center = TRUE, 
 hist(ITEX_shrubs_mean_trim$sum_cover_int) # normal distribution
 
 # standardising lat and long
-ANWR_Atigun_shrub_lat$LAT<- scale(ANWR_Atigun_shrub_lat$LAT , center = TRUE, scale = TRUE)
-ANWR_Atigun_shrub_lat$LONG<- scale(ANWR_Atigun_shrub_lat$LONG , center = TRUE, scale = TRUE)
-ANWR_Jago_shrub_lat$LAT<- scale(ANWR_Jago_shrub_lat$LAT , center = TRUE, scale = TRUE)
-ANWR_Jago_shrub_lat$LONG<- scale(ANWR_Jago_shrub_lat$LONG , center = TRUE, scale = TRUE)
+ANWR_Atigun_shrub_lat$LAT <- scale(ANWR_Atigun_shrub_lat$LAT , center = TRUE, scale = TRUE)
+ANWR_Atigun_shrub_lat$LONG <- scale(ANWR_Atigun_shrub_lat$LONG , center = TRUE, scale = TRUE)
+ANWR_Jago_shrub_lat$LAT <- scale(ANWR_Jago_shrub_lat$LAT , center = TRUE, scale = TRUE)
+ANWR_Jago_shrub_lat$LONG <- scale(ANWR_Jago_shrub_lat$LONG , center = TRUE, scale = TRUE)
 
 # Shrub cover vs latitude at Atigun 
-shrub_lat <- lm(sum_cover_int ~ LAT, data = ANWR_Atigun_shrub_lat)
+shrub_lat <- glm.nb(sum_cover_int ~ LAT, data = ANWR_Atigun_shrub_lat)
 summary(shrub_lat)
-# Null deviance: 230.24 
-# Residual deviance:  136.82 
-# Pseudo R2 = 1-(136.82 /230.24)
-# [1] 0.4057505 latitude explains ~40 % in variation in shrub cover
-plot(shrub_lat)
 
-# null model
-shrub_lat_null <- glm.nb(mean_cover ~ 1, data = ITEX_shrubs_mean_trim)
-AIC(shrub_lat, shrub_lat_null)
+length(unique(ANWR_Atigun_shrub_lat$LAT))
+plot(shrub_lat)
 
 # Output table
 stargazer(shrub_lat, type = "text",
@@ -416,16 +410,16 @@ stargazer(shrub_lat, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
-# Plotting scatter
+# Plotting scatter (ATIGUN)
 (cover_lat_scatter <- (ggplot(ANWR_Atigun_shrub_lat))+
     geom_point(aes(x = LAT, y = sum_cover_int), colour= "#009E73", size = 1) +
-    geom_smooth(aes(x = LAT, y = sum_cover_int),colour = "black", method = "glm", fill="#009E73", size = 2) + 
+    geom_smooth(aes(x = LAT, y = sum_cover_int),colour = "#009E73", method = "glm", fill="#009E73", alpha = 0.1, size = 2) + 
     labs(y = "Shrub % cover\n", x = "\nScaled latitude") +
    # annotate(geom = "text", x = 1, y = 60, label="(a)", size = 10) +
-    #annotate(geom = "text", x = 0.5, y = 20, label="slope = -0.447*** ", size = 10) +
+    annotate(geom = "text", x = 0, y = 60, label="slope = -0.245*** ", size = 10) +
      theme_shrub())
 
-# ggsave(file = "output/figures/cover_lat_scatter.png")
+ggsave(file = "output/figures/cover_lat_scatter.png")
 
 # adding icon
 lat_logo <- readPNG("lat_icon.png")
@@ -434,20 +428,20 @@ raster_lat_logo <- as.raster(lat_logo)
 ggsave(file = "output/figures/cover_lat_scatter.png")
 
 # Extracting model predictions 
-predictions_10 <- as.data.frame(predict(shrub_lat, newdata = ITEX_shrubs_mean_trim, interval = "confidence")) # this gives overall predictions for the model
-model_10_preds <- cbind(ITEX_shrubs_mean_trim, predictions_10)
+predictions_10 <- as.data.frame(predict(shrub_lat, newdata = ANWR_Atigun_shrub_lat, interval = "confidence")) # this gives overall predictions for the model
+model_10_preds <- cbind(ANWR_Atigun_shrub_lat, predictions_10)
 
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
 # Plot the predictions 
 (plot_model_shrub_lat <- (ggplot(model_10_preds, aes(LAT, fit)) +
-                            geom_point(aes(x = LAT, y = mean_cover)         # adding the raw data 
+                            geom_point(aes(x = LAT, y = sum_cover_int)         # adding the raw data 
                                        ,colour = "green4", size = 1) + 
                             stat_smooth(method=lm, colour = "black")+
                             geom_line(aes(y=lwr,  color = "grey"), linetype = "dashed")+
                             geom_line(aes(y=upr, color = "grey"), linetype = "dashed")+
-                            annotate(geom = "text", x = 1, y = 60, label="(a)", size = 10) +
-                            annotate(geom = "text", x = 0.5, y = 20, label="slope = -4.419*** ", size = 6) +
+                            #annotate(geom = "text", x = 1, y = 60, label="(a)", size = 10) +
+                           # annotate(geom = "text", x = 0.5, y = 20, label="slope = -4.419*** ", size = 6) +
                             labs(x = "\nLatitude", y = "Shrub cover (%)\n", 
                                  title = "") + 
                             # scale_x_continuous(scale_x_continuous(breaks = 1996:2007))+ 
@@ -456,7 +450,7 @@ model_10_preds <- cbind(ITEX_shrubs_mean_trim, predictions_10)
 ggsave(file = "output/figures/plot_model_shrub_lat.png")
 
 # Shrub cover vs longitude
-shrub_long <- lm(sum_cover_int ~ LAT, data = ANWR_Jago_shrub_lat)
+shrub_long <- glm.nb(sum_cover_int ~ LONG, data = ANWR_Jago_shrub_lat)
 summary(shrub_long)
 
 plot(shrub_long)
@@ -477,18 +471,21 @@ stargazer(shrub_long, type = "text",
     #annotate(geom = "text", x = 0.5, y = 20, label="slope = -4.419*** ", size = 6) +
     theme_shrub())
 
+str(ANWR_Atigun_shrub_lat)
+
 
 # ggsave(file = "output/figures/cover_long_scatter.png")
 
 # Extracting model predictions 
-predictions_11 <- as.data.frame(predict(shrub_long, newdata = ITEX_shrubs_mean_trim, interval = "confidence")) # this gives overall predictions for the model
-model_11_preds <- cbind(ITEX_shrubs_mean_trim, predictions_11)
+
+predictions_11 <- as.data.frame(predict(shrub_lat, newdata =ANWR_Atigun_shrub_lat, interval = "confidence")) # this gives overall predictions for the model
+model_11_preds <- cbind(ANWR_Atigun_shrub_lat, predictions_11)
 
 # write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
 
 # Plot the predictions 
-(plot_model_shrub_long <- (ggplot(model_11_preds, aes(LONG, fit)) +
-                            geom_point(aes(x = LONG, y = mean_cover)         # adding the raw data 
+(plot_model_shrub_long <- (ggplot(model_11_preds, aes(LAT, fit)) +
+                            geom_point(aes(x = LAT, y = sum_cover_int)         # adding the raw data 
                                        ,colour = "green4", size = 1) + 
                             stat_smooth(method=lm, colour = "black")+
                             geom_line(aes(y=lwr,  color = "grey"), linetype = "dashed")+

@@ -46,3 +46,15 @@ ggsave(file = "output/figures/greening_model.png")
     labs( x= "Year", y = "mean DOY"))
 
 ggsave(file = "outputs/figures/slopes_pred_lmer_green.png")
+
+
+# making year type variable
+prop_greening_plots<- prop_greening_plots%>% 
+    mutate(year_type = case_when(prop_early_int == 1 ~ "1", 
+                                 prop_early_int == 0 ~ "0"))
+
+prop_greening_plots$year_type <- as.factor(prop_greening_plots$year_type)
+str(prop_greening_plots)
+
+(box <- ggplot(prop_greening_plots, aes(x = year_type, y = year_index))+
+        geom_boxplot())

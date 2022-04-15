@@ -15,6 +15,8 @@ library(webshot)
 prop_greening_plots <- read_csv("datasets/phenology_data/prop_greening_plots.csv")
 phenology_green_trim <- read_csv("datasets/phenology_data/phenology_green_trim.csv")
 
+
+
 # DATA VISUALISATION and modelling ----
 
 # 1. EARLY GREENING  -----
@@ -67,6 +69,31 @@ stargazer(glm_early, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
+
+# Finding the range of Average Spring Temperature
+range(prop_greening_plots$year_index)
+# predictions
+new_data <- data.frame(year_index=seq(from=1, to=26, length=100))
+predictions<- predict(glm_early, newdata = new_data, type = "link", se.fit = TRUE) # the type="link" here predicted the fit and se on the log-linear scale. 
+new_data$pred<- predictions$fit
+new_data$se<- predictions$se.fit
+new_data$upperCI<- new_data$pred+(new_data$se*1.96)
+new_data$lowerCI<- new_data$pred-(new_data$se*1.96)
+
+# Making the Plot of predictions
+binomial_early_pred <- ggplot(new_data, aes(x=year_index, y=plogis(pred)))+ 
+    geom_line(colour = "black", size = 1.5)+
+    geom_point(prop_greening_plots, mapping = aes(x=year_index, y=prop_early_int), col="#009E73")+
+    geom_ribbon(aes(ymin=plogis(lowerCI), ymax=plogis(upperCI), alpha=0.1), colour = "#009E73",  fill ="#009E73", show.legend = FALSE)+ 
+    labs(y="Probability of plots greening early\n", x="\nYear(indexed)")+
+    theme_shrub() +
+    theme(axis.text.x = element_text(size= 20, angle = 0),
+          axis.title.x = element_text(size=25),
+          axis.title.y = element_text(size=25),
+          axis.text.y = element_text(size=25, hjust = 1))
+
+ggsave(file = 'output/figures/binomial_early_pred.png')
+
 # plotting binomial 
 
 fit = glm(prop_early_int ~ year_index, data=prop_greening_plots, family=binomial)
@@ -80,6 +107,7 @@ lines(prop_early_int~year_index, newdat, col="black", lwd=2)
     geom_point(alpha=.8, colour = "black") +
     stat_smooth(method="glm", se=TRUE, method.args = list(family=binomial), colour = "#009E73",  fill ="#009E73", alpha= 0.2, size = 2)+
     scale_x_continuous(breaks=c(2,4,6,8,10,12,14,16,18,20,22,24,26))+
+    scale_y_continuous(breaks=c(0,1))+
     xlab("\nYear(indexed)") + 
     ylab("Plots with early greening\n"))+
     theme_shrub() +
@@ -90,7 +118,6 @@ lines(prop_early_int~year_index, newdat, col="black", lwd=2)
 
 
 ggsave(file = "output/figures/early_binomial.png")
-
 
 
 # 2. LATE GREENING -----
@@ -124,9 +151,7 @@ r.squaredGLMM(glm_late)
 check_overdispersion(glm_late)
 
 
-# null model
-glm_late_null <- glm(prop_late ~  1, family = binomial, data = prop_greening_plots)
-AIC(glm_late, glm_late_null)
+
 
 # checking assumptions
 plot(glm_late)
@@ -139,6 +164,20 @@ stargazer(glm_late, type = "text",
           digits = 3,
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
+
+# Making the Plot of predictions
+binomial_pred <- ggplot(new_data, aes(x=year_index, y=plogis(pred)))+ 
+    geom_line(colour = "black", size = 1.5)+
+    geom_point(prop_greening_plots, mapping = aes(x=year_index, y=prop_late_int), col="#009E73")+
+    geom_ribbon(aes(ymin=plogis(lowerCI), ymax=plogis(upperCI), alpha=0.1), colour = "#009E73",  fill ="#009E73", show.legend = FALSE)+ 
+    labs(y="Probability of plots greening early\n", x="\nYear(indexed)")+
+    theme_shrub() +
+    theme(axis.text.x = element_text(size= 20, angle = 0),
+          axis.title.x = element_text(size=25),
+          axis.title.y = element_text(size=25),
+          axis.text.y = element_text(size=25, hjust = 1))
+
+ggsave(file = "output/figures/binomial_pred_eary.png")
 
 # plotting binomial with base R
 fit_2 = glm(prop_late_int ~ year_index, data=prop_greening_plots, family=binomial)
@@ -283,6 +322,7 @@ Qiki_preds <- ggpredict(lmer_Qiki, terms = ("year_index"))
                    aes(x = year_index, y = mean.doy), colour = "#117733", size = 2.5))+
     scale_x_continuous(breaks=c(2,6,10,14,18,22,26))+
     labs(x = "\nYear (indexed)", y = "Mean greening DOY (%)\n") +
+    annotate(geom = "text", x = 22, y = 190, label="slope = -0.98**", size = 10) +
     theme_shrub()+
     theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 0, 
                                       colour = "black"), 

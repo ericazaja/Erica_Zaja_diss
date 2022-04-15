@@ -129,12 +129,12 @@ unique(ANWR_veg$FuncGroup)  # checking I have all functional groups
       geom_vline(aes(xintercept = mean(RelCover)),            
                  colour = "black", linetype = "dashed", size = 1) +
       labs(x = "\nCover (%)", y = "Frequency\n") +
-      scale_fill_manual(values=c( "#DC9902", "#46AAE2", "#003654", "#D55E00", "#009E73"), name = "Plant functional group")+
+      scale_fill_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"), name = "Functional group")+
       theme_shrub() +
       theme(legend.text = element_text(size=20),
             legend.title = element_text(size=25)) )
 
-# ggsave(file = "output/figures/hist_all_veg.png")
+ggsave(file = "output/figures/hist_all_veg.png")
 
 # making functional group a factor 
 ANWR_veg$FuncGroup <- as.factor(as.character(ANWR_veg$FuncGroup))
@@ -202,6 +202,9 @@ check_overdispersion(glm_atigun) # no over
 # Jago 
 glm_jago <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Jago)
 
+glm_poisson <- glm(sum_cover_int~year_index + FuncGroup, family = "poisson", data = ANWR_Jago)
+check_overdispersion(glm_poisson) #overdispersion
+
 tab_model(glm_jago, file = "output/tables/glm_jago.html")
 webshot("output/tables/glm_jago.html", "output/tables/glm_jago.png")
 
@@ -221,7 +224,7 @@ rename(FuncGroup = group)
 (atigun_fgroups <- ggplot(atigun_preds, aes(x = x, y = predicted, colour=FuncGroup))+
    stat_smooth(method = "glm", aes(colour = FuncGroup, fill = FuncGroup), size = 1.5) +
    facet_wrap(~FuncGroup, ncol = 3, scales = "free_y"))+
-   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = FuncGroup), alpha = 0.1) +
+   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, colour = FuncGroup), alpha = 0.1) +
    geom_point(data = ANWR_Atigun, aes(x = year_index, y = sum_cover_int, colour = FuncGroup), size = 2.5) +
    scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
    scale_fill_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
