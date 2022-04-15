@@ -10,6 +10,7 @@
 # LOADING LIBRARIES -----
 library(tidyverse)
 library(webshot)
+library(lme4)
 
 # LOADING DATA  -----
 prop_greening_plots <- read_csv("datasets/phenology_data/prop_greening_plots.csv")
@@ -50,10 +51,6 @@ prop_greening_plots$year_index <- as.numeric(prop_greening_plots$year_index)
 glm_early <- glm(prop_early_int ~  year_index, family = "binomial", data = prop_greening_plots)
 summary(glm_early) 
 r.squaredGLMM(glm_early)
-
-# null model
-glm_early_null <- glm(prop_early ~  1, family = binomial, data = prop_greening_plots)
-AIC(glm_early, glm_early_null)
 
 # assumptions
 plot(glm_early)
@@ -230,10 +227,6 @@ stargazer(lmer_green, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
-# null model
-lmer_green_null <- lm(mean.doy ~ 1, data = phenology_green_trim ) 
-AIC(lmer_green, lmer_green_null)
-
 # checking assumptions
 plot(lmer_green)
 qqnorm(resid(lmer_green))
@@ -284,11 +277,6 @@ dev.off()
 ggsave(file = "output/figures/pheno_preds.png")
 
 
-# random slopes
-lmer_green_rand <- lmer(mean.doy ~ year_index + (year_index|study_area) + (1|year), data = phenology_green_trim ) 
-# doesnt converge 
-
-
 # Separate models per study area ----
 ## ONLY QIKI significant  
 
@@ -302,9 +290,6 @@ summary(lmer_Qiki)
 plot(lmer_Qiki)
 r2_nakagawa(lmer_Qiki)
 
-# null
-lm_Qiki_null <- lm(mean.doy ~ 1, data =Qikiqtaruk ) 
-AIC(lmer_Qiki, lm_Qiki_null)
 
 # output
 tab_model(lmer_Qiki, file = "output/tables/lmer_Qiki.html")
@@ -356,7 +341,7 @@ ggsave(file = "output/figures/Qiki_DOY.png")
 
 # b. Atqasuk -----
 Atqasuk <-  phenology_green_trim %>% filter (study_area == "Atqasuk") 
-lmer_Atqasuk <- lmer(mean.doy ~ year + (1|year), data =Atqasuk ) 
+lmer_Atqasuk <- lmer(mean.doy ~ year_index + (1|year_index), data =Atqasuk ) 
 summary(lmer_Atqasuk)
 plot(lmer_Atqasuk)
 r2_nakagawa(lmer_Atqasuk)
@@ -383,7 +368,7 @@ stargazer(lmer_Atqasuk, type = "text",
 
 # c. Toolik -----
 Toolik <-  phenology_green_trim %>% filter (study_area == "Toolik Lake") 
-lmer_Toolik <- lmer(mean.doy ~ year + (1|year), data =Toolik) 
+lmer_Toolik <- lmer(mean.doy ~ year_index + (1|year_index), data =Toolik) 
 summary(lmer_Toolik)
 plot(lmer_Toolik)
 r2_nakagawa(lmer_Toolik)
@@ -409,7 +394,7 @@ stargazer(lmer_Toolik, type = "text",
 
 # d. Utqiagvik -----
 Utqiagvik<-  phenology_green_trim %>% filter (study_area == "Utqiagvik") 
-lmer_Utqiagvik <- lmer(mean.doy ~ year + (1|year), data =Utqiagvik) 
+lmer_Utqiagvik <- lmer(mean.doy ~ year_index + (1|year_index), data =Utqiagvik) 
 summary(lmer_Toolik)
 plot(lmer_Utqiagvik)
 r2_nakagawa(lmer_Utqiagvik)
