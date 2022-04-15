@@ -44,10 +44,6 @@ summary(model_3)
 # F-statistic: 355.5 on 1 and 3190 DF,  p-value: < 2.2e-16
 # slope =  38.033  ***
 
-# null model
-model_3_null<- lm(biomass ~1, data = coord.chelsa.combo.c)
-AIC(model_3, model_3_null)
-
 # Checking model 3 assumptions
 plot(model_3)
 qqnorm(resid(model_3))
@@ -107,8 +103,6 @@ summary(model_4)
 # F-statistic: 585.1 on 1 and 3190 DF,  p-value: < 2.2e-16
 # slope = 47.290***
 
-# null model comparison
-AIC(model_4, model_3_null)
 
 # Checking model 4 assumptions 
 plot(model_4)
@@ -206,10 +200,6 @@ write.csv(coord.chelsa.combo.d, file = "datasets/climate_data/coord.chelsa.combo
 model_5a <- lm(biomass ~ CH_TempMeanSummer*precip_level, data = coord.chelsa.combo.d)
 summary(model_5a)
 # F-statistic: 174.6 on 5 and 3186 DF,  p-value: < 2.2e-16
-
-# null model
-model_5a_null <- lm(biomass ~ 1, data = coord.chelsa.combo.d)
-AIC(model_3, model_4, model_5a, model_5a_null)
 
 # model 5a output table 
 stargazer(model_5a, type = "html",

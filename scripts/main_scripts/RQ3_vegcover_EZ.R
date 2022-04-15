@@ -8,6 +8,8 @@
 # RQ3: How has vegetation cover changed in the Arctic National Wildlife Refuge between 1996-2007? 
 # colour palettes credits: Bang Wong and Paul Tol
 
+# PART 1: FUNCTIONAL GROUPS ----
+
 # LOADING LIBRARIES  ----
 library(tidyverse)
 library(cowplot)
@@ -119,7 +121,7 @@ theme_shrub <- function(){ theme(legend.position = "right",
                    plot.title = element_text(color = "black", size = 18, face = "bold", hjust = 0.5),
                    plot.margin = unit(c(1,1,1,1), units = , "cm"))}
 
-# MODELLING mean cover of FUNCTIONAL GROUPS ----
+# MODELLING total cover change of FUNCTIONAL GROUPS ----
 unique(ANWR_veg$FuncGroup)  # checking I have all functional groups
 
 # Visualising distribution with a histogram
@@ -140,43 +142,34 @@ ggsave(file = "output/figures/hist_all_veg.png")
 ANWR_veg$FuncGroup <- as.factor(as.character(ANWR_veg$FuncGroup))
 
 
-# calculating mean cover of functional groups
+# calculating tot cover of functional groups
 ANWR_veg_fg <- ANWR_veg %>%
    group_by(SiteSubsitePlotYear, FuncGroup) %>%
    mutate(sum_cover = sum(RelCover)) %>%
    ungroup()
 
-ANWR_veg_fg_2 <- ANWR_veg_fg %>% mutate(cover = floor(mean_cover)) %>%
-   group_by(FuncGroup, PLOT) %>%  
-   filter (mode(cover) != 0)  
-
 hist(ANWR_veg_fg$sum_cover)
-
-zeros <- ANWR_veg_fg_2 %>% group_by(FuncGroup, PLOT)%>%  summarise_each(funs(sum(.==0)))
 
 
 # Shrinking the dataframe to retain one row per plot etc.
 ANWR_veg_fg_trim <- ANWR_veg_fg %>% 
    dplyr::select(PLOT, YEAR, FuncGroup, SUBSITE, SiteSubsitePlotYear, SiteSubsitePlot, sum_cover, lat_grid, lon_grid, gridcell) %>% 
    distinct(SiteSubsitePlotYear, sum_cover, .keep_all = TRUE)%>% 
-   mutate(sum_cover_prop = sum_cover/100) %>%    # making into proportion data
    mutate(sum_cover_int = round(sum_cover)) %>%   
-   mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
+   mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', # index year
                                   YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
                                   YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
                                   YEAR == 2002 ~ '7', YEAR == 2003 ~ '8',
                                   YEAR== 2004 ~ '9', YEAR == 2005 ~ '10',
                                  YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
 
-                      
 
-
-ANWR_veg_fg_trim$PLOT <- as.factor(ANWR_veg_fg_trim$PLOT)
-ANWR_veg_fg_trim$year_index <- as.numeric(ANWR_veg_fg_trim$year_index)
-hist(ANWR_veg_fg_trim$mean_cover_int)
-
-# making func group a factor in the new dataset
+# f group as factor in the new dataset
 ANWR_veg_fg_trim$FuncGroup <- as.factor(as.character(ANWR_veg_fg_trim$FuncGroup))
+
+# indexed year numeric
+ANWR_veg_fg_trim$year_index <- as.numeric(ANWR_veg_fg_trim$year_index)
+
 hist(ANWR_veg_fg_trim$sum_cover_int) # checking proportion data distribution
 unique(ANWR_veg_fg_trim$SiteSubsitePlot)
 
@@ -187,6 +180,7 @@ ANWR_Jago <- ANWR_veg_fg_trim %>% filter(SUBSITE %in% c("JAGO-A", "JAGO-B"))
 # making year numeric
 ANWR_Atigun$year_index <- as.numeric(ANWR_Atigun$year_index)
 ANWR_Jago$year_index <- as.numeric(ANWR_Jago$year_index)
+str(ANWR_Atigun)
 
 # MODEL(s) 11 ----
 
@@ -196,7 +190,8 @@ glm_atigun <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Atigun)
 tab_model(glm_atigun, file = "output/tables/glm_atigun.html")
 webshot("output/tables/glm_atigun.html", "output/tables/glm_atigun.png")
 
-check_overdispersion(glm_atigun) # no over
+check_overdispersion(glm_poisson_atigun) # no over
+glm_poisson_atigun <- glm(sum_cover_int~year_index + FuncGroup, family = "poisson", data = ANWR_Atigun)
 
 
 # Jago 
@@ -262,92 +257,6 @@ ggsave(file = "output/figures/atigun_fgroups.png")
 
 ggsave(file = "output/figures/jago_fgroups.png")
 
-# Trying and comparing different model syntaxes
-hist(ANWR_veg_fg_trim$sum_cover_int)
-
-# glmer.nb, functional group fixed effect, year and plot random effects
-lmer_all_2a <- glmer(sum_cover_int~year_index + FuncGroup + (1|YEAR), data = ANWR_veg_fg_trim)
-
-dispersion_glmer(lmer_all_2a)
-summary(lmer_all_2a)
-AIC(lmer_all_2a, lmer_all_null)
-r.squaredGLMM(lmer_all_2a)
-### THIS IS THE MODEL SELECTED FOR THE RESULTS
-
-str(ANWR_veg_fg_trim$mean_cover_int)
-unique(ANWR_veg_fg_trim$mean_cover_int)
-
-# glmer poisson, no functional group
-lmer_all_0 <- glmer(mean_cover_int~year_index + (1|YEAR), family = "poisson", data = ANWR_veg_fg_trim)
-summary(lmer_all_0)
-r.squaredGLMM(lmer_all_0)
-dispersion_glmer(lmer_all_0)
-plot(lmer_all_0)
-
-# glmer poisson, functional group fixed effect 
-lmer_all_2 <- glmer(mean_cover_prop~year_index + FuncGroup + (1|YEAR) + (1|PLOT),family = "poisson", data = ANWR_veg_fg_trim)
-summary(lmer_all_2) 
-r.squaredGLMM(lmer_all_2)
-dispersion_glmer(lmer_all_2)
-plot(lmer_all_2)
-
-#glm.nb, functional group fixed effect, model without year and plot random effects 
-lmer_all_2a_try <- glm.nb(mean_cover_prop~I(YEAR-1995) + FuncGroup, data = ANWR_veg_fg_trim)
-summary(lmer_all_2a_try)
-
-# glmer.nb, functional group random effect, no year and plot random effects
-lmer_all_3_try <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup), data = ANWR_veg_fg_trim)
-summary(lmer_all_3_try)
-
-# glmer.nb, functional group random effect, year and plot random effects
-lmer_all_3a <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
-dispersion_glmer(lmer_all_3a) #0.1845308
-summary(lmer_all_3a)
-r.squaredGLMM(lmer_all_3a)
-
-# glmer poisson, functional group random effect, year and plot random effects
-lmer_all_3b <- glmer(mean_cover_prop~I(YEAR-1995) + (1|FuncGroup) + (1|YEAR) + (1|PLOT), family = "poisson", data = ANWR_veg_fg_trim)
-dispersion_glmer(lmer_all_3b) # 0.1595953
-
-# glmer.nb, random slopes 
-lmer_all_4 <- glmer.nb(mean_cover_prop~I(YEAR-1995) + (1+YEAR|FuncGroup) + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
-summary(lmer_all_4)
-r.squaredGLMM(lmer_all_4)
-
-# glmer.nb with functional group interacting with year
-lmer_all <- glmer.nb(mean_cover_prop~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), data = ANWR_veg_fg_trim)
-summary(lmer_all)
-r.squaredGLMM(lmer_all)
-AIC(lmer_all, lmer_all_null, lmer_all_4)
-dispersion_glmer(lmer_all_2)# 0.9356298
-
-# glmer poisson, with functional group interacting with year
-lmer_all_2<- glmer(mean_cover~I(YEAR-1995)*FuncGroup + (1|YEAR) + (1|PLOT), family = poisson, data = ANWR_veg_fg_trim)
-summary(lmer_all_2)
-plot(lmer_all_2)
-dispersion_glmer(lmer_all_4)# 1.477103
-
-# saving model outputs
-tab_model(lmer_all_2a, file = "output/tables/lmer_2a.html")
-webshot("output/tables/lmer_2a.html", "output/tables/lmer_2a.png")
-
-tab_model(lmer_all_2a_try, file = "output/tables/lmer_2a_try.html")
-webshot("output/tables/lmer_2a_try.html", "output/tables/lmer_2a_try.png")
-
-# null model
-lmer_all_null <- glm.nb(mean_cover_prop~1, data = ANWR_veg_fg_trim)
-glimpse(ANWR_veg_fg_trim)
-
-# Extract predictions
-predictions_vegcover<- ggpredict(lmer_all_2a, terms = c("year_index", "FuncGroup"), interval = "confidence")  # this gives overall predictions for the model
-
-# Model selection ----
-# comparing AIC values 
-AIC(lmer_all_null, lmer_all, lmer_all_0, lmer_all_2, lmer_all_2a, lmer_all_3, lmer_all_3a, lmer_all_3b, lmer_all_4)
-
-# Model selected: glmer.nb with fixed effect f group and year and plot random, but AIC equivalent to null model
-
-
 # DATA VISUALSATION -----
 (scatter_fgroups <- (ggplot(ANWR_veg_fg_trim, aes(x = YEAR, y = mean_cover, colour = FuncGroup))+
                         geom_point(size = 0.5) +
@@ -366,33 +275,6 @@ AIC(lmer_all_null, lmer_all, lmer_all_0, lmer_all_2, lmer_all_2a, lmer_all_3, lm
           axis.text.y = element_text(size=25, hjust = 1)))
 
 #ggsave(file = "output/figures/scatter_fgroups.png")
-
-# Extracting model predictions of selected model 
-pred_lmer_all_1 <- ggpredict(lmer_all_2a , terms = c("YEAR"))
-pred_lmer_all_2 <- ggpredict(lmer_all_2a , terms = c("FuncGroup"))  # this gives overall predictions for the model
-# write.csv(pred_model_10, file = "datasets/pred_model_10.csv")
-
-# trying different graph
-ANWR_veg_fg_trim$Predicted <- predict(lmer_all_2a, ANWR_veg_fg_trim)
-
-# plot predicted values
-ggplot(ANWR_veg_fg_trim, aes(YEAR, Predicted)) +
-   facet_wrap(~FuncGroup) +
-   geom_point(aes(x = YEAR, y = mean_cover, colour= FuncGroup), size = .5) +
-   geom_smooth(aes(y = Predicted, colour= FuncGroup), linetype = "solid", 
-               se = T, method = "lm") +
-   guides(color=guide_legend(override.aes=list(fill=NA))) +  
-   theme_shrub() + 
-   xlab("Year") # ugly
-
-# extracting model predictions
-pred.mm <- ggpredict(lmer_all_2a, terms = c("YEAR"))
-
-# Plotting fixed effects
-(fe.effects <- plot_model(lmer_all_2a, show.values = TRUE))
-
-# Plotting random effects
-(re.effects <- plot_model(lmer_all_2a, type = "re", show.values = TRUE))
 
 
 ############################################################ END -----

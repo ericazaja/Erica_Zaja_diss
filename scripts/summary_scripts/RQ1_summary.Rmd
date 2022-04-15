@@ -5,7 +5,7 @@ date: '2022-04-14'
 output: pdf_document
 ---
 
-# # RQ1: How is shrub biomass distributed in the focal study area?
+## RQ1: How is shrub biomass distributed in the focal study area?
 
 ### Part 1: BUFFERED RANDOM SAMPLING 
 
@@ -267,7 +267,7 @@ model_1_lat <- cbind(r3_rsample_002, predictions_1)
                               axis.text.x = element_text(size=25, hjust = 1),
                               axis.text.y = element_text(size=25, hjust = 1) )) )
 
-# same code for model 2, but with longitude
+# analogous code and procedure for model 2, but with longitude
 ```
 
 

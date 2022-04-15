@@ -129,10 +129,6 @@ summary(model_2)
 # F-statistic: 110.9 on 1 and 3190 DF,  p-value: < 2.2e-16***
 # slope -22.021
 
-# null model
-model_2_null <- lm(biomass~1, data = r3_rsample_002)
-AIC(model_2, model_2_null) # delta AIC indicates very different models
-
 # Checking model 2 assumptions 
 plot(model_2)
 qqnorm(resid(model_2))

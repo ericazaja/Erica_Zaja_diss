@@ -6,7 +6,7 @@
 ##%######################################################%##
 
 # RQ3: How has vegetation cover changed in the Arctic National Wildlife Refuge between 1996-2007? 
-# colour palette by Wong 
+# colour palette by Bang Wong 
 # https://davidmathlogic.com/colorblind/#%23000000-%23E69F00-%2356B4E9-%23009E73-%23F7EA40-%230072B2-%23D55E00-%23CC79A7 
 
 # LOADING LIBRARIES  ----
@@ -55,107 +55,6 @@ theme_shrub <- function(){ theme(legend.position = "right",
 
 
 
-# MODELLING -----
-
-# 1. SHRUB COVER CHANGE ------
-
-# Mean shrub cover per plot per year (right method - checked with Mariana)
-ITEX_shrubs_mean <- ITEX_shrubs %>%
-  group_by(SiteSubsitePlotYear) %>%
-  mutate(sum_cover = sum(RelCover)) %>%
-  ungroup()
-
-# Shrinking the dataframe to retain one row per plot etc.
-ITEX_shrubs_mean_trim <- ITEX_shrubs_mean %>% 
-  dplyr::select(PLOT, YEAR, LAT, LONG, SUBSITE, SiteSubsitePlotYear, SiteSubsitePlot, sum_cover, lat_grid, lon_grid, gridcell) %>% 
-  distinct(SiteSubsitePlotYear, sum_cover, .keep_all = TRUE)%>% 
-  mutate(sum_cover_prop = sum_cover/100) %>%    # making into proportion data
-  mutate(sum_cover_int = floor(sum_cover)) %>%   
-  mutate(year_index = case_when (YEAR == 1996 ~ '1', YEAR == 1997 ~ '2', 
-                                 YEAR == 1998 ~ '3', YEAR == 1999 ~ '4',
-                                 YEAR == 2000 ~ '5', YEAR== 2001 ~ '6', 
-                                 YEAR == 2002 ~ '7', YEAR == 2003 ~ '8',
-                                 YEAR== 2004 ~ '9', YEAR == 2005 ~ '10',
-                                 YEAR== 2006 ~ '11', YEAR == 2007 ~ '12')) 
-
-ITEX_shrubs_mean_trim$year_index <- as.numeric(ITEX_shrubs_mean_trim$year_index)
-ITEX_shrubs_mean_trim$YEAR <- as.factor(ITEX_shrubs_mean_trim$YEAR)
-
-str(ITEX_shrubs_mean_trim)
-
-# making plot categorical
-ITEX_shrubs_mean_trim$PLOT <- as.factor(as.character(ITEX_shrubs_mean_trim$PLOT))
-hist(ITEX_shrubs_mean_trim$sum_cover_int) # right skewed
-glimpse(ITEX_shrubs_mean_trim)
-
-# Mean shrub cover change over time scatter plot
-(shrub_mean_change <- (ggplot(ITEX_shrubs_mean_trim)+
-                     geom_point(aes(x = YEAR, y = mean_cover_prop), colour = "green4", size = 1) +
-                     geom_smooth(aes(x = YEAR, y = mean_cover_prop), colour= "black", method = "glm") + 
-                     scale_x_continuous(breaks=c(1996, 1999, 2002,2005, 2007))+
-                     labs(y = "Mean shrub % cover\n", x = "\nYear") + 
-                  # annotate(geom = "text", x = 2007, y = 50, label="(a)", size = 10) +
-                     theme_shrub()+
-                     theme(axis.text.x = element_text(angle = 45))))
-
-# ggsave(shrub_mean_change, file = "output/figures/shrub_mean_change.png")          
-
-# Model 12 ----
-# Shrub cover over time
-unique(ITEX_shrubs_mean_trim$YEAR)
-
-# Transform percentage cover to proportion (dividing by 100)
-ITEX_shrubs_mean_trim <- ITEX_shrubs_mean_trim %>% mutate(cover_prop = mean_cover/100)
-hist(ITEX_shrubs_mean_trim$mean_cover)
-
-
-# glmer.nb, with plot and year as random effects
-model_6b <- glmer.nb(mean_cover_int~ year_index  + (1|PLOT) + (1|YEAR), data = ITEX_shrubs_mean_trim)
-summary(model_6b)
-dispersion_glmer(model_6b)# 0.9659739
-
-# glmer poisson,  with plot and year as random effects
-model_6c <- glmer(mean_cover_prop ~ I(YEAR-1995) + (1|PLOT) + (1|YEAR), family = poisson, data = ITEX_shrubs_mean_trim)
-summary(model_6c)
-dispersion_glmer(model_6c)#0.1816644
-
-# null model 
-model_6_null <- glm.nb(mean_cover_prop ~1,  data = ITEX_shrubs_mean_trim)
-# comparing AIC
-AIC(model_6_null, model_6,model_6a, model_6b, model_6c)
-
-# Checking model assumptions 
-plot(model_6b)
-qqnorm(resid(model_6b))
-qqline(resid(model_6b))  # points fall nicely onto the line - good!
-
-# Output table model 6 
-stargazer(model_6, type = "text",
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "")
-
-# Extracting model predictions 
-pred_model_6 <- ggpredict(model_6b, terms = c("year_index"))
-# this gives overall predictions for the model
-pred_model_6a <- ggpredict(model_6b, terms = c("YEAR"))
-g <-ggeffect(model_6b)
-random_effect_terms <- insight::find_random(model_6b, split_nested = TRUE, flatten = TRUE)
-ggeffect(model_6b, "year_index",ci.lvl = 0.95)
-
-# write.csv(pred_model_6, file = "datasets/pred_model_6.csv")
-
-# Plot the predictions 
-(shrub_preds <- ggplot(pred_model_6, aes(x = x, y = predicted)) +
-    stat_smooth(method = "lm")  +
-    geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1) +
-    geom_point(data = ITEX_shrubs_mean_trim,                      # adding the raw data (scaled values)
-               aes(x = year_index, y = mean_cover_int))+
-    labs(x = "\nYear (indexed)", y = "Mean shrub cover (%)\n")+
-    theme_shrub()) 
-
-
-ggsave(file = "output/figures/shrub_cover_ANWR.png")
 
 ### 2. SHRUB GENUS -----
 
@@ -164,7 +63,7 @@ unique(ITEX_shrubs$GENUS)
 # [1] "Dryas"          "Salix"          "Vaccinium"      "Arctostaphylos" "Betula"         "Cassiope"      
 # [7] "Ledum"
 
-# Mean shrub genus cover per plot per year
+# Total shrub genus cover per plot per year
 ITEX_shrub_sp <- ITEX_shrubs %>%
   group_by(SiteSubsitePlotYear, GENUS) %>%
   mutate(genus_cover = sum(RelCover)) %>%
@@ -186,8 +85,7 @@ ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>%
 
 # making genus a factor
 ITEX_shrubs_sp_trim$GENUS <- as.factor(as.character(ITEX_shrubs_sp_trim$GENUS ))
-# making year a factor
-ITEX_shrubs_sp_trim$YEAR <- as.numeric(ITEX_shrubs_sp_trim$YEAR)
+# making year numeric
 ITEX_shrubs_sp_trim$year_index <- as.numeric(ITEX_shrubs_sp_trim$year_index)
 
 hist(ITEX_shrubs_sp_trim$genus_cover_int) # right skewed
@@ -210,6 +108,8 @@ webshot("output/tables/glm_atigun_shrub.html", "output/tables/glm_atigun_shrub.p
 
 check_overdispersion(glm_atigun_shrub) # no over.
 
+glm_atigun_shrub_poisson <- glm(genus_cover_int~year_index+GENUS, family = "poisson", data = ANWR_Atigun_shrub)
+
 
 # Jago
 glm_jago_shrub <- glm.nb(genus_cover_int~year_index+GENUS, data = ANWR_Jago_shrub)
@@ -218,7 +118,8 @@ tab_model(glm_jago_shrub, file = "output/tables/glm_jago_shrub.html")
 webshot("output/tables/glm_jago_shrub.html", "output/tables/glm_jago_shrub.png")
 
 check_overdispersion(glm_jago_shrub) # no over.
-
+glm_jago_shrub_poisson <- glm(genus_cover_int~year_index+GENUS, family = "poisson", data = ANWR_Jago_shrub)
+plot(glm_jago_shrub)
 
 # extracting predictions
 atigun_shrub_preds <- ggpredict(glm_atigun_shrub, terms = c("year_index", "GENUS"), type = "re") %>% 
@@ -294,89 +195,6 @@ ggsave(file = "output/figures/jago_shrub.png")
 
 dev.off()
 # ggsave(file = "output/figures/facet_scatter_shrub_genus.png")
-
-# MODEL(s) 13 ----
-
-# Comparing different models:
-lmer_shrub_sp_2a <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|PLOT), data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp_2 <- glmer.nb(genus_cover_int~year_index + GENUS + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp_3 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|GENUS) + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp_0 <- glmer.nb(genus_cover_prop~I(YEAR-1995) + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp_1 <- glmer.nb(genus_cover_prop~I(YEAR-1995)+ (1|GENUS) , data = ITEX_shrubs_sp_trim)
-lmer_shrub_sp <- glmer.nb(genus_cover_int~year_index*GENUS + (1|YEAR) + (1|PLOT), data = ITEX_shrubs_sp_trim) # doesnt converge
-dispersion_glmer(lmer_shrub_sp_2) #0.2723795
-dispersion_glmer(lmer_shrub_sp_0)# 0.2750381
-r.squaredGLMM(lmer_shrub_sp_2)
-r.squaredGLMM(lmer_shrub_sp_0)
-summary(lmer_shrub_sp_2) 
-
-# Using model with genus fixed effect
-summary(lmer_shrub_sp_2)
-dispersion_glmer(lmer_shrub_sp_2) # 1.015989
-r.squaredGLMM(lmer_shrub_sp_2) 
-AIC(lmer_shrub_sp_null, lmer_shrub_sp_2)
-
-# Output tables
-tab_model(lmer_shrub_sp_2, file = "output/tables/lmer_shrub_sp_2.html")
-webshot("output/tables/lmer_shrub_sp_2.html", "output/tables/lmer_shrub_sp_2.png")
-
-tab_model(lmer_shrub_sp_0, file = "output/tables/lmer_shrub_sp_0.html")
-webshot("output/tables/lmer_shrub_sp_0.html", "output/tables/lmer_shrub_sp_0.png")
-
-# Output table 
-stargazer(lmer_shrub_sp_2,
-          digits = 3,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          digit.separator = "", 
-          type = "html", out = "output/tables/lmer_shrub_sp.html")
-
-
-# Trying model with random intercepts/slopes
-lmer_shrub_sp_rand <- glmer.nb(genus_cover_int~year_index + (1+YEAR|GENUS) + (1|YEAR), data = ITEX_shrubs_sp_trim) 
-# NB. doesn't converge with glmer.nb and with glmer we have overdispersion
-
-# null model
-lmer_shrub_sp_null <- glm.nb(genus_cover_int~1, data = ITEX_shrubs_sp_trim)
-
-# comparing AIC values
-AIC(lmer_shrub_sp_null, lmer_shrub_sp_2)
-
-# Plotting fixed effects
-(fe.effects <- plot_model(lmer_shrub_sp_2, show.values = TRUE))
-
-# Plotting random effects
-(re.effects <- plot_model(lmer_shrub_sp , type = "re", show.values = TRUE))
-
-
-#model predicions
-p <- ggpredict(lmer_shrub_sp_2, c("year_index", "GENUS"))
-p$group <- as.factor(as.character(p$group))
-str(p)
-
-# Plot the predictions 
-(genera_predictions <- ggplot(p, aes(x = x, y = predicted)) +
-   stat_smooth(method = "lm", colour = "black", size = 1.5) +
-    # facet_wrap(~ GENUS, scales = "free_y") +
-    geom_ribbon(data = p, aes(ymin = conf.low, ymax = conf.high), alpha = 0)) +
-    geom_point(data = ITEX_shrubs_sp_trim,                
-               aes(x = year_index, y = genus_cover_int, colour = GENUS), size = 2)+
-    scale_colour_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
-    #geom_smooth(data = ITEX_shrubs_sp_trim, method = lm, aes(colour = GENUS, fill = GENUS), show.legend = FALSE)+
-   #scale_fill_manual(values = c("#DC9902", "#000000", "#46AAE2", "#003654", "#D55E00", "#009E73","#CC79A7", "#000000"))+
-  scale_x_continuous(breaks=1:13)+
-  labs(x = "\nYear (indexed)", y = "Mean cover (%)\n")+
-    theme_shrub()+
-    theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 0, 
-                                      colour = "black"), 
-          legend.position = "right",
-          axis.title.x = element_text(size=25),
-          axis.title.y = element_text(size=25),
-          legend.text = element_text(size=20),
-          legend.title = element_text(size=25),
-          strip.text.x = element_text(size = 25, face = "italic" )) +
-          guides(color = guide_legend(override.aes = list(size = 3)))
-
-ggsave(file = "output/figures/genera_predictions.png")
 
 
 # 3. SHRUB COVER IN SPACE  ----
