@@ -1,5 +1,5 @@
 ---
-title: "RQ2_summary_01"
+title: "RQ2_summary"
 author: "Erica Zaja"
 date: '2022-04-15'
 output: pdf_document
@@ -29,7 +29,7 @@ library(lme4)
 library(ggpubr)
 library(corrplot)
 library(Hmisc)
-
+library(tidyverse)
 ```
 
 
@@ -94,8 +94,6 @@ coord.chelsa.combo.c <- coord.chelsa.combo.b %>%
   rename(CH_TempMeanSummer = CHELSA_bio10_10,
          CH_PrecipMeanSummer = CHELSA_bio10_18) %>% na.omit()
 
-unique(coord.chelsa.combo.c$CH_TempMeanSummer)
-
 # Exporting the dataframe to csv
 # write.csv(coord.chelsa.combo.c, "../../datasets/climate_data/coord_chelsa_combo_new.csv")
 ```
@@ -104,8 +102,8 @@ unique(coord.chelsa.combo.c$CH_TempMeanSummer)
 
 ```{r, message = FALSE}
 # DATA MANIPULATION ----
-range(coord.chelsa.combo.c$CH_TempMeanSummer) # 7 11
-range(coord.chelsa.combo.c$CH_PrecipMeanSummer) # 61 131
+range(coord.chelsa.combo.c$CH_TempMeanSummer) 
+range(coord.chelsa.combo.c$CH_PrecipMeanSummer) 
 
 ```
 
@@ -124,12 +122,9 @@ summary(model_3)
 
 # Checking model 3 assumptions
 plot(model_3)
-qqnorm(resid(model_3))
-qqline(resid(model_3))  # points fall nicely onto the line - good!
-
 ```
 
-```{r, fig.show='hide'}
+```{r, fig.show='hide', message = FALSE}
 # Extracting model predictions 
 predictions_3 <- as.data.frame(predict(model_3, newdata = coord.chelsa.combo.c, 
                                        interval = "confidence")) 
@@ -149,7 +144,7 @@ model_3_preds <- cbind(coord.chelsa.combo.c, predictions_3)
                                             label="slope = 38.033*** ", size = 10) +
                                   xlab("Scaled mean summer temperature (°C)") +
                                   ylab(bquote("Shrub biomass "*(g~m^-2)*"")) + 
-                                         theme_shrub()+
+                                  # theme_shrub()+
                                    theme(axis.title.x =element_text(size=25, face = "plain"),
                                          axis.title.y =element_text(size=25),
                                          axis.text.x = element_text(size=25, hjust = 1),
@@ -165,14 +160,12 @@ model_3_preds <- cbind(coord.chelsa.combo.c, predictions_3)
 # To display interaction: categorise precipitation into'low', 'medium', 'high': 
 # Plot 3 lines in plot with temp on the x and biomass on y and points coloured 
 # by precipitation level
-range(coord.chelsa.combo.c$CH_PrecipMeanSummer)
+# range(coord.chelsa.combo.c$CH_PrecipMeanSummer)
 
 # quantiles
 quantile(coord.chelsa.combo.c$CH_PrecipMeanSummer)
 #0%         25%         50%         75%        100% 
 #-2.21492909 -0.70752311 -0.03756489  0.54864855  4.14967397 
-mean(coord.chelsa.combo.c$CH_PrecipMeanSummer)
-# 86.44856 (not standardised)
 
 # Categorising into precipitation levels using quantiles
 coord.chelsa.combo.d <- coord.chelsa.combo.c %>% 
@@ -199,7 +192,7 @@ summary(model_5a)
  
 ```
 
-```{r, fig.show = FALSE, warning = FALSE}
+```{r, fig.show = "hide", warning = FALSE}
 # ASSUMPTION CHECK -----
 
 coord.chelsa.combo.e <- coord.chelsa.combo.c %>%
