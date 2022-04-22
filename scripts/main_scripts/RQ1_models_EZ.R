@@ -83,6 +83,8 @@ stargazer(model_1, type = "text",
           star.cutoffs = c(0.05, 0.01, 0.001),
           digit.separator = "")
 
+pred_1 <- ggpredict(model_1, terms = c("latitude"))
+
 # Extracting model predictions 
 predictions_1 <- as.data.frame(predict(model_1, newdata = r3_rsample_002, interval = "confidence")) # this gives overall predictions for the model
 model_1_lat <- cbind(r3_rsample_002, predictions_1)
@@ -226,15 +228,15 @@ r3_rsample_categ$biomass_level <- factor(r3_rsample_categ$biomass_level,levels =
     xlab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
     scale_fill_manual(name = "Biomass level", values=c( "#F0E442", "#E69F00", "#009E73")) +
     theme_shrub()+
-    theme(axis.title.x =element_text(size=25),
-          axis.title.y =element_text(size=25),
-          axis.text.x = element_text(size=25, hjust = 1),
-          axis.text.y = element_text(size=25, hjust = 1),
-          legend.text = element_text(size=20),
-          legend.title = element_text(size=25),
-          legend.position = "bottom"))
+    theme(axis.title.x =element_text(size=40),
+          axis.title.y =element_text(size=40),
+          axis.text.x = element_text(size=40, hjust = 1),
+          axis.text.y = element_text(size=40, hjust = 1),
+          legend.text = element_text(size=40),
+          legend.title = element_text(size=40),
+          legend.position = "none"))
 
-ggsave(file = "output/figures/hist_high_medium_low.png")
+ggsave(file = "output/figures/hist_high_medium_low.png", width = 15, height = 10 )
 
 # adding shrub logo
 shrub_logo <- readPNG("team_shrub_logo.png")

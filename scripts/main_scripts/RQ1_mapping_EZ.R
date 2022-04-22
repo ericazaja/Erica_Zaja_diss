@@ -158,14 +158,14 @@ r3_latlong_agg_df$biomass_level <- factor(r3_latlong_agg_df$biomass_level,levels
  xlim(-146.5, -141)+
  ylim(69.2,70.2)+ 
   theme(plot.title = element_text(hjust = 0.5),      # centres plot title
-                       text = element_text(size=25),	
-        axis.title.x =element_text(size=25),
-        axis.title.y =element_text(size=25),
-        axis.text.x = element_text(size=25, hjust = 1),
-                       axis.text.y = element_text(size=25, hjust = 1),
+                       text = element_text(size=40),	
+        axis.title.x =element_text(size=40),
+        axis.title.y =element_text(size=40),
+        axis.text.x = element_text(size=40, hjust = 1),
+                       axis.text.y = element_text(size=40, hjust = 45),
                        legend.text = element_text(size=20),
-                       legend.title = element_text(size=30),
-  legend.position ="bottom"))
+                       legend.title = element_text(size=40),
+  legend.position ="none"))
 
 # adding logo
 caribou_logo <- readPNG("caribou_icon.png")

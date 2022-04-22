@@ -289,6 +289,7 @@ lmer_Qiki <- lmer(mean.doy ~ year_index + (1|year_index), data =Qikiqtaruk )
 summary(lmer_Qiki)
 plot(lmer_Qiki)
 r2_nakagawa(lmer_Qiki)
+tab_model(lmer_Qiki)
 
 
 # output
@@ -307,15 +308,16 @@ Qiki_preds <- ggpredict(lmer_Qiki, terms = ("year_index"))
         geom_point(data = Qikiqtaruk ,                      # adding the raw data (scaled values)
                    aes(x = year_index, y = mean.doy), colour = "#117733", size = 2.5))+
     scale_x_continuous(breaks=c(2,6,10,14,18,22,26))+
-    labs(x = "\nYear (indexed)", y = "Mean greening DOY (%)\n") +
+    labs(x = "\nYear (indexed)", y = "Mean shrub green-up (DOY) \n") +
     annotate(geom = "text", x = 22, y = 190, label="slope = -0.98**", size = 10) +
     theme_shrub()+
-    theme(axis.text.x  = element_text(vjust=0.5, size=20, angle= 0, 
+    theme(axis.text.x  = element_text(vjust=0.5, size=30, angle= 0, 
                                       colour = "black"), 
           legend.position = "none",
-          axis.title.x = element_text(size=25),
-          axis.title.y = element_text(size=25),
-          strip.text.x = element_text(size = 25, face = "italic" ))
+          axis.text.y = element_text(size = 30),
+          axis.title.x = element_text(size=30),
+          axis.title.y = element_text(size=30),
+          strip.text.x = element_text(size = 30, face = "italic" ))
 
 
 ggsave(file = "output/figures/qiki_preds.png")
@@ -345,6 +347,7 @@ lmer_Atqasuk <- lmer(mean.doy ~ year_index + (1|year_index), data =Atqasuk )
 summary(lmer_Atqasuk)
 plot(lmer_Atqasuk)
 r2_nakagawa(lmer_Atqasuk)
+tab_model(lmer_Atqasuk)
 
 # null
 lm_Atqasuk_null <- lm(mean.doy ~ 1, data = Atqasuk) 
@@ -372,6 +375,7 @@ lmer_Toolik <- lmer(mean.doy ~ year_index + (1|year_index), data =Toolik)
 summary(lmer_Toolik)
 plot(lmer_Toolik)
 r2_nakagawa(lmer_Toolik)
+tab_model(lmer_Toolik)
 
 # null
 lm_Toolik_null <- lm(mean.doy ~ 1, data = Toolik) 
@@ -395,9 +399,10 @@ stargazer(lmer_Toolik, type = "text",
 # d. Utqiagvik -----
 Utqiagvik<-  phenology_green_trim %>% filter (study_area == "Utqiagvik") 
 lmer_Utqiagvik <- lmer(mean.doy ~ year_index + (1|year_index), data =Utqiagvik) 
-summary(lmer_Toolik)
+summary(lmer_Utqiagvik)
 plot(lmer_Utqiagvik)
 r2_nakagawa(lmer_Utqiagvik)
+tab_model(lmer_Utqiagvik)
 
 # null
 lm_Utqiagvik_null <- lm(mean.doy ~ 1, data = Utqiagvik) 

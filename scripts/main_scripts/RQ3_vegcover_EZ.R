@@ -186,6 +186,7 @@ str(ANWR_Atigun)
 
 # Atigun model
 glm_atigun <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Atigun)
+summary(glm_atigun)
 
 tab_model(glm_atigun, file = "output/tables/glm_atigun.html")
 webshot("output/tables/glm_atigun.html", "output/tables/glm_atigun.png")

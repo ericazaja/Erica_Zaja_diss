@@ -70,10 +70,10 @@ model_3_preds <- cbind(coord.chelsa.combo.c, predictions_3)
                                   xlab("Scaled mean summer temperature (°C)") +
                                   ylab(bquote("Shrub biomass "*(g~m^-2)*"")) + 
                                          theme_shrub()+
-                                   theme(axis.title.x =element_text(size=25, face = "plain"),
-                                         axis.title.y =element_text(size=25),
-                                         axis.text.x = element_text(size=25, hjust = 1),
-                                         axis.text.y = element_text(size=25, hjust = 1) )) )
+                                   theme(axis.title.x =element_text(size=40, face = "plain"),
+                                         axis.title.y =element_text(size=40),
+                                         axis.text.x = element_text(size=40, hjust = 1),
+                                         axis.text.y = element_text(size=40, hjust = 1) )) )
 
 
 
@@ -126,18 +126,18 @@ model_4_preds <- cbind(coord.chelsa.combo.c, predictions_4)
                                      geom_line(aes(y=lwr),  color = "#F96E00", linetype = "dashed", size = 0.5)+
                                      geom_line(aes(y=upr), color = "#F96E00", linetype = "dashed", size = 0.5)+
                                      #annotate(geom = "text", x = 4, y = 1000, label="(b)", size = 15) +
-                                     annotate(geom = "text", x = 3, y = 700, label="slope = 47.290*** ", size = 10) +
+                                     annotate(geom = "text", x = 3, y = 800, label="slope = 47.290*** ", size = 10) +
                                     xlab(bquote("\nScaled mean summer precipitation "*(g~m^-2)*""))+
                                     ylab(bquote("Shrub biomass "*(g~m^-2)*""))+
                                     theme_shrub()+
-                                     theme(axis.title.x =element_text(size=25),
-                                           axis.title.y =element_text(size=25),
-                                           axis.text.x = element_text(size=25, hjust = 1),
-                                           axis.text.y = element_text(size=25, hjust = 1) )) )
+                                     theme(axis.title.x =element_text(size=40),
+                                           axis.title.y =element_text(size=40),
+                                           axis.text.x = element_text(size=40, hjust = 1),
+                                           axis.text.y = element_text(size=40, hjust = 1) )) )
 
 
                                      
-# ggsave(file = "output/figures/predictions_biomass_vs_precip.png")
+ggsave(file = "output/figures/predictions_biomass_vs_precip.png")
 
 # adding rain logo
 rain_logo <- readPNG("rain_logo.png")
