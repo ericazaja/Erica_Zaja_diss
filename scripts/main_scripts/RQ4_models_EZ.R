@@ -147,9 +147,6 @@ summary(glm_late)
 r.squaredGLMM(glm_late)
 check_overdispersion(glm_late)
 
-
-
-
 # checking assumptions
 plot(glm_late)
 dispersion_glmer(glm_late)# 0.7259028

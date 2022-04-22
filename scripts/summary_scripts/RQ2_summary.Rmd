@@ -1,11 +1,11 @@
 ---
-title: "RQ2_summary"
+title: "RQ2 summary code"
 author: "Erica Zaja"
 date: '2022-04-15'
 output: pdf_document
 ---
 
-## RQ2: how does biomass vary with temperature and precipitation?
+## RQ2: How does shrub biomass vary with mean summer temperature and precipitation in the focal study area?
 
 ### Script credit: adapted from Joseph Everest and Mariana Garcia Criado
 

@@ -31,12 +31,12 @@ library(tidyverse)
 
 # SHRUB DATA: from Berner et al 2018
 # Loading raster of shrub biomass (g/m2) on Alaskan North Slope  
-shrub_agb_p50 <- raster("../../datasets/berner_data/shrub_agb_p50.tif") 
+# shrub_agb_p50 <- raster("../../datasets/berner_data/shrub_agb_p50.tif") 
 # Using the best-estimates: the 50th percentile of the 1,000 permutations
 
 # PCH CORE RANGE DATA: from Porcupine Caribou Management Board (2016)
 # Loading polygon of PCH range 
-PCH_core_range <- st_read("../../datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") 
+# PCH_core_range <- st_read("../../datasets/PCH_Core_Range_2016/PCH_Core_Range_2016.shp") 
 
 ```
 
@@ -44,11 +44,11 @@ PCH_core_range <- st_read("../../datasets/PCH_Core_Range_2016/PCH_Core_Range_201
 ## EXPLORING DATA ------
 
 # class: what type of data 
-class(shrub_agb_p50) # RasterLayer
-class(PCH_core_range) # sf dataframe
+# class(shrub_agb_p50) # RasterLayer
+# class(PCH_core_range) # sf dataframe
 
 # resolution of shrub map 
-res(shrub_agb_p50) # resolution of map: [1] 30m x 30m
+# res(shrub_agb_p50) # resolution of map: [1] 30m x 30m
 
 ```
 
@@ -199,7 +199,8 @@ r3_rsample_categ <- r3_rsample_002 %>%
                color = "black", curvature = 0.3) +
     ylab("Frequency\n") +
     xlab(bquote("Shrub biomass "*(g~m^-2)*""))+ 
-    scale_fill_manual(name = "Biomass level", values=c( "#F0E442", "#E69F00", "#009E73")) +
+    scale_fill_manual(name = "Biomass level", values=c( "#F0E442", "#E69F00", 
+                                                        "#009E73")) +
     # theme_shrub()+
     theme(axis.title.x =element_text(size=25),
           axis.title.y =element_text(size=25),
@@ -235,9 +236,6 @@ summary(model_1)
 
 # Checking model 1 assumptions 
 plot(model_1)
-qqnorm(resid(model_1))
-qqline(resid(model_1))  # points fall nicely onto the line - good!
-
 
 ```
 

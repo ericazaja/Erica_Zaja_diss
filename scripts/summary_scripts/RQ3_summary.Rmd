@@ -1,5 +1,5 @@
 ---
-title: "RQ3_summary"
+title: "RQ3 summary code"
 author: "Erica Zaja"
 date: '2022-04-15'
 output: pdf_document
@@ -7,7 +7,8 @@ output: pdf_document
 
 # RQ3: How has vegetation cover changed in the Arctic National Wildlife Refuge between 1996-2007? 
 ### Colour palette credit: Bang Wong 
-### Part 1: FUNCTIONAL GROUPS ----
+
+###Part 1: FUNCTIONAL GROUPS 
 
 
 ```{r setup, include=FALSE}
@@ -48,7 +49,7 @@ ANWR_veg <- ITEX_EZ_diss %>%
 ANWR_veg$GENUS <- as.factor(as.character(ANWR_veg$GENUS))
 ANWR_veg$SITE <- as.factor(as.character(ANWR_veg$SITE))
 ANWR_veg$PLOT <- as.factor(as.character(ANWR_veg$PLOT))
-ANWR_veg$FuncGroup<- as.factor(as.character(ANWR_veg$FuncGroup))
+ANWR_veg$FuncGroup <- as.factor(as.character(ANWR_veg$FuncGroup))
 
 # calculating total cover of functional groups (sum of all species)
 ANWR_veg_fg <- ANWR_veg %>%
@@ -71,7 +72,9 @@ ANWR_veg_fg_trim <- ANWR_veg_fg %>%
 
 
 # Dividing two subsites
-ANWR_Atigun <- ANWR_veg_fg_trim %>% filter(SUBSITE %in% c("ATIGUN-A", "ATIGUN-B", "ATIGUN-C"))
+ANWR_Atigun <- ANWR_veg_fg_trim %>% filter(SUBSITE %in% c("ATIGUN-A", 
+                                                          "ATIGUN-B", 
+                                                          "ATIGUN-C"))
 ANWR_Jago <- ANWR_veg_fg_trim %>% filter(SUBSITE %in% c("JAGO-A", "JAGO-B"))
 
 # making year numeric
@@ -90,25 +93,30 @@ glm_atigun <- glm.nb(sum_cover_int~year_index + FuncGroup, data = ANWR_Atigun)
 #tab_model(glm_atigun, file = "output/tables/glm_atigun.html")
 #webshot("output/tables/glm_atigun.html", "output/tables/glm_atigun.png")
 
-check_overdispersion(glm_atigun) # no over
-plot(resid(glm_atigun))
+check_overdispersion(glm_atigun) # no over dispersion
+plot(glm_atigun)
 
 # similar model for Jago
 ```
 
 ```{r, fig.show = "hide"}
 # extracting predictions Atigun
-atigun_preds <- ggpredict(glm_atigun, terms = c("year_index", "FuncGroup"), type = "re") %>% 
+atigun_preds <- ggpredict(glm_atigun, terms = c("year_index", "FuncGroup"), 
+                          type = "re") %>% 
    rename(FuncGroup = group)
 
 # plotting Atigun f.groups predictions ----
 (atigun_fgroups <- ggplot(atigun_preds, aes(x = x, y = predicted, colour=FuncGroup))+
    stat_smooth(method = "glm", aes(colour = FuncGroup, fill = FuncGroup), size = 1.5) +
    facet_wrap(~FuncGroup, ncol = 3, scales = "free_y"))+
-   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, colour = FuncGroup), alpha = 0.1) +
-   geom_point(data = ANWR_Atigun, aes(x = year_index, y = sum_cover_int, colour = FuncGroup), size = 2.5) +
-   scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
-   scale_fill_manual(values = c("#332288", "#117733", "#DDCC77", "#CC6677", "#882255"))+
+   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, colour = FuncGroup), 
+               alpha = 0.1) +
+   geom_point(data = ANWR_Atigun, aes(x = year_index, y = sum_cover_int, 
+                                      colour = FuncGroup), size = 2.5) +
+   scale_colour_manual(values = c("#332288", "#117733", "#DDCC77", 
+                                  "#CC6677", "#882255"))+
+   scale_fill_manual(values = c("#332288", "#117733", "#DDCC77", 
+                                "#CC6677", "#882255"))+
    scale_x_continuous(breaks=c(2,4,6,8,10,12))+
    labs(y = "Predicted cover (%) \n", x = "\nYear (indexed)") +
   # theme_shrub()+
@@ -120,7 +128,8 @@ atigun_preds <- ggpredict(glm_atigun, terms = c("year_index", "FuncGroup"), type
          strip.text.x = element_text(size = 25, face = "italic" ))
 
 ```
-### Part 2: SHRUB GENERA ----
+
+###Part 2: SHRUB GENERA 
 
 ```{r, message = FALSE}
 # DATA WRANGLING ----
@@ -128,7 +137,8 @@ atigun_preds <- ggpredict(glm_atigun, terms = c("year_index", "FuncGroup"), type
 # Filtering shrub only data
 ITEX_shrubs <-  ANWR_veg %>% filter (FuncGroup == "Shrub") 
 unique(ITEX_shrubs$YEAR) # Unique genus names 
-# [1] "Dryas"          "Salix"          "Vaccinium"      "Arctostaphylos" "Betula"         "Cassiope"       "Ledum"         
+# [1] "Dryas"          "Salix"          "Vaccinium"      "Arctostaphylos" 
+# "Betula"       "Cassiope"       "Ledum"         
 
 # Total shrub genus cover per plot per year
 ITEX_shrub_sp <- ITEX_shrubs %>%
@@ -138,7 +148,8 @@ ITEX_shrub_sp <- ITEX_shrubs %>%
 
 # Shrinking the dataframe to retain one row per plot etc.
 ITEX_shrubs_sp_trim <- ITEX_shrub_sp  %>% 
-  dplyr::select(PLOT, YEAR, SUBSITE, SiteSubsitePlotYear, SiteSubsitePlot, GENUS, genus_cover) %>% 
+  dplyr::select(PLOT, YEAR, SUBSITE, SiteSubsitePlotYear, SiteSubsitePlot, 
+                GENUS, genus_cover) %>% 
   distinct(SiteSubsitePlotYear, genus_cover, .keep_all = TRUE)  %>% 
   mutate(genus_cover_prop = genus_cover/100)  %>%
   mutate(genus_cover_int = round(genus_cover)) %>%   
@@ -162,7 +173,9 @@ hist(ITEX_shrubs_sp_trim$genus_cover_int) # right skewed
 
 ```{r}
 # Dividing two subsites
-ANWR_Atigun_shrub <- ITEX_shrubs_sp_trim %>% filter(SUBSITE %in% c("ATIGUN-A", "ATIGUN-B", "ATIGUN-C"))
+ANWR_Atigun_shrub <- ITEX_shrubs_sp_trim %>% filter(SUBSITE %in% c("ATIGUN-A",
+                                                                   "ATIGUN-B", 
+                                                                   "ATIGUN-C"))
 ANWR_Jago_shrub <- ITEX_shrubs_sp_trim %>% filter(SUBSITE %in% c("JAGO-A", "JAGO-B"))
 
 # making year numeric
@@ -170,14 +183,15 @@ ANWR_Atigun_shrub$year_index <- as.numeric(ANWR_Atigun_shrub$year_index)
 ANWR_Jago_shrub$year_index <- as.numeric(ANWR_Jago_shrub$year_index)
 
 # Atigun 
-glm_atigun_shrub <- glm.nb(genus_cover_int~year_index+GENUS, data = ANWR_Atigun_shrub)
+glm_atigun_shrub <- glm.nb(genus_cover_int~year_index+GENUS, 
+                           data = ANWR_Atigun_shrub)
 summary(glm_atigun_shrub)
 
 check_overdispersion(glm_atigun_shrub) # no over.
-plot(glm_atigun_shrub)
 
 # Trying with poisson distribution
-glm_atigun_shrub_poisson <- glm(genus_cover_int~year_index+GENUS, family = "poisson", data = ANWR_Atigun_shrub) 
+glm_atigun_shrub_poisson <- glm(genus_cover_int~year_index+GENUS, 
+                                family = "poisson", data = ANWR_Atigun_shrub) 
 check_overdispersion(glm_atigun_shrub_poisson) # overdispersion detected
 
 # Analogous model for Jago
