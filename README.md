@@ -31,9 +31,7 @@ Repository includes: datasets, figures, R scripts, statistical output, Markdown 
   - [RQ2_models_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/main_scripts/RQ2_models_EZ.R): script with models to answer RQ2
   - [RQ3_mariana_cleaning_EZ](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/main_scripts/RQ3_mariana_cleaning_EZ.R): script adapted from Mariana Garcia Criado's ITEX dataset data wranglig script. Modified to keep only functional groups I needed. 
   - [RQ3_vegcover_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/main_scripts/RQ3_vegcover_EZ.R): script with models for cover of functional groups over time in the ANWR
-  - [RQ3_vegcover_separate_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/main_scripts/RQ3_vegcover_separate_EZ.R): script with separate models for each functional group
   - [RQ3_shrubcover_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/main_scripts/RQ3_shrubcover_EZ.R): script with models for cover of shrubs over time in the ANWR
-  - [RQ3_shrubcover_separate_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/main_scripts/RQ3_shrubcover_separate_EZ.R): script with separate models for each shrub genus
   - [RQ4_wrangle_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/main_scripts/RQ4_wrangle_EZ.R): script with data wrangling for shrub phenology analysis 
   - [RQ4_models_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/main_scripts/RQ4_models_EZ.R): script with shrub phenology models
   
@@ -41,9 +39,11 @@ Repository includes: datasets, figures, R scripts, statistical output, Markdown 
   - [RQ1_extras_EZ](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/other_scripts/RQ1_extras_EZ.R): NOT USED extra code/analyses for RQ1
   - [RQ2_extras_EZ](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/other_scripts/RQ2_extras_EZ.R): NOT USED extra code/analyses for RQ2
   - [RQ3_extras_EZ](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/other_scripts/RQ3_extras_EZ.R):  NOT USED extra code/analyses for RQ3
+  - [RQ3_shrubcover_separate_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/other_scripts/RQ3_shrubcover_separate_EZ.R): script with separate models for each shrub genus
+  - [RQ3_vegcover_separate_EZ.R](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/other_scripts/RQ3_vegcover_separate_EZ.R): script with separate models for each functional group
   - [RQ4_extras_EZ](https://github.com/ericazaja/Erica_Zaja_diss/blob/main/scripts/other_scripts/RQ4_extras_EZ.R):  NOT USED extra code/analyses for RQ4
   - other scripts including scraps and experiments
-
+  
 - #### [img](https://github.com/ericazaja/dissertation/tree/main/img):
   - figures produced 
 
@@ -74,5 +74,4 @@ Repository includes: datasets, figures, R scripts, statistical output, Markdown 
 - I'm happy to answer any questions you might have about my work.
 
 ### Acknowledgements
-I thank the data providers, my supervisor Dr Isla Myers Smith, and Team Shrub members for their support. I also thank Anna Chirumbolo for the tutorial on writing your Dissertation in RMarkdown. 
-
+I thank the data providers, my supervisor Dr Isla Myers Smith, and Team Shrub members for their support. 
